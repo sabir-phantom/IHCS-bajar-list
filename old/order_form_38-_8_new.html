@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>অর্ডার ফর্ম</title>
+<style>
+  .set-menu-field { margin-left: 18px; }
+  .set-menu-field select { font-family: inherit; font-size: 15px; padding: 4px 8px; }
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.maateen.me/kalpurush/font.css');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap');
+
+  :root {
+    --maroon-dark: #5c1626;
+    --maroon: #7d1f34;
+    --gold: #b8892f;
+    --gold-light: #e8d9a0;
+    --navy: #1b3455;
+    --navy-dark: #10233b;
+    --navy-light: #dbe6f0;
+    --cream-bg: #f8f5ee;
+    --cream-card: #fffdf9;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Kalpurush', 'Noto Sans Bengali', sans-serif;
+    background: var(--cream-bg);
+    margin: 0;
+    padding: 24px;
+    color: #2b2620;
+    position: relative;
+  }
+  .royal-side-pattern {
+    display: none;
+    position: fixed;
+    top: 0;
+    width: 130px;
+    height: 100vh;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cg fill='none' stroke='%23b8892f' stroke-width='1.2'%3E%3Cpath d='M45 0 L90 45 L45 90 L0 45 Z'/%3E%3Cpath d='M45 18 L72 45 L45 72 L18 45 Z'/%3E%3Cpath d='M45 0 L45 18 M45 72 L45 90 M0 45 L18 45 M72 45 L90 45'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 90px 90px;
+    background-repeat: repeat;
+  }
+  .royal-side-pattern.left { left: 0; }
+  .royal-side-pattern.right { right: 0; transform: scaleX(-1); }
+  @media (min-width: 1150px) {
+    .royal-side-pattern { display: block; }
+  }
+  @media print {
+    .royal-side-pattern { display: none !important; }
+  }
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--cream-card);
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(27, 52, 85, 0.18);
+    padding: 0 32px 28px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+  .contact-bar {
+    background: var(--navy-dark);
+    height: 8px;
+    margin: 0 -32px;
+  }
+  .gold-strip {
+    height: 5px;
+    margin: 0 -32px;
+    background: linear-gradient(90deg, var(--navy), var(--gold), var(--navy));
+  }
+  .brand-header {
+    text-align: center;
+    padding: 20px 0 16px;
+    margin: 0 -32px 22px;
+    background: linear-gradient(180deg, rgba(27,52,85,0.05), rgba(27,52,85,0));
+    border-bottom: 1px solid var(--gold-light);
+  }
+  .brand-header .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    font-size: 22px;
+    color: var(--navy-dark);
+    text-transform: uppercase;
+  }
+  .brand-header .brand-name span { color: var(--gold); }
+  .brand-header .brand-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: #7a6a4d;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+  .brand-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    color: var(--gold);
+    font-size: 12px;
+  }
+  .brand-divider::before, .brand-divider::after {
+    content: '';
+    height: 1px;
+    width: 60px;
+    background: var(--gold-light);
+  }
+  h1.page-title {
+    text-align: center;
+    font-size: 22px;
+    color: var(--maroon-dark);
+    margin: 0 0 20px;
+    font-weight: 700;
+  }
+  .font-size-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: #7a6a4d;
+  }
+  .font-size-control button {
+    background: #fff;
+    border: 1px solid #e0d4b8;
+    color: var(--maroon-dark);
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .font-size-control button:hover { background: var(--gold-light); }
+  #font-size-display {
+    min-width: 42px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--maroon-dark);
+  }
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+    margin-bottom: 24px;
+  }
+  .field { display: flex; flex-direction: column; }
+  label {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #7a6a4d;
+  }
+  label[for="cust-name"] { font-weight: 700; color: var(--maroon-dark); }
+  input, textarea, select {
+    font-family: inherit;
+    font-size: 16px;
+    padding: 8px 10px;
+    border: 1px solid #e0d4b8;
+    border-radius: 6px;
+    background: #fffefb;
+  }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--gold); border-color: transparent; }
+
+  h2.section {
+    font-size: 19px;
+    color: var(--maroon-dark);
+    border-bottom: 2px solid var(--gold-light);
+    padding-bottom: 6px;
+    margin: 24px 0 12px;
+  }
+
+  .menu-block {
+    border: 1px solid var(--gold-light);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    background: #fffdf9;
+    position: relative;
+  }
+  .menu-block-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .menu-block-header .category-select {
+    font-weight: 700;
+    color: var(--maroon-dark);
+    min-width: 150px;
+  }
+  .menu-block-header .category-input {
+    font-weight: 700;
+    color: var(--maroon-dark);
+    min-width: 170px;
+  }
+  .global-guest-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #7a6a4d;
+    margin-bottom: 18px;
+  }
+  .global-guest-count input {
+    width: 90px;
+    padding: 6px 8px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .remove-block-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #b04a2c;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .remove-block-btn:hover { text-decoration: underline; }
+
+  .item-search {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    font-size: 15px;
+    border: 1px solid #e0d4b8;
+    border-radius: 6px;
+    background: #fafaf8;
+  }
+  .item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #ece5d6;
+    border-radius: 8px;
+    padding: 6px;
+    background: #fff;
+  }
+  .item-list::-webkit-scrollbar { width: 8px; }
+  .item-list::-webkit-scrollbar-thumb { background: #e0d5bf; border-radius: 4px; }
+  .item-list::-webkit-scrollbar-track { background: transparent; }
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+  .item-row:hover { background: #faf2df; }
+  .item-row:has(.item-check:checked) { background: var(--gold-light); }
+  .item-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 16px;
+    color: #2b2620;
+    cursor: pointer;
+    margin: 0;
+    width: 260px;
+    flex-shrink: 0;
+  }
+  .item-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--maroon); flex-shrink: 0; }
+  .item-row input[type="text"].comment {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 15px;
+  }
+  .item-edit-btn, .item-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    color: #a3906a;
+    flex-shrink: 0;
+  }
+  .item-edit-btn:hover { color: var(--maroon-dark); }
+  .item-delete-btn { color: #c81e1e; }
+  .item-delete-btn:hover { color: #8f1414; transform: scale(1.15); }
+  .drag-handle {
+    cursor: grab;
+    color: #b0a890;
+    font-size: 18px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .item-row.dragging { opacity: 0.4; background: #f0e6d2; }
+
+  .add-item-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .add-item-row input { flex: 1; }
+  .add-item-row button {
+    background: var(--gold-light);
+    border: none;
+    border-radius: 6px;
+    padding: 0 14px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    color: #7a6a4d;
+  }
+  .add-item-row button:hover { background: #dcc789; }
+
+  .add-menu-btn-row { text-align: center; margin: 10px 0 20px; }
+  .add-menu-btn {
+    background: #fff;
+    border: 2px dashed var(--gold);
+    color: var(--maroon);
+    padding: 10px 22px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .add-menu-btn:hover { background: #fbf1dc; }
+
+  .actions { display: flex; gap: 16px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+
+  .print-btn, .history-btn, .new-order-btn, .save-btn {
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 13px 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .print-btn:active, .history-btn:active, .new-order-btn:active, .save-btn:active {
+    transform: translateY(3px);
+  }
+
+  .print-btn {
+    background: linear-gradient(160deg, #a13251 0%, var(--maroon) 45%, var(--maroon-dark) 100%);
+    color: #fff8ec;
+    border: 1px solid var(--gold);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      inset 0 -2px 3px rgba(0,0,0,0.2),
+      0 6px 0 var(--maroon-dark),
+      0 12px 20px rgba(92, 22, 38, 0.4);
+  }
+  .print-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      inset 0 -2px 3px rgba(0,0,0,0.2),
+      0 8px 0 var(--maroon-dark),
+      0 16px 26px rgba(92, 22, 38, 0.45);
+  }
+  .print-btn:active {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.2),
+      inset 0 -2px 3px rgba(0,0,0,0.25),
+      0 2px 0 var(--maroon-dark),
+      0 3px 8px rgba(92, 22, 38, 0.35);
+  }
+
+  .history-btn {
+    background: linear-gradient(160deg, #2c4d76 0%, var(--navy) 45%, var(--navy-dark) 100%);
+    color: #f4f8fc;
+    border: 1px solid var(--gold);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      inset 0 -2px 3px rgba(0,0,0,0.2),
+      0 6px 0 var(--navy-dark),
+      0 12px 20px rgba(16, 35, 59, 0.4);
+  }
+  .history-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      inset 0 -2px 3px rgba(0,0,0,0.2),
+      0 8px 0 var(--navy-dark),
+      0 16px 26px rgba(16, 35, 59, 0.45);
+  }
+  .history-btn:active {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 -2px 3px rgba(0,0,0,0.25),
+      0 2px 0 var(--navy-dark),
+      0 3px 8px rgba(16, 35, 59, 0.35);
+  }
+
+  .new-order-btn {
+    background: linear-gradient(160deg, #d9b463 0%, var(--gold) 55%, #8f6a1f 100%);
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    border: 1px solid var(--navy-dark);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -2px 3px rgba(0,0,0,0.15),
+      0 6px 0 #8f6a1f,
+      0 12px 20px rgba(143, 106, 31, 0.4);
+  }
+  .new-order-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -2px 3px rgba(0,0,0,0.15),
+      0 8px 0 #8f6a1f,
+      0 16px 26px rgba(143, 106, 31, 0.45);
+  }
+  .new-order-btn:active {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      inset 0 -2px 3px rgba(0,0,0,0.2),
+      0 2px 0 #8f6a1f,
+      0 3px 8px rgba(143, 106, 31, 0.35);
+  }
+
+  .save-btn {
+    background: linear-gradient(160deg, #1f7a63 0%, #146650 45%, #0d4c3b 100%);
+    color: #f4fdfa;
+    border: 1px solid var(--gold);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      inset 0 -2px 3px rgba(0,0,0,0.2),
+      0 6px 0 #0d4c3b,
+      0 12px 20px rgba(13, 76, 59, 0.4);
+  }
+  .save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      inset 0 -2px 3px rgba(0,0,0,0.2),
+      0 8px 0 #0d4c3b,
+      0 16px 26px rgba(13, 76, 59, 0.45);
+  }
+  .save-btn:active {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 -2px 3px rgba(0,0,0,0.25),
+      0 2px 0 #0d4c3b,
+      0 3px 8px rgba(13, 76, 59, 0.35);
+  }
+
+  .history-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 24, 15, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .history-overlay.open { display: flex; }
+  .history-panel {
+    background: #fff;
+    border-radius: 12px;
+    width: 92%;
+    max-width: 640px;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  }
+  .history-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .history-panel-header h2 {
+    font-size: 19px;
+    color: var(--maroon-dark);
+    margin: 0;
+  }
+  .history-close-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #a3906a;
+  }
+  .history-close-btn:hover { color: #b04a2c; }
+  .history-search {
+    margin-bottom: 12px;
+  }
+  .history-list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .history-item {
+    border: 1px solid #ece5d6;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .history-item-info { font-size: 14px; }
+  .history-item-info .h-name { font-weight: 700; color: #2b2620; }
+  .history-item-info .h-meta { color: #8a7550; font-size: 13px; margin-top: 2px; }
+  .history-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .history-item-actions button {
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .history-reprint-btn { background: var(--gold-light); color: #7a6a4d; font-weight: 600; }
+  .history-reprint-btn:hover { background: #dcc789; }
+  .history-edit-btn { background: #fbf1dc; color: var(--maroon); font-weight: 600; border: 1px solid var(--gold-light); }
+  .history-edit-btn:hover { background: #fbe8d3; }
+  .history-delete-btn {
+    background: #fdeceb;
+    color: #c81e1e;
+    font-weight: 700;
+    border: 1px solid #e8a5a0;
+  }
+  .history-delete-btn:hover { background: #c81e1e; color: #fff; border-color: #c81e1e; }
+  .history-empty { text-align: center; color: #a3906a; padding: 30px 0; }
+
+  .storage-note {
+    text-align: center;
+    font-size: 14px;
+    color: #a3906a;
+    margin-top: 14px;
+  }
+  .backup-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .backup-btn {
+    background: none;
+    border: 1px solid #e0d4b8;
+    color: #7a6a4d;
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .backup-btn:hover { background: #faf2df; border-color: var(--gold); color: var(--maroon-dark); }
+
+  /* ---------- PRINT SHEET (hidden on screen) ---------- */
+  #print-sheet { display: none; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .container { display: none; }
+    .history-overlay { display: none !important; }
+    #print-sheet {
+      display: block;
+      font-family: 'Kalpurush', 'Noto Sans Bengali', sans-serif;
+      padding: 16px 30px;
+    }
+    .ps-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .ps-left-col, .ps-right-col { display: flex; flex-direction: column; gap: 8px; }
+    .ps-left-col { margin-left: 90px; }
+    .ps-info div span.k { font-weight: 700; margin-right: 6px; }
+    #ps-name { font-weight: 700; }
+    .ps-guest-global {
+      text-align: center;
+      font-size: 16px;
+      margin-bottom: 14px;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    #ps-menu.ps-menu-single {
+      max-width: 60%;
+      margin: 0 auto;
+      text-align: center;
+    }
+    #ps-menu.ps-menu-single .ps-menu-block { display: inline-block; text-align: left; }
+    #ps-menu.ps-menu-single .ps-item-line { text-align: left; }
+    #ps-menu.ps-menu-single .ps-item-comment { margin-left: 6px; }
+    #ps-menu.ps-menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 40px;
+      row-gap: 6px;
+      margin-left: 90px;
+    }
+    .ps-menu-block { break-inside: avoid; }
+    .ps-category {
+      display: inline-block;
+      font-size: 19px;
+      font-weight: 800;
+      color: #000;
+      margin: 16px 0 6px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 3px;
+    }
+    .ps-guest-count { font-weight: 400; font-size: 15px; }
+    .ps-item-line {
+      text-align: left;
+      padding: 1px 0;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+    .ps-item-name { font-weight: 500; }
+    .ps-item-comment { color: #444; margin-left: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="royal-side-pattern left"></div>
+<div class="royal-side-pattern right"></div>
+
+<div class="container">
+  <div class="contact-bar"></div>
+  <div class="gold-strip"></div>
+  <div class="brand-header">
+    <div class="brand-name">IQBAL HOSSAIN <span>CATERING</span> SERVICE</div>
+    <div class="brand-tagline">Serving with Passion Since 1987</div>
+    <div class="brand-divider">✦</div>
+  </div>
+  <h1 class="page-title">খাবার অর্ডার ফর্ম</h1>
+
+  <div class="field-grid">
+    <div class="field">
+      <label for="cust-name">নাম</label>
+      <input type="text" id="cust-name" placeholder="গ্রাহকের নাম">
+    </div>
+    <div class="field">
+      <label for="cust-address">ঠিকানা</label>
+      <input type="text" id="cust-address" placeholder="ঠিকানা লিখুন">
+    </div>
+    <div class="field">
+      <label for="cust-date">তারিখ</label>
+      <input type="date" id="cust-date">
+    </div>
+    <div class="field">
+      <label for="cust-time">সময়</label>
+      <select id="cust-time">
+        <option value="">নির্বাচন করুন</option>
+        <option value="সকাল">সকাল</option>
+        <option value="দুপুর">দুপুর</option>
+        <option value="বিকাল">বিকাল</option>
+        <option value="সন্ধ্যা">সন্ধ্যা</option>
+        <option value="রাত">রাত</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="cust-place">স্থান</label>
+      <input type="text" id="cust-place" placeholder="স্থান লিখুন">
+    </div>
+    <div class="field">
+      <label for="cust-program">অনুষ্ঠান</label>
+      <input type="text" id="cust-program" placeholder="অনুষ্ঠানের নাম">
+    </div>
+  </div>
+
+  <div class="global-guest-count">
+    লোক সংখ্যা:
+    <input type="text" id="global-guest-vip" placeholder="ভি.আই.পি">
+    <input type="text" id="global-guest-packet" placeholder="প্যাকেট">
+    <span class="set-menu-field">
+      সেট মেনু:
+      <select id="global-set-menu"></select>
+    </span>
+  </div>
+
+  <div id="menu-blocks"></div>
+
+  <div class="add-menu-btn-row">
+    <button class="add-menu-btn" onclick="addMenuBlock()">+ আরেকটি মেনু যোগ করুন</button>
+  </div>
+
+  <div class="font-size-control">
+    <span>প্রিন্ট ফন্ট সাইজ:</span>
+    <button onclick="changeFontSize(-1)" title="ছোট করুন">−</button>
+    <span id="font-size-display">১০০%</span>
+    <button onclick="changeFontSize(1)" title="বড় করুন">+</button>
+    <button onclick="changeFontSize(0)" title="স্বাভাবিক">রিসেট</button>
+  </div>
+
+  <div class="actions">
+    <button class="print-btn" onclick="doPrint()">🖨️ প্রিন্ট করুন</button>
+    <button class="save-btn" id="save-order-btn" onclick="saveOrder()">💾 সংরক্ষণ করুন</button>
+    <button class="history-btn" onclick="openHistoryPanel()">🕘 পূর্ববর্তী অর্ডার</button>
+    <button class="new-order-btn" onclick="startNewOrder()">➕ নতুন অর্ডার</button>
+    <button class="history-btn" onclick="openBajarList()">🛒 বাজার লিস্ট</button>
+  </div>
+
+  <div class="storage-note">আইটেম তালিকায় যোগ/মুছে ফেলা পরিবর্তনগুলো এই ব্রাউজারে সংরক্ষিত থাকবে।</div>
+
+  <div class="backup-row">
+    <button class="backup-btn" onclick="exportAllData()">⬇️ ব্যাকআপ ফাইল ডাউনলোড করুন</button>
+    <button class="backup-btn" onclick="document.getElementById('import-file-input').click()">⬆️ ব্যাকআপ থেকে পুনরুদ্ধার করুন</button>
+    <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importAllData(event)">
+  </div>
+</div>
+
+<!-- Hidden sheet that becomes visible only when printing -->
+<div id="print-sheet">
+  <div class="ps-info">
+    <div class="ps-left-col">
+      <div><span class="k">নাম:</span><span id="ps-name"></span></div>
+      <div id="ps-address-row"><span class="k">ঠিকানা:</span><span id="ps-address"></span></div>
+    </div>
+    <div class="ps-right-col">
+      <div><span class="k">তারিখ:</span><span id="ps-date"></span></div>
+      <div><span class="k">সময়:</span><span id="ps-time"></span></div>
+      <div><span class="k">স্থান:</span><span id="ps-place"></span></div>
+      <div><span class="k">অনুষ্ঠান:</span><span id="ps-program"></span></div>
+    </div>
+  </div>
+  <div id="ps-guest-global" class="ps-guest-global"></div>
+  <div id="ps-menu"></div>
+</div>
+
+<!-- Past orders panel -->
+<div id="history-overlay" class="history-overlay" onclick="if(event.target===this) closeHistoryPanel()">
+  <div class="history-panel">
+    <div class="history-panel-header">
+      <h2>পূর্ববর্তী অর্ডারসমূহ</h2>
+      <button class="history-close-btn" onclick="closeHistoryPanel()">✕</button>
+    </div>
+    <input type="text" id="history-search" class="history-search" placeholder="🔍 নাম বা অনুষ্ঠান দিয়ে খুঁজুন...">
+    <div id="history-list" class="history-list"></div>
+  </div>
+</div>
+
+<script>
+function toBanglaNum(str) {
+  const map = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+  return String(str).replace(/[0-9]/g, d => map[d]);
+}
+
+// Reads a guest-count field that may hold Bangla or Latin digits, or free text.
+// Set menus that have bajar-list recipes behind them.
+// KEEP IN SYNC with SET_MENUS in bajarlist.html -- the keys must match.
+const BAJAR_SET_MENUS = [
+  { key: 'standardKachi', label: 'স্ট্যান্ডার্ড কাচ্চি প্যাকেজ (৬ আইটেম)' }
+];
+
+function populateSetMenuField() {
+  const sel = document.getElementById('global-set-menu');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const none = document.createElement('option');
+  none.value = '';
+  none.textContent = '— প্রযোজ্য নয় —';
+  sel.appendChild(none);
+  // Packages created on the bajar list page are saved in this browser; include them.
+  const menus = BAJAR_SET_MENUS.slice();
+  try {
+    const saved = JSON.parse(localStorage.getItem('iqbal_catering_bajar_setmenus') || 'null');
+    if (saved && typeof saved === 'object') {
+      Object.keys(saved).forEach(k => {
+        const item = { key: k, label: saved[k].label };
+        const i = menus.findIndex(m => m.key === k);
+        if (i === -1) menus.push(item); else menus[i] = item;
+      });
+    }
+  } catch (e) { /* storage off: built-in list only */ }
+  menus.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.key;
+    opt.textContent = m.label;
+    sel.appendChild(opt);
+  });
+}
+
+function toLatinNumber(str) {
+  if (!str) return 0;
+  const map = {'০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+  const latin = String(str).replace(/[০-৯]/g, d => map[d]);
+  const match = latin.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
+
+// Hands the current order over to the bajar list generator. The recipe matching
+// lives in bajarlist.html, so we pass the raw selected item names through.
+function openBajarList() {
+  const data = gatherOrderData();
+
+  if (!data.setMenu) {
+    alert('এই অর্ডারের জন্য বাজার লিস্ট প্রযোজ্য নয়।\n'
+      + 'বাজার লিস্ট লাগলে উপরে "সেট মেনু" বাছাই করুন।');
+    return;
+  }
+
+  const itemNames = [];
+  data.categories.forEach(cat => cat.items.forEach(it => itemNames.push(it.name)));
+
+  if (itemNames.length === 0) {
+    alert('বাজার লিস্ট তৈরি করতে অন্তত একটি মেনু আইটেম বাছাই করুন।');
+    return;
+  }
+
+  const guests = toLatinNumber(data.guestVip) + toLatinNumber(data.guestPacket);
+  const params = new URLSearchParams();
+  if (data.date) params.set('date', data.date);
+  if (data.place) params.set('place', data.place);
+  const label = [data.name, data.program].filter(Boolean).join(' — ');
+  if (label) params.set('label', label);
+  if (guests > 0) params.set('guests', String(guests));
+  params.set('setMenu', data.setMenu);
+  params.set('items', JSON.stringify(itemNames));
+
+  window.open('bajarlist.html?' + params.toString(), '_blank');
+}
+
+const STORAGE_KEY = 'iqbal_catering_menu_items';
+const CATEGORIES = ["ভি.আই.পি মেনু", "এক্সট্রা মেনু", "প্যাকেট মেনু"];
+
+const DEFAULT_MENU = {
+  "ভি.আই.পি মেনু": [
+    "শাহী মাটন কাচ্চি বিরিয়ানী (চিনিগুড়া)",
+    "চিকেন রোস্ট",
+    "শাহী শেরওয়ানী রুটি",
+    "বিফ কালিয়া",
+    "বোরহানী",
+    "শাহী জর্দা+মিষ্টি গুটি",
+    "আলু বোখারার চাটনী",
+    "পিছ সালাদ",
+    "মিনারেল ওয়াটার",
+    "শাহী পান বক্স",
+    "টিস্যু, তাওয়েল, সাবান, ইত্যাদি",
+    "আস্ত খাশীর রোস্ট",
+    "চিকেন সাসলিক",
+    "ভেটকী গ্রীল"
+  ],
+  "এক্সট্রা মেনু": [
+    "মোরগ পোলাও",
+    "খাসির রেজালা",
+    "সালাদ",
+    "মিষ্টি"
+  ],
+  "প্যাকেট মেনু": [
+    "শাহী মাটন কাচ্চি বিরিয়ানী (চিনিগুড়া)",
+    "চিকেন রোস্ট",
+    "মজো ২৫০ মিঃ",
+    "প্লাস্টিক গোল বক্স + চামচ",
+    "কাপড়ের ব্যাগ"
+  ]
+};
+
+function loadMenu() {
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) { /* ignore, fall back to defaults */ }
+
+  if (!saved) return JSON.parse(JSON.stringify(DEFAULT_MENU));
+
+  // Merge: keep any real customizations, but if a built-in category came out
+  // empty (e.g. from stale/leftover browser data), restore its built-in items
+  // instead of silently showing an empty list.
+  const merged = {};
+  Object.keys(DEFAULT_MENU).forEach(cat => {
+    merged[cat] = (saved[cat] && saved[cat].length > 0) ? saved[cat] : JSON.parse(JSON.stringify(DEFAULT_MENU[cat]));
+  });
+  Object.keys(saved).forEach(cat => {
+    if (!merged[cat] && saved[cat] && saved[cat].length > 0) {
+      merged[cat] = saved[cat];
+    }
+  });
+  return merged;
+}
+
+function saveMenu() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(menuLibrary));
+  } catch (e) { console.error('Could not save item list:', e); }
+}
+
+let menuLibrary = loadMenu();
+let blockCounter = 0;
+let menuBlocks = [];
+let globalGuestCount = { vip: '', packet: '' };
+let currentEditId = null;
+
+function addMenuBlock(category) {
+  blockCounter++;
+  menuBlocks.push({ id: blockCounter, category: category || CATEGORIES[0] });
+  renderMenuBlocks();
+}
+
+function removeMenuBlock(id) {
+  menuBlocks = menuBlocks.filter(b => b.id !== id);
+  renderMenuBlocks();
+}
+
+function captureBlockState() {
+  const g1 = document.getElementById('global-guest-vip');
+  const g2 = document.getElementById('global-guest-packet');
+  if (g1) globalGuestCount.vip = g1.value;
+  if (g2) globalGuestCount.packet = g2.value;
+
+  document.querySelectorAll('.menu-block').forEach(blockEl => {
+    const blockId = Number(blockEl.dataset.blockId);
+    const block = menuBlocks.find(b => b.id === blockId);
+    if (!block) return;
+    block.checked = new Set();
+    block.comments = {};
+    blockEl.querySelectorAll('.item-check').forEach(chk => {
+      if (chk.checked) block.checked.add(chk.getAttribute('data-item'));
+    });
+    blockEl.querySelectorAll('.comment').forEach(inp => {
+      if (inp.value.trim()) block.comments[inp.getAttribute('data-item')] = inp.value;
+    });
+  });
+}
+
+function renderMenuBlocks() {
+  captureBlockState();
+  const container = document.getElementById('menu-blocks');
+  container.innerHTML = '';
+
+  menuBlocks.forEach(block => {
+    if (!block.checked) block.checked = new Set();
+    if (!block.comments) block.comments = {};
+
+    const items = menuLibrary[block.category] || [];
+
+    const blockEl = document.createElement('div');
+    blockEl.className = 'menu-block';
+    blockEl.dataset.blockId = block.id;
+
+    const header = document.createElement('div');
+    header.className = 'menu-block-header';
+
+    const select = document.createElement('select');
+    select.className = 'category-select';
+    const blankOpt = document.createElement('option');
+    blankOpt.value = '';
+    blankOpt.textContent = 'তালিকা থেকে বাছুন';
+    select.appendChild(blankOpt);
+    CATEGORIES.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    });
+    header.appendChild(select);
+
+    const catInput = document.createElement('input');
+    catInput.type = 'text';
+    catInput.className = 'category-input';
+    catInput.placeholder = 'অথবা মেনুর নাম লিখুন';
+    catInput.value = block.category;
+    catInput.addEventListener('change', () => {
+      block.category = catInput.value.trim() || block.category;
+      renderMenuBlocks();
+    });
+    header.appendChild(catInput);
+
+    select.addEventListener('change', () => {
+      if (select.value) {
+        block.category = select.value;
+        renderMenuBlocks();
+      }
+    });
+
+    if (menuBlocks.length > 1) {
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-block-btn';
+      removeBtn.textContent = '✕ এই মেনু মুছুন';
+      removeBtn.onclick = () => removeMenuBlock(block.id);
+      header.appendChild(removeBtn);
+    }
+
+    blockEl.appendChild(header);
+
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'item-search';
+    searchInput.placeholder = '🔍 আইটেম খুঁজুন...';
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      list.querySelectorAll('.item-row').forEach(row => {
+        const name = row.querySelector('.item-check').getAttribute('data-item').toLowerCase();
+        row.style.display = name.includes(q) ? '' : 'none';
+      });
+    });
+    blockEl.appendChild(searchInput);
+
+    const list = document.createElement('div');
+    list.className = 'item-list';
+
+    // Display checked items first (permanent library order is untouched)
+    const displayItems = items.slice().sort((a, b) => {
+      const aChecked = block.checked.has(a) ? 0 : 1;
+      const bChecked = block.checked.has(b) ? 0 : 1;
+      return aChecked - bChecked;
+    });
+
+    displayItems.forEach(name => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.setAttribute('draggable', 'true');
+      row.innerHTML = `
+        <span class="drag-handle">⠿</span>
+        <label>
+          <input type="checkbox" class="item-check" data-item="${name}">
+          ${name}
+        </label>
+        <input type="text" class="comment" placeholder="মন্তব্য" data-item="${name}">
+        <button class="item-edit-btn" title="সম্পাদনা করুন">✎</button>
+        <button class="item-delete-btn" title="মুছে ফেলুন">🗑</button>
+      `;
+      row.querySelector('.item-check').checked = block.checked.has(name);
+      row.querySelector('.comment').value = block.comments[name] || '';
+      row.querySelector('.item-edit-btn').onclick = () => editItem(block.category, name);
+      row.querySelector('.item-delete-btn').onclick = () => deleteItem(block.category, name);
+      row.querySelector('.item-check').addEventListener('change', () => renderMenuBlocks());
+
+      row.addEventListener('dragstart', () => row.classList.add('dragging'));
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        const newOrder = Array.from(list.querySelectorAll('.item-row')).map(r => r.querySelector('.item-check').getAttribute('data-item'));
+        menuLibrary[block.category] = newOrder;
+        saveMenu();
+      });
+
+      list.appendChild(row);
+    });
+
+    list.addEventListener('dragover', e => {
+      e.preventDefault();
+      const dragging = list.querySelector('.dragging');
+      if (!dragging) return;
+      const afterElement = getDragAfterElement(list, e.clientY);
+      if (afterElement == null) {
+        list.appendChild(dragging);
+      } else {
+        list.insertBefore(dragging, afterElement);
+      }
+    });
+
+    blockEl.appendChild(list);
+
+    const addRow = document.createElement('div');
+    addRow.className = 'add-item-row';
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.placeholder = 'নতুন আইটেম যোগ করুন (স্থায়ীভাবে সংরক্ষিত হবে)';
+    addInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { addItem(block.category, addInput.value); addInput.value = ''; }
+    });
+    const addBtn = document.createElement('button');
+    addBtn.textContent = 'যোগ করুন';
+    addBtn.onclick = () => { addItem(block.category, addInput.value); addInput.value = ''; };
+    addRow.appendChild(addInput);
+    addRow.appendChild(addBtn);
+    blockEl.appendChild(addRow);
+
+    container.appendChild(blockEl);
+  });
+
+  const g1 = document.getElementById('global-guest-vip');
+  const g2 = document.getElementById('global-guest-packet');
+  if (g1) g1.value = globalGuestCount.vip;
+  if (g2) g2.value = globalGuestCount.packet;
+}
+
+function getDragAfterElement(container, y) {
+  const elements = [...container.querySelectorAll('.item-row:not(.dragging)')];
+  return elements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function addItem(category, name) {
+  const val = (name || '').trim();
+  if (!val) return;
+  if (!menuLibrary[category]) menuLibrary[category] = [];
+  if (menuLibrary[category].includes(val)) return;
+  menuLibrary[category].push(val);
+  saveMenu();
+  renderMenuBlocks();
+}
+
+function editItem(category, oldName) {
+  const newName = prompt('আইটেমের নতুন নাম লিখুন:', oldName);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) return;
+  const idx = menuLibrary[category].indexOf(oldName);
+  if (idx !== -1) {
+    menuLibrary[category][idx] = trimmed;
+    saveMenu();
+    renderMenuBlocks();
+  }
+}
+
+function deleteItem(category, name) {
+  if (!confirm('"' + name + '" তালিকা থেকে স্থায়ীভাবে মুছে ফেলতে চান?')) return;
+  menuLibrary[category] = menuLibrary[category].filter(i => i !== name);
+  saveMenu();
+  renderMenuBlocks();
+}
+
+// ---------- Order history (saved locally in this browser) ----------
+const HISTORY_KEY = 'iqbal_catering_order_history';
+
+function loadHistory() {
+  try {
+    const saved = localStorage.getItem(HISTORY_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) { /* ignore */ }
+  return [];
+}
+
+function saveOrderToHistory(order) {
+  const history = loadHistory();
+  history.unshift(order);
+  if (history.length > 300) history.length = 300;
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch (e) { console.error('Could not save order history:', e); }
+}
+
+function updateOrderInHistory(order) {
+  const history = loadHistory();
+  const idx = history.findIndex(o => o.id === order.id);
+  if (idx !== -1) {
+    history[idx] = order;
+  } else {
+    history.unshift(order);
+  }
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch (e) { console.error('Could not save order history:', e); }
+}
+
+function deleteHistoryOrder(id) {
+  if (!confirm('এই অর্ডারটি ইতিহাস থেকে স্থায়ীভাবে মুছে ফেলতে চান?')) return;
+  const history = loadHistory().filter(o => o.id !== id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  renderHistoryPanel();
+}
+
+function gatherOrderData() {
+  const categories = [];
+  document.querySelectorAll('.menu-block').forEach(blockEl => {
+    const blockId = Number(blockEl.dataset.blockId);
+    const block = menuBlocks.find(b => b.id === blockId);
+    const checks = blockEl.querySelectorAll('.item-check:checked');
+    if (checks.length === 0) return;
+
+    const items = [];
+    checks.forEach(chk => {
+      const name = chk.getAttribute('data-item');
+      const commentInput = blockEl.querySelector('.comment[data-item="' + CSS.escape(name) + '"]');
+      items.push({ name: name, comment: commentInput ? commentInput.value.trim() : '' });
+    });
+    categories.push({ category: block.category, items: items });
+  });
+
+  return {
+    id: String(Date.now()),
+    savedAt: new Date().toISOString(),
+    name: document.getElementById('cust-name').value.trim(),
+    address: document.getElementById('cust-address').value.trim(),
+    date: document.getElementById('cust-date').value,
+    time: document.getElementById('cust-time').value,
+    place: document.getElementById('cust-place').value.trim(),
+    program: document.getElementById('cust-program').value.trim(),
+    guestVip: document.getElementById('global-guest-vip').value.trim(),
+    guestPacket: document.getElementById('global-guest-packet').value.trim(),
+    setMenu: document.getElementById('global-set-menu').value,
+    categories: categories
+  };
+}
+
+function renderPrintSheet(order) {
+  applyPrintFontScale();
+  document.getElementById('ps-name').textContent = order.name || '—';
+  document.getElementById('ps-address').textContent = order.address || '';
+  document.getElementById('ps-address-row').style.display = order.address ? '' : 'none';
+  document.getElementById('ps-date').textContent = order.date ? toBanglaNum(order.date.split('-').reverse().join('/')) : '—';
+  document.getElementById('ps-time').textContent = order.time || '—';
+  document.getElementById('ps-place').textContent = order.place || '—';
+  document.getElementById('ps-program').textContent = order.program || '—';
+
+  const psGuest = document.getElementById('ps-guest-global');
+  let guestHtml = '';
+  if (order.guestVip || order.guestPacket) {
+    guestHtml = '<strong>লোক সংখ্যা:</strong>';
+    if (order.guestVip) guestHtml += ' <strong>' + toBanglaNum(order.guestVip) + '</strong> ভি.আই.পি';
+    if (order.guestPacket) guestHtml += (order.guestVip ? ' এবং' : '') + ' <strong>' + toBanglaNum(order.guestPacket) + '</strong> প্যাকেট';
+  }
+  psGuest.innerHTML = guestHtml;
+
+  const psMenu = document.getElementById('ps-menu');
+  psMenu.innerHTML = '';
+  psMenu.className = '';
+
+  if (!order.categories || order.categories.length === 0) {
+    psMenu.innerHTML = '<div style="text-align:center;">কোনো আইটেম নির্বাচন করা হয়নি</div>';
+    return;
+  }
+
+  psMenu.className = order.categories.length === 1 ? 'ps-menu-single' : 'ps-menu-grid';
+
+  order.categories.forEach(cat => {
+    const blockDiv = document.createElement('div');
+    blockDiv.className = 'ps-menu-block';
+
+    const catHeading = document.createElement('div');
+    catHeading.className = 'ps-category';
+    catHeading.innerHTML = cat.category + ' -';
+    blockDiv.appendChild(catHeading);
+
+    cat.items.forEach((item, i) => {
+      const line = document.createElement('div');
+      line.className = 'ps-item-line';
+      line.innerHTML = '<span class="ps-item-name">' + toBanglaNum(i + 1) + '। ' + item.name + '</span>' + (item.comment ? '<span class="ps-item-comment">' + item.comment + '</span>' : '');
+      blockDiv.appendChild(line);
+    });
+
+    psMenu.appendChild(blockDiv);
+  });
+}
+
+function doPrint() {
+  const order = gatherOrderData();
+  renderPrintSheet(order);
+  window.print();
+}
+
+function saveOrder() {
+  const order = gatherOrderData();
+
+  if (currentEditId) {
+    order.id = currentEditId;
+    updateOrderInHistory(order);
+  } else {
+    saveOrderToHistory(order);
+    currentEditId = order.id;
+  }
+
+  const btn = document.getElementById('save-order-btn');
+  const original = btn.textContent;
+  btn.textContent = '✓ সংরক্ষিত হয়েছে';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+function startNewOrder() {
+  if (currentEditId) {
+    const wantsSave = confirm('বর্তমান অর্ডারে পরিবর্তন সংরক্ষণ করতে চান?\n\n"OK" চাপলে সংরক্ষণ হবে, "Cancel" চাপলে সংরক্ষণ ছাড়াই নতুন অর্ডার শুরু হবে।');
+    if (wantsSave) saveOrder();
+  } else {
+    if (!confirm('একটি নতুন অর্ডারের জন্য বর্তমান ফর্মটি খালি করতে চান?')) return;
+  }
+
+  document.getElementById('cust-name').value = '';
+  document.getElementById('cust-address').value = '';
+  document.getElementById('cust-date').value = '';
+  document.getElementById('cust-time').value = '';
+  document.getElementById('cust-place').value = '';
+  document.getElementById('cust-program').value = '';
+  document.getElementById('global-set-menu').value = '';
+  document.getElementById('global-guest-vip').value = '';
+  document.getElementById('global-guest-packet').value = '';
+  globalGuestCount.vip = '';
+  globalGuestCount.packet = '';
+
+  blockCounter = 0;
+  menuBlocks = [];
+  document.getElementById('menu-blocks').innerHTML = '';
+  addMenuBlock(CATEGORIES[0]);
+
+  currentEditId = null;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function editHistoryOrder(id) {
+  const order = loadHistory().find(o => o.id === id);
+  if (!order) return;
+
+  currentEditId = id;
+
+  document.getElementById('cust-name').value = order.name || '';
+  document.getElementById('cust-address').value = order.address || '';
+  document.getElementById('cust-date').value = order.date || '';
+  document.getElementById('cust-time').value = order.time || '';
+  document.getElementById('cust-place').value = order.place || '';
+  document.getElementById('cust-program').value = order.program || '';
+  document.getElementById('global-set-menu').value = order.setMenu || '';
+
+  // Set DOM first so any state-capture during render reads the new values, not stale ones
+  document.getElementById('global-guest-vip').value = order.guestVip || '';
+  document.getElementById('global-guest-packet').value = order.guestPacket || '';
+  globalGuestCount.vip = order.guestVip || '';
+  globalGuestCount.packet = order.guestPacket || '';
+
+  blockCounter = 0;
+  menuBlocks = [];
+  (order.categories || []).forEach(cat => {
+    blockCounter++;
+    const checkedSet = new Set();
+    const commentsObj = {};
+    (cat.items || []).forEach(it => {
+      checkedSet.add(it.name);
+      if (it.comment) commentsObj[it.name] = it.comment;
+      // make sure the item still exists in the permanent library so it shows up
+      if (!menuLibrary[cat.category]) menuLibrary[cat.category] = [];
+      if (!menuLibrary[cat.category].includes(it.name)) {
+        menuLibrary[cat.category].push(it.name);
+      }
+    });
+    menuBlocks.push({ id: blockCounter, category: cat.category, checked: checkedSet, comments: commentsObj });
+  });
+
+  if (menuBlocks.length === 0) {
+    blockCounter++;
+    menuBlocks.push({ id: blockCounter, category: CATEGORIES[0] });
+  }
+
+  saveMenu();
+  document.getElementById('menu-blocks').innerHTML = '';
+  renderMenuBlocks();
+  closeHistoryPanel();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function reprintOrder(id) {
+  const order = loadHistory().find(o => o.id === id);
+  if (!order) return;
+  renderPrintSheet(order);
+  window.print();
+}
+
+function openHistoryPanel() {
+  document.getElementById('history-overlay').classList.add('open');
+  document.getElementById('history-search').value = '';
+  renderHistoryPanel();
+}
+
+function closeHistoryPanel() {
+  document.getElementById('history-overlay').classList.remove('open');
+}
+
+function renderHistoryPanel() {
+  const listEl = document.getElementById('history-list');
+  const query = (document.getElementById('history-search').value || '').trim().toLowerCase();
+  const history = loadHistory();
+
+  const filtered = history.filter(o => {
+    if (!query) return true;
+    return (o.name || '').toLowerCase().includes(query) || (o.program || '').toLowerCase().includes(query);
+  });
+
+  listEl.innerHTML = '';
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div class="history-empty">কোনো সংরক্ষিত অর্ডার পাওয়া যায়নি</div>';
+    return;
+  }
+
+  filtered.forEach(order => {
+    const dateDisplay = order.date ? toBanglaNum(order.date.split('-').reverse().join('/')) : '—';
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `
+      <div class="history-item-info">
+        <div class="h-name">${order.name || 'নাম নেই'}</div>
+        <div class="h-meta">${dateDisplay}${order.program ? ' · ' + order.program : ''}${order.place ? ' · ' + order.place : ''}</div>
+      </div>
+      <div class="history-item-actions">
+        <button class="history-edit-btn">✎ আপডেট</button>
+        <button class="history-reprint-btn">প্রিন্ট করুন</button>
+        <button class="history-delete-btn">🗑 মুছুন</button>
+      </div>
+    `;
+    item.querySelector('.history-edit-btn').onclick = () => editHistoryOrder(order.id);
+    item.querySelector('.history-reprint-btn').onclick = () => reprintOrder(order.id);
+    item.querySelector('.history-delete-btn').onclick = () => deleteHistoryOrder(order.id);
+    listEl.appendChild(item);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('history-search');
+  if (searchInput) searchInput.addEventListener('input', renderHistoryPanel);
+});
+
+function exportAllData() {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    menuLibrary: menuLibrary,
+    orderHistory: loadHistory()
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = 'iqbal_catering_backup_' + dateStr + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importAllData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const backup = JSON.parse(reader.result);
+      if (!backup.menuLibrary) throw new Error('invalid file');
+
+      if (!confirm('এই ব্যাকআপ ফাইল থেকে আইটেম তালিকা ও অর্ডার ইতিহাস পুনরুদ্ধার করতে চান? বর্তমান তথ্য প্রতিস্থাপিত হবে।')) {
+        event.target.value = '';
+        return;
+      }
+
+      menuLibrary = backup.menuLibrary;
+      saveMenu();
+
+      if (backup.orderHistory) {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(backup.orderHistory));
+      }
+
+      blockCounter = 0;
+      menuBlocks = [];
+      document.getElementById('menu-blocks').innerHTML = '';
+      addMenuBlock(CATEGORIES[0]);
+
+      alert('পুনরুদ্ধার সম্পন্ন হয়েছে।');
+    } catch (e) {
+      alert('ফাইলটি পড়া যায়নি। সঠিক ব্যাকআপ ফাইল বেছে নিন।');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ---------- Print font size control ----------
+const FONT_SCALE_KEY = 'iqbal_catering_print_font_scale';
+let printFontScale = 100;
+
+function loadFontScale() {
+  try {
+    const saved = localStorage.getItem(FONT_SCALE_KEY);
+    if (saved) printFontScale = parseInt(saved, 10) || 100;
+  } catch (e) { /* ignore */ }
+  updateFontScaleDisplay();
+}
+
+function updateFontScaleDisplay() {
+  const display = document.getElementById('font-size-display');
+  if (display) display.textContent = toBanglaNum(printFontScale) + '%';
+}
+
+function applyPrintFontScale() {
+  const sheet = document.getElementById('print-sheet');
+  if (sheet) sheet.style.zoom = (printFontScale / 100);
+}
+
+function changeFontSize(direction) {
+  if (direction === 0) {
+    printFontScale = 100;
+  } else {
+    printFontScale += direction * 10;
+    if (printFontScale < 70) printFontScale = 70;
+    if (printFontScale > 160) printFontScale = 160;
+  }
+  try { localStorage.setItem(FONT_SCALE_KEY, String(printFontScale)); } catch (e) { /* ignore */ }
+  updateFontScaleDisplay();
+}
+
+populateSetMenuField();
+loadFontScale();
+addMenuBlock(CATEGORIES[0]);
+</script>
+
+</body>
+</html>

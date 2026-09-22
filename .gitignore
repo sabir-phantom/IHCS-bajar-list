@@ -1,0 +1,10 @@
+# The data file holds real customer order history — never commit it.
+bajar-data.json
+*-backup*.json
+bajar-per100-backup.json
+iqbal_catering_backup_*.json
+
+# OS / editor noise
+Thumbs.db
+desktop.ini
+.DS_Store

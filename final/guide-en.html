@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iqbal Hossain Catering — System Guide (English)</title>
+<style>
+  :root {
+    --maroon-dark: #5c1626; --maroon: #7d1f34; --gold: #b8892f; --gold-light: #e8d9a0;
+    --navy: #1b3455; --navy-dark: #10233b; --navy-light: #dbe6f0;
+    --cream-bg: #f8f5ee; --cream-card: #fffdf9; --green: #1f7a63;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px; background: var(--cream-bg); color: #2b2620;
+    font-family: 'Segoe UI', 'Kalpurush', 'Nirmala UI', system-ui, sans-serif;
+    font-size: 16px; line-height: 1.65;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; background: var(--cream-card);
+    border-radius: 12px; box-shadow: 0 8px 28px rgba(27,52,85,.14); padding: 0 32px 40px; overflow: hidden; }
+  .topbar { height: 8px; background: var(--navy-dark); margin: 0 -32px; }
+  .goldbar { height: 5px; margin: 0 -32px 28px;
+    background: linear-gradient(90deg, var(--navy), var(--gold), var(--navy)); }
+  h1 { font-size: 26px; color: var(--navy-dark); margin: 8px 0 4px; }
+  .sub { color: #7a6a4d; margin: 0 0 8px; }
+  .lang { font-size: 14px; color: #7a6a4d; margin-bottom: 24px; }
+  .lang a { color: var(--maroon); }
+  h2 { font-size: 21px; color: var(--maroon-dark); margin: 34px 0 10px;
+    border-bottom: 2px solid var(--gold-light); padding-bottom: 6px; }
+  h3 { font-size: 17px; color: var(--navy-dark); margin: 22px 0 6px; }
+  p, li { margin: 8px 0; }
+  ul, ol { padding-left: 22px; }
+  code { background: #f3ecdb; padding: 1px 6px; border-radius: 4px; font-size: 14px;
+    font-family: Consolas, monospace; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+  th, td { border: 1px solid #e6ddc6; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #faf2df; color: #7a6a4d; }
+  .note { background: #fdf6e3; border: 1px solid var(--gold-light); border-left: 4px solid var(--gold);
+    border-radius: 6px; padding: 12px 16px; margin: 16px 0; }
+  .warn { background: #fdf0ef; border-color: #e9c3bd; border-left-color: #b1442f; }
+  .ok { background: #eef6f2; border-color: #cfe5dc; border-left-color: var(--green); }
+  .toc { background: #f7f2e4; border-radius: 8px; padding: 14px 20px; }
+  .toc ol { margin: 6px 0; }
+  kbd { background: #fff; border: 1px solid #d8cdb5; border-bottom-width: 2px; border-radius: 4px;
+    padding: 1px 6px; font-size: 14px; }
+  footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--gold-light);
+    font-size: 14px; color: #a3906a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"></div><div class="goldbar"></div>
+
+  <h1>Iqbal Hossain Catering — System Guide</h1>
+  <p class="sub">How the order form and the bajar list work, and how to look after your data.</p>
+  <p class="lang">বাংলায় পড়তে: <a href="guide-bn.html">guide-bn.html</a></p>
+
+  <div class="toc">
+    <strong>Contents</strong>
+    <ol>
+      <li><a href="#what">What this system is</a></li>
+      <li><a href="#daily">Everyday use</a></li>
+      <li><a href="#bajar">The bajar list page</a></li>
+      <li><a href="#packages">Set menu packages</a></li>
+      <li><a href="#recipes">The recipe library</a></li>
+      <li><a href="#printing">Printing</a></li>
+      <li><a href="#data">Your data and backups</a></li>
+      <li><a href="#trouble">If something goes wrong</a></li>
+      <li><a href="#tech">Technical reference</a></li>
+      <li><a href="#verify">Numbers still to confirm</a></li>
+    </ol>
+  </div>
+
+  <h2 id="what">1. What this system is</h2>
+  <p>Two web pages that live on your computer as ordinary files. You open them by double-clicking. There is no server, no login, no installation, and <strong>no internet needed</strong> — the fonts are stored inside the files themselves.</p>
+
+  <table>
+    <tr><th>File</th><th>What it does</th></tr>
+    <tr><td><code>order_form.html</code></td><td>Takes a customer's order, saves it to history, prints the order sheet, and hands the order to the bajar list.</td></tr>
+    <tr><td><code>bajarlist.html</code></td><td>Turns an order into a market shopping list, calculated from recipes, and prints it on your three standard forms.</td></tr>
+    <tr><td><code>bajar-data.json</code></td><td>Optional but recommended. One file holding everything both pages save. See <a href="#data">section 7</a>.</td></tr>
+    <tr><td><code>old/</code></td><td>Earlier versions of the order form, kept only for reference.</td></tr>
+  </table>
+
+  <div class="warn">
+    <strong>Do this once before anything else — set up the data file.</strong>
+    Without it, your order history and every change you make live only in this browser,
+    and clearing browsing data wipes them.
+    <ol style="margin:8px 0 0">
+      <li>Open <code>bajarlist.html</code>, scroll to the bar at the bottom, click
+        <strong>নতুন ডেটা ফাইল তৈরি করুন</strong>.</li>
+      <li>Save it beside the HTML files, keeping the name <code>bajar-data.json</code>.</li>
+      <li>Open <code>order_form.html</code>, and on its bar click
+        <strong>ডেটা ফাইল খুলুন</strong> and pick that same file.</li>
+      <li>Both bars should show a green dot. Done — every change now saves to the file.</li>
+    </ol>
+    <p style="margin:8px 0 0">Needs Chrome or Edge. Full details in <a href="#data">section 7</a>.</p>
+  </div>
+
+  <h2 id="daily">2. Everyday use</h2>
+  <ol>
+    <li>Open <code>order_form.html</code> and fill in the customer, date, venue and headcount (ভি.আই.পি and প্যাকেট).</li>
+    <li>Pick a <strong>সেট মেনু</strong> next to the headcount, if this order needs a market list.</li>
+    <li>Tick the menu items. Checked items move to the top of each block.</li>
+    <li><kbd>💾 সংরক্ষণ করুন</kbd> saves the order to history. <kbd>🖨️ প্রিন্ট করুন</kbd> prints the order sheet.</li>
+    <li><kbd>🛒 বাজার লিস্ট</kbd> opens the bajar list with this order's headcount, date, venue and set menu already filled in.</li>
+    <li>Check the quantities, correct anything that looks wrong, then print.</li>
+  </ol>
+  <div class="note">If no set menu is chosen, the 🛒 button refuses and says so. That is deliberate: not every order needs a market list.</div>
+
+  <h2 id="bajar">3. The bajar list page</h2>
+
+  <h3>Header</h3>
+  <p>Date, venue, event name and <strong>লোকসংখ্যা</strong> (headcount). Everything is calculated from the headcount: recipes are stored per 100 people and scaled. Type 250 and every amount becomes two and a half times the per-100 figure.</p>
+
+  <h3>The review table</h3>
+  <p>Three tables, one per printed form. Each row has:</p>
+  <table>
+    <tr><th>Column</th><th>Meaning</th></tr>
+    <tr><td>দ্রব্যের নাম</td><td>The item name. Click to rename it.</td></tr>
+    <tr><td>প্রতি ১০০ জনে</td><td>The amount for 100 people. Changing this rescales the order amount.</td></tr>
+    <tr><td>এই অর্ডারে</td><td>The amount for this order. Changing this is a one-off and does not change the recipe.</td></tr>
+    <tr><td>একক</td><td>Unit: কেজি, গ্রাম, লিটার, মিলি, পিছ, পাউন্ড.</td></tr>
+  </table>
+
+  <h3>The ▸ arrow</h3>
+  <p>Every ingredient that comes from a recipe has a small arrow before its name. Click it to see which dishes use that ingredient and how much each contributes:</p>
+  <div class="ok">
+    <strong>দুধ ▾</strong><br>
+    কাচ্চি — ৭৫০ গ্রাম<br>
+    চিকেন রোস্ট — ২৫০ গ্রাম<br>
+    <strong>রেসিপি অনুযায়ী মোট — ১ কেজি</strong>
+  </div>
+  <p>If you typed your own number into that row, a red line appears saying the handwritten value is being used instead of the recipe total. An ingredient with no arrow does not come from any recipe.</p>
+
+  <h3>Rows with no quantity</h3>
+  <p>They are folded away behind <strong>"▸ পরিমাণ নেই — … টি সারি (দেখান)"</strong>. Click to show them. They never print.</p>
+
+  <h3>Changing the forms</h3>
+  <ul>
+    <li><strong>Rename</strong> any item, heading or sheet title by clicking the text.</li>
+    <li><strong>Change a unit</strong> with the dropdown in the একক column.</li>
+    <li><strong>Add a row or heading</strong> with <kbd>+ নতুন সারি</kbd> / <kbd>+ নতুন উপশিরোনাম</kbd>. The <strong>কোথায়</strong> dropdown next to them chooses where it goes: at the top, under any heading, or at the end.</li>
+    <li><strong>Delete</strong> rows you added with the red ✕. Original form rows have no ✕ so they cannot be deleted by accident.</li>
+    <li><kbd>↺ ফর্ম আগের অবস্থায় ফেরান</kbd> at the bottom undoes all form changes.</li>
+  </ul>
+
+  <h2 id="packages">4. Set menu packages</h2>
+  <p>A package is a named group of dishes, for example স্ট্যান্ডার্ড কাচ্চি প্যাকেজ. The order form's সেট মেনু dropdown lists them.</p>
+  <ul>
+    <li><kbd>+ নতুন প্যাকেজ</kbd> — give it a name, tick its dishes, tick its dessert options (জদ্দা, ফির্নি, both or neither).</li>
+    <li><kbd>✎ সম্পাদনা</kbd> — change the selected package.</li>
+    <li><kbd>প্যাকেজ মুছুন</kbd> — only for packages you created. The original one cannot be deleted.</li>
+  </ul>
+  <p><strong>A package with no recipes still works.</strong> Create it, type the amounts into the প্রতি ১০০ জনে column, then press <kbd>💾 এই সেট মেনুর ডিফল্ট হিসেবে সংরক্ষণ</kbd>. From then on that package fills itself in.</p>
+
+  <h2 id="recipes">5. The recipe library</h2>
+  <p>Below the package box. It holds all 28 dishes. Changing a recipe changes every package that uses it.</p>
+  <ul>
+    <li><kbd>+ নতুন রেসিপি</kbd> — name the dish, tick "এটি একটি মিষ্টান্ন" if it is a dessert, then add ingredients. Each ingredient picks a form row, an amount per 100 people, and a unit.</li>
+    <li><kbd>✎ সম্পাদনা</kbd> on any recipe to change it.</li>
+    <li><kbd>মূল রেসিপিতে ফেরান</kbd> undoes your changes to a built-in recipe.</li>
+    <li><kbd>রেসিপি মুছুন</kbd> only appears for recipes you created. Deleting one also removes it from any package that used it, and the confirmation names those packages.</li>
+  </ul>
+  <div class="note"><strong>Why ingredients pick a row rather than free text:</strong> every ingredient must land on a row of the printed form, so that two dishes using the same item add up into one line instead of being bought twice.</div>
+
+  <h2 id="printing">6. Printing</h2>
+  <ul>
+    <li>Three sheets print, in this order: <strong>পার্টি বাজার লিস্ট</strong>, <strong>সবজী</strong>, <strong>বাজার লিস্ট</strong>.</li>
+    <li><strong>Only rows with a quantity print.</strong> Empty rows are left out and the numbering runs 1, 2, 3 down the printed rows.</li>
+    <li><strong>Price columns are not printed</strong> (দর, টাকা, মোট টাকা) — the buyer writes prices at the market.</li>
+    <li><strong>Long sheets switch to two columns</strong> on the same page so a category never spills onto a second page. Past 22 rows it goes two-column; past 56 the text tightens further. All of it was measured against A4.</li>
+    <li>A heading with nothing under it is dropped automatically.</li>
+  </ul>
+  <div class="note">Print from Chrome or Edge, paper size A4, margins "Default". Do a test print once on your own printer, as printers differ slightly.</div>
+
+  <h2 id="data">7. Your data and backups</h2>
+  <p>There are three layers. Understanding them is the difference between safe and sorry.</p>
+
+  <h3>Layer 1 — inside the files</h3>
+  <p>The 28 recipes, the form rows and the standard package are written inside <code>bajarlist.html</code>. They survive anything, including a new computer.</p>
+
+  <h3>Layer 2 — browser storage</h3>
+  <p>Everything <em>you</em> change is saved by the browser on that one computer: recipes you add, packages, saved per-100 values, form edits, your menu library and <strong>your whole order history</strong>.</p>
+  <div class="warn"><strong>This layer is fragile.</strong> Clearing browsing data, a Windows reinstall or a different browser and it is gone. That is what layer 3 is for.</div>
+
+  <h3>Layer 3 — the data file (recommended)</h3>
+  <p>One file, <code>bajar-data.json</code>, holding everything both pages save. Set it up once:</p>
+  <ol>
+    <li>Open <code>bajarlist.html</code>, scroll to the bar at the bottom, click <strong>নতুন ডেটা ফাইল তৈরি করুন</strong>.</li>
+    <li>Save it next to your HTML files, keeping the name <code>bajar-data.json</code>.</li>
+    <li>Open <code>order_form.html</code> and click <strong>ডেটা ফাইল খুলুন</strong> on its bar, choosing the same file.</li>
+  </ol>
+  <p>From then on every change is written to the file within half a second, and the dot in the bar turns green. When you reopen a page, the browser asks once for permission — click <strong>ডেটা ফাইল আবার চালু করুন</strong>.</p>
+  <p>Both pages share the file safely: each one only rewrites its own part. The bajar list owns the recipes, forms, packages and per-100 values; the order form owns your menu library and order history.</p>
+  <div class="note"><strong>Needs Chrome or Edge.</strong> Firefox cannot write files this way, so there the pages fall back to browser storage and the manual backup buttons.</div>
+
+  <h3>Manual backup</h3>
+  <p>Both pages also have <strong>ব্যাকআপ ডাউনলোড</strong> and <strong>ব্যাকআপ থেকে পুনরুদ্ধার</strong> links. Useful for keeping a dated copy before a big change. Restoring asks for confirmation first, because it replaces what is there.</p>
+
+  <h2 id="trouble">8. If something goes wrong</h2>
+  <table>
+    <tr><th>Problem</th><th>What to do</th></tr>
+    <tr><td>The 🛒 button refuses to open</td><td>No সেট মেনু is selected, or no menu items are ticked.</td></tr>
+    <tr><td>The list is empty</td><td>লোকসংখ্যা is blank. Type a headcount.</td></tr>
+    <tr><td>An amount looks wrong</td><td>Click the ▸ arrow to see which dishes produced it. Correct the প্রতি ১০০ জনে value and save it as the package default.</td></tr>
+    <tr><td>A warning about ingredients not placed on a row</td><td>A recipe ingredient has no matching form row, usually because the row was deleted. Add the amount by hand or re-add the row.</td></tr>
+    <tr><td>The data bar shows an orange dot</td><td>The browser needs permission again. Click <strong>ডেটা ফাইল আবার চালু করুন</strong>.</td></tr>
+    <tr><td>Bangla text looks wrong when printing</td><td>Print from Chrome or Edge. The fonts are inside the file, so no internet is needed.</td></tr>
+    <tr><td>Packages missing in the order form</td><td>Open the data file on that page too, or use the same browser as the bajar list.</td></tr>
+  </table>
+
+  <h2 id="tech">9. Technical reference</h2>
+  <p>For whoever maintains the files later.</p>
+
+  <h3>Browser storage keys</h3>
+  <table>
+    <tr><th>Key</th><th>Contents</th></tr>
+    <tr><td><code>iqbal_catering_bajar_recipes</code></td><td>Recipes added or edited by the user</td></tr>
+    <tr><td><code>iqbal_catering_bajar_setmenus</code></td><td>Set menu packages</td></tr>
+    <tr><td><code>iqbal_catering_bajar_per100</code></td><td>Saved per-100 values, per package</td></tr>
+    <tr><td><code>iqbal_catering_bajar_forms</code></td><td>The three forms as edited</td></tr>
+    <tr><td><code>iqbal_catering_menu_items</code></td><td>Order form menu library</td></tr>
+    <tr><td><code>iqbal_catering_order_history</code></td><td>Saved orders (max 300)</td></tr>
+    <tr><td><code>iqbal_catering_print_font_scale</code></td><td>Print font size for the order sheet</td></tr>
+  </table>
+
+  <h3>Data file format</h3>
+  <p><code>{ app: "iqbal-bajar", version: 2, savedAt, per100, forms, setMenus, recipes, orderForm: { menu, history } }</code></p>
+  <p>A file whose <code>app</code> is anything else is refused. The file handle is remembered in IndexedDB under database <code>iqbal-bajar</code>, store <code>handles</code>, key <code>dataFile</code> — that holds a pointer to the file, not your data.</p>
+
+  <h3>Row ids</h3>
+  <table>
+    <tr><th>Prefix</th><th>Sheet</th></tr>
+    <tr><td><code>p1…p87</code></td><td>পার্টি বাজার লিস্ট, matching the printed form's numbering</td></tr>
+    <tr><td><code>n1…n33</code></td><td>Extra items added to the পার্টি sheet</td></tr>
+    <tr><td><code>v1…v31</code></td><td>সবজী sheet</td></tr>
+    <tr><td><code>w1…w7</code></td><td>Extra items added to the সবজী sheet</td></tr>
+    <tr><td><code>m1…m52</code></td><td>বাজার লিস্ট sheet</td></tr>
+    <tr><td><code>r1…r17</code></td><td>রুটির মালামাল section of that sheet</td></tr>
+    <tr><td><code>u…</code>, <code>rec…</code>, <code>pkg…</code></td><td>Rows, recipes and packages created in the app</td></tr>
+  </table>
+
+  <h3>Recipe format</h3>
+  <p><code>{ label, dessert?, ingredients: [ [rowId, qty, unit], … ] }</code> where qty is per 100 people and unit is one of <code>kg, gm, ltr, ml, pcs, pound</code>. Older built-in recipes name the row by an alias instead of an id; <code>ROW_ALIASES</code> maps those.</p>
+  <div class="warn"><strong>Unit kinds must match.</strong> Putting a weight amount on a row whose unit is পিছ multiplies it a thousandfold. The code that checks this caught exactly that bug with বড় পেঁপে (3 কেজি read as 3000 পিছ).</div>
+
+  <h3>One item, one row</h3>
+  <p>Ghee was written on three different rows across the paper cards (ঘি, গাওয়া ঘি, and the পার্টি sheet's ঘি). All nine dishes that use it now point at the single <strong>ঘি</strong> row on the বাজার লিস্ট sheet, so an order using several of them prints one combined line instead of two or three. The unused rows stay on the form but print empty.</p>
+
+  <h2 id="verify">10. Numbers still to confirm</h2>
+  <p>Transcribed from the handwritten cards, worth checking before a big order:</p>
+  <ul>
+    <li><strong>মোতানজান জদ্দা</strong> — গোলাপজল and কেওড়া জল are set to 1 bottle each. The card says 150 গ্রাম, but the form counts bottles.</li>
+    <li><strong>মোতানজান জদ্দা</strong> — the four spices split at 5 গ্রাম each make 20 গ্রাম, where the card's combined line reads 15 গ্রাম.</li>
+    <li><strong>মুরগ পোলাও</strong> — মোরগ ৫০ পিছ uses the দেশী মোরগ row, although "দেশী" was struck out on the card.</li>
+    <li><strong>ডরি ফিস</strong> — its card is written for 30 কেজি of fish, which is the amount for 100 people, so it went in as written. দই আড়ং "১ টা" was entered as ১ কেজি.</li>
+    <li>Three handwritten additions on the blank row 88 of the cards could not be read: সাদা পোলাও (250 গ্রাম), মিক্সড ভেজিটেবল (200 গ্রাম), চাটনি (20 গ্রাম).</li>
+    <li><strong>চিকেন রোস্ট and জালি কাবাব carry no chicken</strong>, following the master bazaar list. The standard কাচ্চি package therefore buys no মুরগী at all.</li>
+  </ul>
+
+  <footer>Iqbal Hossain Catering Service — Serving with Passion Since 1987</footer>
+</div>
+</body>
+</html>

@@ -334,6 +334,12 @@
 
   @media print {
     body { background: #fff; padding: 0; }
+    /* On paper the page card is just a wrapper: its cream fill would print as a tint
+       and its padding would eat into the printable width. */
+    .container {
+      max-width: none; margin: 0; padding: 0; background: none;
+      box-shadow: none; border-radius: 0; overflow: visible;
+    }
     .container > *:not(#print-sheet) { display: none !important; }
     .contact-bar, .gold-strip, .brand-header, .to-top { display: none !important; }
     #print-sheet { display: block; }

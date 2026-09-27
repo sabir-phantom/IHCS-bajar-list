@@ -1863,42 +1863,45 @@ function renderPrintSheet() {
     sheetEl.appendChild(pageDiv);
   };
 
-  // The cooks' page comes first in the packet so it can be torn off and handed over.
-  // Two cooks share one sheet, a column each; one cook gets the page to itself.
-  // Nothing here is ever mixed with another cook's list or with the standard sheets.
-  const CHEF_PAGE_TITLE = 'বাবুর্চির রান্নার তালিকা';
-  const chefLines = chef => chefRows(data, split[chef]).map((r, i) => Object.assign({}, r, { n: i + 1 }));
-  const chefHead = chef => '<div class="ps-chef-name">' + escapeHtml(CHEF_LABELS[chef]) + ' —</div>'
-    + '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>'
-    + escapeHtml(split.dishes[chef].join(', ') || '—') + '</div>';
+  // The cooks' sheet, printed last in the packet so it can be torn off the back and
+  // handed over. Two cooks share one sheet, a column each; one cook gets the page to
+  // itself. Nothing here is ever mixed with another cook's list or with the standard sheets.
+  const addChefPage = () => {
+    const CHEF_PAGE_TITLE = 'বাবুর্চির রান্নার তালিকা';
+    const chefLines = chef => chefRows(data, split[chef]).map((r, i) => Object.assign({}, r, { n: i + 1 }));
+    const chefHead = chef => '<div class="ps-chef-name">' + escapeHtml(CHEF_LABELS[chef]) + ' —</div>'
+      + '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>'
+      + escapeHtml(split.dishes[chef].join(', ') || '—') + '</div>';
 
-  if (split.active.length === 2) {
-    const lists = split.active.map(chef => ({ chef: chef, lines: chefLines(chef) }));
-    const pageDiv = document.createElement('div');
-    pageDiv.className = 'ps-page two-col';
-    const longest = Math.max.apply(null, lists.map(l => l.lines.length));
-    if (longest > CHEF_PAIR_DENSE_AFTER) pageDiv.classList.add('dense');
-    if (longest > CHEF_PAIR_TIGHT_AFTER) pageDiv.classList.add('tight');
-    pageDiv.innerHTML = '<div class="ps-brand">IQBAL HOSSAIN CATERING SERVICE</div>'
-      + '<div class="ps-title">' + CHEF_PAGE_TITLE + '</div>' + metaHtml();
-    const wrap = document.createElement('div');
-    wrap.className = 'ps-cols';
-    lists.forEach(l => {
-      const block = document.createElement('div');
-      block.className = 'ps-chef-block';
-      block.innerHTML = chefHead(l.chef);
-      block.appendChild(buildTable(l.lines, ['qty']));
-      wrap.appendChild(block);
-    });
-    pageDiv.appendChild(wrap);
-    sheetEl.appendChild(pageDiv);
-  } else if (split.active.length === 1) {
-    const chef = split.active[0];
-    const lines = chefLines(chef);
-    if (lines.length) {
-      addPage(CHEF_PAGE_TITLE, chefHead(chef), lines, ['qty']);
+    if (split.active.length === 2) {
+      const lists = split.active.map(chef => ({ chef: chef, lines: chefLines(chef) }));
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'ps-page two-col';
+      const longest = Math.max.apply(null, lists.map(l => l.lines.length));
+      if (longest > CHEF_PAIR_DENSE_AFTER) pageDiv.classList.add('dense');
+      if (longest > CHEF_PAIR_TIGHT_AFTER) pageDiv.classList.add('tight');
+      pageDiv.innerHTML = '<div class="ps-brand">IQBAL HOSSAIN CATERING SERVICE</div>'
+        + '<div class="ps-title">' + CHEF_PAGE_TITLE + '</div>' + metaHtml();
+      const wrap = document.createElement('div');
+      wrap.className = 'ps-cols';
+      lists.forEach(l => {
+        const block = document.createElement('div');
+        block.className = 'ps-chef-block';
+        block.innerHTML = chefHead(l.chef);
+        block.appendChild(buildTable(l.lines, ['qty']));
+        wrap.appendChild(block);
+      });
+      pageDiv.appendChild(wrap);
+      sheetEl.appendChild(pageDiv);
+    } else if (split.active.length === 1) {
+      const chef = split.active[0];
+      const lines = chefLines(chef);
+      if (lines.length) {
+        addPage(CHEF_PAGE_TITLE, chefHead(chef), lines, ['qty']);
+      }
     }
-  }
+
+  };
 
   // The three paper forms, carrying the standard cook's share only.
   forms.forEach(sheet => {
@@ -1925,6 +1928,8 @@ function renderPrintSheet() {
 
     addPage(escapeHtml(sheet.title), '', lines, cols);
   });
+
+  addChefPage();
 }
 
 function doPrint() {

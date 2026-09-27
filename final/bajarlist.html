@@ -363,7 +363,6 @@
     .ps-page.two-col.dense table.ps-table th, .ps-page.two-col.dense table.ps-table td { padding: 0 4px; line-height: 1.35; }
     .ps-page.two-col.dense .ps-meta { margin-bottom: 6px; padding-bottom: 4px; }
     @page { size: A4 portrait; margin: 12mm; }
-    .ps-page-footer { text-align: center; font-size: 12px; color: #666; margin-top: 10px; }
     /* A chef's page: whose list it is and what they are cooking sits above that
        cook's own table, so two cooks can share one sheet side by side. */
     .ps-cols > .ps-chef-block { flex: 1 1 0; min-width: 0; }
@@ -1848,17 +1847,13 @@ function renderPrintSheet() {
     }
   };
 
-  const addPage = (titleHtml, preHtml, lines, cols, footerText) => {
+  const addPage = (titleHtml, preHtml, lines, cols) => {
     const pageDiv = document.createElement('div');
     pageDiv.className = 'ps-page';
     pageDiv.innerHTML = '<div class="ps-brand">IQBAL HOSSAIN CATERING SERVICE</div>'
       + '<div class="ps-title">' + titleHtml + '</div>'
       + metaHtml() + (preHtml || '');
     layout(pageDiv, lines, cols);
-    const footer = document.createElement('div');
-    footer.className = 'ps-page-footer';
-    footer.textContent = footerText;
-    pageDiv.appendChild(footer);
     sheetEl.appendChild(pageDiv);
   };
 
@@ -1890,17 +1885,12 @@ function renderPrintSheet() {
       wrap.appendChild(block);
     });
     pageDiv.appendChild(wrap);
-    const footer = document.createElement('div');
-    footer.className = 'ps-page-footer';
-    footer.textContent = 'বাবুর্চি: ' + lists.map(l => l.chef).join(' ও ') + ' — রান্নার তালিকা';
-    pageDiv.appendChild(footer);
     sheetEl.appendChild(pageDiv);
   } else if (split.active.length === 1) {
     const chef = split.active[0];
     const lines = chefLines(chef);
     if (lines.length) {
-      addPage(CHEF_PAGE_TITLE, chefHead(chef), lines, ['qty'],
-        CHEF_LABELS[chef] + ' — ' + split.dishes[chef].join(', '));
+      addPage(CHEF_PAGE_TITLE, chefHead(chef), lines, ['qty']);
     }
   }
 
@@ -1927,7 +1917,7 @@ function renderPrintSheet() {
     });
     if (!lines.some(item => item.section === undefined)) return;
 
-    addPage(escapeHtml(sheet.title), '', lines, cols, sheet.title);
+    addPage(escapeHtml(sheet.title), '', lines, cols);
   });
 }
 

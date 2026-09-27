@@ -998,6 +998,20 @@ function rebuildRowIndex() {
 loadForms();
 rebuildRowIndex();
 
+// The order the sheets are reviewed and printed in. Kept separate from the order they
+// are stored in, so a data file written before this order changed still comes out right.
+// A sheet the user created, with a key not listed here, keeps its place at the end.
+const SHEET_ORDER = ['party', 'main', 'produce'];
+function orderedForms() {
+  const rank = sheet => {
+    const i = SHEET_ORDER.indexOf(sheet.key);
+    return i === -1 ? SHEET_ORDER.length : i;
+  };
+  return forms
+    .map((sheet, si) => ({ sheet: sheet, si: si }))
+    .sort((a, b) => rank(a.sheet) - rank(b.sheet) || a.si - b.si);
+}
+
 // ---------------- Unit helpers ----------------
 function unitInfo(unit) {
   if (unit === 'kg') return { type: 'weight', factor: 1000 };
@@ -1426,7 +1440,7 @@ function generateList() {
         : '');
   previewEl.appendChild(intro);
 
-  forms.forEach((sheet, si) => {
+  orderedForms().forEach(({ sheet, si }) => {
     const box = document.createElement('div');
     box.className = 'preview-cat';
 
@@ -1904,7 +1918,7 @@ function renderPrintSheet() {
   };
 
   // The three paper forms, carrying the standard cook's share only.
-  forms.forEach(sheet => {
+  orderedForms().forEach(({ sheet }) => {
     const cols = (sheet.columns || ['qty']).filter(c => COLS[c]);
 
     // Only rows that ended up with a quantity print; numbering runs across columns.

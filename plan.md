@@ -66,6 +66,14 @@ recipe  →  ingredient  →  form row  →  printed line
            (per 100)      (unique)     (× headcount ÷ 100)
 ```
 
+### Sheet order
+
+`SHEET_ORDER` (`party`, `main`, `produce`) decides the order the sheets are reviewed and
+printed in. It is deliberately separate from the order `forms` stores them in, so a data
+file written under the old order still comes out right, and a sheet the user creates
+keeps its place at the end. The review screen renders in this order too, while each row
+still carries its original sheet index, so edits land on the right sheet.
+
 ### Chef split
 
 A dish can be handed to বাবুর্চি A or C. `chefSplit()` divides every row's quantity

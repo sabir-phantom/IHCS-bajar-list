@@ -364,9 +364,24 @@
     .ps-page.two-col.dense .ps-meta { margin-bottom: 6px; padding-bottom: 4px; }
     @page { size: A4 portrait; margin: 12mm; }
     .ps-page-footer { text-align: center; font-size: 12px; color: #666; margin-top: 10px; }
-    /* A chef's page: the cook must see whose list it is and what they are cooking. */
-    .ps-title.ps-chef { text-decoration: underline; }
-    .ps-dishes { flex: 1 0 100%; order: 9; }
+    /* A chef's page: whose list it is and what they are cooking sits above that
+       cook's own table, so two cooks can share one sheet side by side. */
+    .ps-cols > .ps-chef-block { flex: 1 1 0; min-width: 0; }
+    /* Centred over the table, which is sized to its content rather than stretched. */
+    .ps-chef-name { font-size: 16px; font-weight: 700; text-decoration: underline; margin-bottom: 2px; text-align: center; }
+    .ps-chef-dishes { font-size: 13px; margin-bottom: 6px; text-align: center; }
+    .ps-chef-dishes span.k { font-weight: 700; margin-right: 4px; }
+    .ps-page.two-col .ps-chef-name { font-size: 14px; }
+    .ps-page.two-col .ps-chef-dishes { font-size: 12px; }
+    .ps-page.two-col.dense .ps-chef-name { font-size: 13px; }
+    .ps-page.two-col.dense .ps-chef-dishes { font-size: 11px; margin-bottom: 4px; }
+    /* Last resort, for a cook with an unusually long list: tighter still, so two
+       lists of any realistic length stay on the one sheet. */
+    .ps-page.two-col.dense.tight table.ps-table { font-size: 10px; }
+    .ps-page.two-col.dense.tight table.ps-table th,
+    .ps-page.two-col.dense.tight table.ps-table td { padding: 0 3px; line-height: 1.2; }
+    .ps-page.two-col.dense.tight .ps-chef-name { font-size: 12px; }
+    .ps-page.two-col.dense.tight .ps-chef-dishes { font-size: 10px; margin-bottom: 3px; }
   }
 </style>
 </head>
@@ -1590,9 +1605,14 @@ function generateList() {
 
     const note = document.createElement('div');
     note.className = 'chef-note';
-    note.textContent = rows.length > TWO_COLUMN_AFTER
-      ? 'এই তালিকা এক পাতায় দুই কলামে ছাপা হবে।'
-      : 'এই তালিকা এক পাতায় এক কলামে ছাপা হবে।';
+    const longest = Math.max.apply(null, split.active.map(c => chefRows(data, split[c]).length));
+    note.textContent = split.active.length === 2
+      ? (longest > CHEF_PAIR_MAX
+          ? '⚠ তালিকা এত লম্বা যে দুই বাবুর্চি এক পাতায় ধরবে না — কিছু আইটেম কমিয়ে দেখুন।'
+          : 'দুই বাবুর্চির তালিকা একই পাতায় পাশাপাশি দুই কলামে ছাপা হবে।')
+      : (rows.length > TWO_COLUMN_AFTER
+          ? 'এই তালিকা এক পাতায় দুই কলামে ছাপা হবে।'
+          : 'এই তালিকা এক পাতায় এক কলামে ছাপা হবে।');
     box.appendChild(note);
 
     previewEl.appendChild(box);
@@ -1740,6 +1760,17 @@ function importDefaults(event) {
 const TWO_COLUMN_AFTER = 22;   // measured: 22 lines fill 989px of the 1032px A4 page
 // Past this many, the two columns also tighten so the sheet still fits one page.
 const DENSE_AFTER = 56;        // measured: 56 lines fill 963px in two columns
+// When both cooks share one page they take a column each, so neither can spread into
+// two columns of its own. Past this many rows in either column the type tightens
+// instead, which keeps the promise that the two lists never leave one sheet.
+// Measured with both columns filled, against the 1032px A4 page: 26 rows reach 938px,
+// 50 rows in dense type reach 1001px, and 60 rows tighter still reach 983px. Past
+// roughly 62 rows in a column even the tightest setting spills, which no realistic
+// menu reaches -- the whole standard package is 41 rows -- but the review screen
+// says so rather than letting it overflow unnoticed.
+const CHEF_PAIR_DENSE_AFTER = 26;
+const CHEF_PAIR_TIGHT_AFTER = 50;
+const CHEF_PAIR_MAX = 62;
 
 function renderPrintSheet() {
   const data = aggregate();
@@ -1756,12 +1787,11 @@ function renderPrintSheet() {
   // Price columns (দর / টাকা / মোট টাকা) are not printed.
   const COLS = { pcs: 'পিছ', kg: 'কেজি', gm: 'গ্রাম', qty: 'পরিমাণ' };
 
-  const metaHtml = extra => '<div class="ps-meta">'
+  const metaHtml = () => '<div class="ps-meta">'
     + '<div><span class="k">তারিখ:</span>' + dateDisplay + '</div>'
     + '<div><span class="k">লোকসংখ্যা:</span>' + guests + '</div>'
     + '<div><span class="k">স্থান:</span>' + place + '</div>'
     + '<div><span class="k">অনুষ্ঠান:</span>' + label + '</div>'
-    + (extra || '')
     + '</div>';
 
   const cellsFor = (item, cols) => {
@@ -1818,12 +1848,12 @@ function renderPrintSheet() {
     }
   };
 
-  const addPage = (titleHtml, titleClass, metaExtra, lines, cols, footerText) => {
+  const addPage = (titleHtml, preHtml, lines, cols, footerText) => {
     const pageDiv = document.createElement('div');
     pageDiv.className = 'ps-page';
     pageDiv.innerHTML = '<div class="ps-brand">IQBAL HOSSAIN CATERING SERVICE</div>'
-      + '<div class="ps-title' + (titleClass ? ' ' + titleClass : '') + '">' + titleHtml + '</div>'
-      + metaHtml(metaExtra);
+      + '<div class="ps-title">' + titleHtml + '</div>'
+      + metaHtml() + (preHtml || '');
     layout(pageDiv, lines, cols);
     const footer = document.createElement('div');
     footer.className = 'ps-page-footer';
@@ -1832,16 +1862,47 @@ function renderPrintSheet() {
     sheetEl.appendChild(pageDiv);
   };
 
-  // A page of its own for each cook, first in the packet so it can be torn off and
-  // handed over. Nothing here is mixed with another chef's or the standard list.
-  split.active.forEach(chef => {
-    const rows = chefRows(data, split[chef]).map((r, i) => Object.assign({}, r, { n: i + 1 }));
-    if (!rows.length) return;
-    const dishList = escapeHtml(split.dishes[chef].join(', ') || '—');
-    addPage(escapeHtml(CHEF_LABELS[chef]) + ' — রান্নার তালিকা', 'ps-chef',
-      '<div class="ps-dishes"><span class="k">রান্নার আইটেম:</span>' + dishList + '</div>',
-      rows, ['qty'], CHEF_LABELS[chef] + ' — ' + split.dishes[chef].join(', '));
-  });
+  // The cooks' page comes first in the packet so it can be torn off and handed over.
+  // Two cooks share one sheet, a column each; one cook gets the page to itself.
+  // Nothing here is ever mixed with another cook's list or with the standard sheets.
+  const CHEF_PAGE_TITLE = 'বাবুর্চির রান্নার তালিকা';
+  const chefLines = chef => chefRows(data, split[chef]).map((r, i) => Object.assign({}, r, { n: i + 1 }));
+  const chefHead = chef => '<div class="ps-chef-name">' + escapeHtml(CHEF_LABELS[chef]) + ' —</div>'
+    + '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>'
+    + escapeHtml(split.dishes[chef].join(', ') || '—') + '</div>';
+
+  if (split.active.length === 2) {
+    const lists = split.active.map(chef => ({ chef: chef, lines: chefLines(chef) }));
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'ps-page two-col';
+    const longest = Math.max.apply(null, lists.map(l => l.lines.length));
+    if (longest > CHEF_PAIR_DENSE_AFTER) pageDiv.classList.add('dense');
+    if (longest > CHEF_PAIR_TIGHT_AFTER) pageDiv.classList.add('tight');
+    pageDiv.innerHTML = '<div class="ps-brand">IQBAL HOSSAIN CATERING SERVICE</div>'
+      + '<div class="ps-title">' + CHEF_PAGE_TITLE + '</div>' + metaHtml();
+    const wrap = document.createElement('div');
+    wrap.className = 'ps-cols';
+    lists.forEach(l => {
+      const block = document.createElement('div');
+      block.className = 'ps-chef-block';
+      block.innerHTML = chefHead(l.chef);
+      block.appendChild(buildTable(l.lines, ['qty']));
+      wrap.appendChild(block);
+    });
+    pageDiv.appendChild(wrap);
+    const footer = document.createElement('div');
+    footer.className = 'ps-page-footer';
+    footer.textContent = 'বাবুর্চি: ' + lists.map(l => l.chef).join(' ও ') + ' — রান্নার তালিকা';
+    pageDiv.appendChild(footer);
+    sheetEl.appendChild(pageDiv);
+  } else if (split.active.length === 1) {
+    const chef = split.active[0];
+    const lines = chefLines(chef);
+    if (lines.length) {
+      addPage(CHEF_PAGE_TITLE, chefHead(chef), lines, ['qty'],
+        CHEF_LABELS[chef] + ' — ' + split.dishes[chef].join(', '));
+    }
+  }
 
   // The three paper forms, carrying the standard cook's share only.
   forms.forEach(sheet => {
@@ -1866,7 +1927,7 @@ function renderPrintSheet() {
     });
     if (!lines.some(item => item.section === undefined)) return;
 
-    addPage(escapeHtml(sheet.title), '', '', lines, cols, sheet.title);
+    addPage(escapeHtml(sheet.title), '', lines, cols, sheet.title);
   });
 }
 

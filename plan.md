@@ -45,7 +45,7 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Forms | 3 printed sheets, ~260 rows, fully editable (names, units, rows, headings) |
 | Packages | 3 built in: স্ট্যান্ডার্ড কাচ্চি, রুটি কালিয়া, মোরগ পোলাও; more can be created in the app. The order form's dropdown reads them live from `localStorage` (`iqbal_catering_bajar_setmenus`) |
 | Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations |
-| Chef assignment | Each dish of the package can go to বাবুর্চি S / A / C. A and C's ingredients leave the three normal sheets and print on that cook's own page; shares are split in proportion to each dish's contribution, so nothing is bought twice and nothing is mixed between cooks |
+| Chef assignment | Each dish of the package can go to বাবুর্চি S / A / C. A and C's ingredients leave the three normal sheets and print on a cooks' sheet ahead of them — both cooks side by side on one page, a column each, or the whole page to one cook. Shares are split in proportion to each dish's contribution, so nothing is bought twice and nothing is mixed between cooks |
 | Printing | Only filled rows, no price columns, one page per sheet, measured against A4: one column to 22 lines, two columns beyond, dense type beyond 56 |
 | Fonts | Embedded — zero external requests |
 | Data file | `final/bajar-data.json` exists and holds 1 saved order (22 Sep); re-open it from both pages after the recent changes |
@@ -73,8 +73,15 @@ between S / A / C in proportion to how much each chef's dishes contribute to tha
 taken from the same `sources` that power the ▸ breakdown. The three shares always add
 back to the row total (verified: drift 0 across all rows). A row with no recipe behind
 it — hand-typed, or a package default like ভাতের চাউল — belongs to no dish and stays
-with S. Chef pages print first in the packet, one merged table per cook, and reuse the
-same 22 / 56 line rules as the other sheets.
+with S.
+
+The cooks' sheet prints first in the packet, one merged table per cook: both cooks side
+by side on one page, a column each, or the whole page to a single cook. Because the two
+share the page's columns, neither can spread into two columns of its own, so the type
+tightens instead. Measured against the 1032px page: 26 rows per column reach 938px,
+50 rows in dense type reach 1001px, 60 rows tighter still reach 983px. Past about 62
+the review screen warns rather than spilling onto a second sheet. A single cook's page
+keeps the ordinary 22 / 56 rules.
 
 The assignment lives in memory only and is never saved. That is deliberate: a stale
 assignment restored from last week would silently remove items from the shopping sheets.

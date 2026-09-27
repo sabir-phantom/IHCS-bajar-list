@@ -21,7 +21,8 @@ Bangla Menu/
 ├── final/             ← the live system
 │   ├── order_form.html    order entry, history, multi-time meals, auto-set menu,
 │   │                      universal item search, single-page print guard  (293 KB)
-│   ├── bajarlist.html     recipes, quantity calculation, market sheets (328 KB)
+│   ├── bajarlist.html     recipes, quantity calculation, chef pages,
+│   │                      market sheets                                (327 KB)
 │   ├── guide-en.html      user + maintainer guide, English
 │   ├── guide-bn.html      user + maintainer guide, Bangla
 │   └── bajar-data.json    the data file — CREATED BY THE USER, not yet set up
@@ -46,6 +47,7 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Multi-time meals | সকাল / দুপুর / বিকাল / সন্ধ্যা / রাত as multi-select checkboxes; selecting 2+ times splits the form into a dedicated headed section per time, each with its own category blocks and "আরেকটি মেনু যোগ করুন" button; single or no time keeps the flat layout |
 | Universal item search | A search bar above all blocks searches every category at once; results show a category badge per item; multi-time orders show a time-slot dropdown per result; already-checked items are marked and blocked from double-adding; clicking outside dismisses results |
 | Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations |
+| Chef assignment | Each dish of the package can go to বাবুর্চি S / A / C. A and C's ingredients leave the three normal sheets and print on that cook's own page; shares are split in proportion to each dish's contribution, so nothing is bought twice and nothing is mixed between cooks |
 | Printing | Print styles shared between screen preview and printer; column count auto-chosen (1 / 2 / 3) based on item count vs. A4 printable height; scale guard shrinks font to ≥70% if even 3 columns overflow; manual font-size control overrides auto-scale; multi-time orders print with a bold underlined heading per time slot |
 | Fonts | Embedded — zero external requests |
 | Data file | Built and tested; **not yet switched on by the user** |
@@ -67,6 +69,19 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 recipe  →  ingredient  →  form row  →  printed line
            (per 100)      (unique)     (× headcount ÷ 100)
 ```
+
+### Chef split
+
+A dish can be handed to বাবুর্চি A or C. `chefSplit()` divides every row's quantity
+between S / A / C in proportion to how much each chef's dishes contribute to that row,
+taken from the same `sources` that power the ▸ breakdown. The three shares always add
+back to the row total (verified: drift 0 across all rows). A row with no recipe behind
+it — hand-typed, or a package default like ভাতের চাউল — belongs to no dish and stays
+with S. Chef pages print first in the packet, one merged table per cook, and reuse the
+same 22 / 56 line rules as the other sheets.
+
+The assignment lives in memory only and is never saved. That is deliberate: a stale
+assignment restored from last week would silently remove items from the shopping sheets.
 
 **The rule that keeps it honest:** every ingredient names exactly one form row.
 Two dishes using the same item therefore add into one line instead of being bought
@@ -237,6 +252,13 @@ node --check <extracted script>
   previous package auto-checked are removed; anything the user ticked by hand
   survives the switch. A manual click on an auto-checked item transfers ownership
   to the user at that moment.
+- **Chef assignment is per job and never persisted.** Convenience would cost
+  correctness here: the failure mode of a remembered assignment is items quietly
+  missing from the market sheet, which is not discovered until the market.
+- **Chef shares are proportional, not all-or-nothing.** An overridden or hand-typed
+  quantity on a shared row is divided the same way the recipe would have divided it.
+  Count units are rounded up per cook, so a split of 7 পিছ gives 4 and 4 — over by one
+  rather than short.
 - **Print scale is calculated, not stored.** Column count and zoom are derived from
   the actual rendered line count at print time, so no value needs updating when
   menu content grows or shrinks.

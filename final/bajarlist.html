@@ -307,6 +307,24 @@
   table.preview-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .empty-note { color: #a3906a; font-size: 14px; font-style: italic; padding: 8px 0; }
   .manual-tag { color: var(--maroon); font-weight: 700; font-size: 12px; }
+  select.chef-sel {
+    font-family: inherit; font-size: 12px; margin-left: 6px; padding: 1px 3px;
+    border: 1px solid #ded2b8; border-radius: 4px; background: #fff; color: #7a6a4d;
+  }
+  .dish-chip.chef-A, .dish-chip.chef-C { border-color: var(--maroon); }
+  .dish-chip.chef-A select.chef-sel, .dish-chip.chef-C select.chef-sel {
+    color: var(--maroon); font-weight: 700; border-color: #e0bcb4;
+  }
+  .chef-badge {
+    flex: none; display: inline-block; min-width: 17px; text-align: center;
+    font-size: 11px; font-weight: 700; line-height: 16px; border-radius: 3px;
+    background: var(--maroon); color: #fff; margin-left: 4px;
+  }
+  .chef-split { flex: none; font-size: 11px; color: #8a7a5c; margin-left: 6px; white-space: nowrap; }
+  .chef-preview { border-top: 2px solid var(--maroon); padding-top: 10px; }
+  .chef-preview .sheet-head { font-size: 17px; font-weight: 700; color: var(--maroon); }
+  .chef-dishes { font-size: 14px; color: #7a6a4d; margin: 0 0 8px; }
+  .chef-note { font-size: 13px; color: #8a6a55; margin: 6px 0 0; }
 
 
   #print-sheet { display: none; }
@@ -343,6 +361,9 @@
     .ps-page.two-col.dense .ps-meta { margin-bottom: 6px; padding-bottom: 4px; }
     @page { size: A4 portrait; margin: 12mm; }
     .ps-page-footer { text-align: center; font-size: 12px; color: #666; margin-top: 10px; }
+    /* A chef's page: the cook must see whose list it is and what they are cooking. */
+    .ps-title.ps-chef { text-decoration: underline; }
+    .ps-dishes { flex: 1 0 100%; order: 9; }
   }
 </style>
 </head>
@@ -1089,11 +1110,6 @@ function currentSetMenu() {
 
 function renderSetMenuDetails() {
   const pkg = currentSetMenu();
-  const chipRow = document.getElementById('bl-dish-chips');
-  chipRow.innerHTML = pkg.dishes.length
-    ? pkg.dishes.filter(k => RECIPE_LIBRARY[k]).map(k => '<span class="dish-chip">' + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>').join('')
-    : '<span class="pkg-empty">রেসিপি-আইটেম নেই — নিচের তালিকায় পরিমাণ লিখুন</span>';
-
   document.getElementById('pkg-edit-btn').disabled = document.getElementById('bl-package').value === 'fromOrder';
 
   // Dessert: one choice among the package's options, or no row at all.
@@ -1118,8 +1134,33 @@ function renderSetMenuDetails() {
     }));
   }
 
+  // After the dessert radios exist, so the chosen dessert gets a chef dropdown too.
+  renderDishChips();
   renderOverrideFields();
   generateList();   // the list always reflects the current set menu
+}
+
+// Each dish of the package, with the cook it is assigned to.
+function renderDishChips() {
+  const keys = menuDishKeys(currentSetMenu()).filter(k => RECIPE_LIBRARY[k]);
+  const chipRow = document.getElementById('bl-dish-chips');
+  if (!keys.length) {
+    chipRow.innerHTML = '<span class="pkg-empty">রেসিপি-আইটেম নেই — নিচের তালিকায় পরিমাণ লিখুন</span>';
+    return;
+  }
+  chipRow.innerHTML = keys.map(k =>
+    '<span class="dish-chip chef-' + chefOf(k) + '">' + escapeHtml(RECIPE_LIBRARY[k].label)
+    + '<select class="chef-sel" data-dish="' + k + '" aria-label="বাবুর্চি">'
+    + CHEF_KEYS.map(c => '<option value="' + c + '"' + (c === chefOf(k) ? ' selected' : '') + '>'
+        + CHEF_LABELS[c] + '</option>').join('')
+    + '</select></span>').join('');
+  chipRow.querySelectorAll('select.chef-sel').forEach(sel => {
+    sel.addEventListener('change', () => {
+      chefAssign[sel.dataset.dish] = sel.value;
+      renderDishChips();
+      generateList();
+    });
+  });
 }
 
 function renderOverrideFields() {
@@ -1161,9 +1202,9 @@ function recipePer100() {
   const base = {};
   const sources = {};          // rowId -> [{ label, base }], for the per-ingredient breakdown
   const unmappedIngredients = [];
-  const note = (rowId, label, amount) => {
+  const note = (rowId, key, label, amount) => {
     if (!sources[rowId]) sources[rowId] = [];
-    sources[rowId].push({ label: label, base: amount });
+    sources[rowId].push({ key: key, label: label, base: amount });
   };
 
   dishKeys.forEach(dishKey => {
@@ -1175,14 +1216,14 @@ function recipePer100() {
       if (!rowId) { unmappedIngredients.push(name); return; }
       const info = unitInfo(unit);
       base[rowId] = (base[rowId] || 0) + qty * info.factor;
-      note(rowId, dish.label, qty * info.factor);
+      note(rowId, dishKey, dish.label, qty * info.factor);
     });
     (dish.editable || []).forEach(e => {
       const rowId = ROW_ALIASES[e.label] || ROW_ALIASES['মুরগী'];
       if (!rowId) return;
       const info = unitInfo(e.unit);
       base[rowId] = (base[rowId] || 0) + e.per100 * info.factor;
-      note(rowId, dish.label, e.per100 * info.factor);
+      note(rowId, dishKey, dish.label, e.per100 * info.factor);
     });
   });
 
@@ -1252,6 +1293,59 @@ function aggregate() {
            unmappedIngredients: recipe.unmappedIngredients };
 }
 
+// ---------------- Chefs ----------------
+// A dish can be handed to a separate cook. Ingredients for বাবুর্চি A and বাবুর্চি C are
+// never merged with anything else: each chef's share leaves the three normal sheets and
+// prints on that chef's own page, so no item is bought twice.
+const CHEF_KEYS = ['S', 'A', 'C'];
+const CHEF_LABELS = { S: 'বাবুর্চি: S', A: 'বাবুর্চি: A', C: 'বাবুর্চি: C' };
+
+// dishKey -> 'S' | 'A' | 'C'. Deliberately not saved anywhere: every job starts with all
+// dishes standard, so a forgotten assignment can never quietly empty the main sheets.
+let chefAssign = {};
+function chefOf(dishKey) {
+  const c = chefAssign[dishKey];
+  return (c === 'A' || c === 'C') ? c : 'S';
+}
+
+// Splits each row's quantity between the chefs in proportion to how much each chef's
+// dishes contribute to that row. A row with no recipe behind it (typed by hand, or a
+// package default) belongs to no dish, so all of it stays standard.
+function chefSplit(data) {
+  const out = { S: {}, A: {}, C: {} };
+  Object.keys(data.rows).forEach(rowId => {
+    const row = data.rows[rowId];
+    if (row.orderQty === null) return;
+    const total = row.sources.reduce((sum, src) => sum + src.base, 0);
+    if (!row.sources.length || total <= 0) { out.S[rowId] = row.orderBase; return; }
+    CHEF_KEYS.forEach(chef => {
+      const part = row.sources.reduce((sum, src) => sum + (chefOf(src.key) === chef ? src.base : 0), 0);
+      if (part > 0) out[chef][rowId] = row.orderBase * (part / total);
+    });
+  });
+  const dishes = { S: [], A: [], C: [] };
+  menuDishKeys(currentSetMenu()).forEach(k => {
+    if (RECIPE_LIBRARY[k]) dishes[chefOf(k)].push(RECIPE_LIBRARY[k].label);
+  });
+  out.dishes = dishes;
+  out.active = ['A', 'C'].filter(c => Object.keys(out[c]).length > 0);
+  return out;
+}
+
+// A chef's ingredients as one merged list, in the master order of the paper forms.
+function chefRows(data, alloc) {
+  const out = [];
+  forms.forEach(sheet => sheet.rows.forEach(entry => {
+    if (entry.section !== undefined) return;
+    const amount = alloc[entry[0]];
+    if (!(amount > 0.0005)) return;
+    const row = data.rows[entry[0]];
+    if (!row) return;
+    out.push(Object.assign({}, row, { orderBase: amount }));
+  }));
+  return out;
+}
+
 // ---------------- Review screen ----------------
 // One-off quantity edits for this order only, shaped { rowId: qtyInRowUnit }.
 let orderOverrides = {};
@@ -1289,6 +1383,7 @@ function onFormsChanged() {
 
 function generateList() {
   const data = aggregate();
+  const split = chefSplit(data);
   const previewEl = document.getElementById('bl-preview');
   previewEl.innerHTML = '';
 
@@ -1301,7 +1396,11 @@ function generateList() {
   intro.className = 'review-intro';
   intro.innerHTML = 'সবকিছু এখানেই বদলানো যায় — নাম, একক, শিরোনাম, সারি যোগ/মোছা/সরানো। '
     + '<strong>প্রতি ১০০ জনে</strong> ঘরে লিখলে <strong>এই অর্ডারে</strong> নিজে থেকে হিসাব হবে। '
-    + 'যেসব সারিতে পরিমাণ আছে শুধু সেগুলোই প্রিন্ট হবে।';
+    + 'যেসব সারিতে পরিমাণ আছে শুধু সেগুলোই প্রিন্ট হবে।'
+    + (split.active.length
+        ? '<div class="chef-note"><strong>বাবুর্চি ' + split.active.join(' ও ') + '</strong>-কে দেওয়া আইটেমের উপকরণ '
+          + 'নিচের তিনটি ফর্ম থেকে বাদ গিয়ে আলাদা পাতায় ছাপা হবে — একই জিনিস দুইবার কেনা হবে না।'
+        : '');
   previewEl.appendChild(intro);
 
   forms.forEach((sheet, si) => {
@@ -1345,6 +1444,14 @@ function generateList() {
 
       const disputed = DISPUTED_ROWS[row.id];
       const flag = disputed ? ' <span class="disputed" title="' + escapeHtml(disputed) + '">⚠</span>' : '';
+      // Which cooks this row's quantity is split between, if any. When part of it stays
+      // on the paper form, say how much — the form prints that, not the total shown here.
+      const chefs = ['A', 'C'].filter(c => split[c][row.id] > 0.0005);
+      const badges = chefs.map(c => '<span class="chef-badge" title="' + CHEF_LABELS[c] + ' এর পাতায় '
+        + toBanglaNum(formatByType(split[c][row.id], row.type)) + '">' + c + '</span>').join('');
+      const shareNote = (chefs.length && split.S[row.id] > 0.0005)
+        ? '<span class="chef-split" title="এই ফর্মে যতটা ছাপা হবে">ফর্মে '
+          + toBanglaNum(formatByType(split.S[row.id], row.type)) + '</span>' : '';
       const unitSel = '<select class="unit-in" data-sheet="' + si + '" data-idx="' + ri + '">'
         + UNIT_OPTIONS.map(o => '<option value="' + o[0] + '"' + (o[0] === row.unit ? ' selected' : '') + '>' + o[1] + '</option>').join('')
         + '</select>';
@@ -1359,7 +1466,7 @@ function generateList() {
       tr.innerHTML =
         '<td>' + toBanglaNum(n) + '</td>' +
         '<td><div class="cell-with-del">' + srcBtn + '<input class="label-in" data-sheet="' + si + '" data-idx="' + ri + '" value="' + escapeHtml(row.label) + '">'
-          + flag + (isAdded ? delBtn(ri) : '') + '</div></td>' +
+          + flag + badges + shareNote + (isAdded ? delBtn(ri) : '') + '</div></td>' +
         '<td><input type="number" min="0" step="any" class="qty-in per100-in" ' +
           'data-row="' + row.id + '" value="' + (row.per100 === '' ? '' : roundQty(row.per100)) + '"></td>' +
         '<td><input type="number" min="0" step="any" class="qty-in order-in" ' +
@@ -1450,6 +1557,40 @@ function generateList() {
       + '<button data-act="add-row" data-sheet="' + si + '">+ নতুন সারি</button>'
       + '<button data-act="add-section" data-sheet="' + si + '">+ নতুন উপশিরোনাম</button>';
     box.appendChild(sheetTools);
+
+    previewEl.appendChild(box);
+  });
+
+  // What each chef's own page will print. Read-only: quantities are edited above.
+  split.active.forEach(chef => {
+    const rows = chefRows(data, split[chef]);
+    const box = document.createElement('div');
+    box.className = 'preview-cat chef-preview';
+
+    const head = document.createElement('div');
+    head.className = 'sheet-head';
+    head.innerHTML = '<span>' + CHEF_LABELS[chef] + ' — আলাদা পাতা</span>'
+      + '<span class="sheet-count">' + toBanglaNum(rows.length) + 'টি উপকরণ</span>';
+    box.appendChild(head);
+
+    const dishes = document.createElement('div');
+    dishes.className = 'chef-dishes';
+    dishes.innerHTML = '<strong>রান্নার আইটেম:</strong> ' + escapeHtml(split.dishes[chef].join(', '));
+    box.appendChild(dishes);
+
+    const table = document.createElement('table');
+    table.className = 'preview-table';
+    table.innerHTML = '<tr><th style="width:40px;">নং</th><th>দ্রব্যের নাম</th><th style="width:120px;">পরিমাণ</th></tr>'
+      + rows.map((r, i) => '<tr><td>' + toBanglaNum(i + 1) + '</td><td>' + escapeHtml(r.label)
+          + '</td><td class="num">' + toBanglaNum(formatByType(r.orderBase, r.type)) + '</td></tr>').join('');
+    box.appendChild(table);
+
+    const note = document.createElement('div');
+    note.className = 'chef-note';
+    note.textContent = rows.length > TWO_COLUMN_AFTER
+      ? 'এই তালিকা এক পাতায় দুই কলামে ছাপা হবে।'
+      : 'এই তালিকা এক পাতায় এক কলামে ছাপা হবে।';
+    box.appendChild(note);
 
     previewEl.appendChild(box);
   });
@@ -1599,6 +1740,7 @@ const DENSE_AFTER = 56;        // measured: 56 lines fill 963px in two columns
 
 function renderPrintSheet() {
   const data = aggregate();
+  const split = chefSplit(data);
   const sheetEl = document.getElementById('print-sheet');
   sheetEl.innerHTML = '';
 
@@ -1611,6 +1753,94 @@ function renderPrintSheet() {
   // Price columns (দর / টাকা / মোট টাকা) are not printed.
   const COLS = { pcs: 'পিছ', kg: 'কেজি', gm: 'গ্রাম', qty: 'পরিমাণ' };
 
+  const metaHtml = extra => '<div class="ps-meta">'
+    + '<div><span class="k">তারিখ:</span>' + dateDisplay + '</div>'
+    + '<div><span class="k">লোকসংখ্যা:</span>' + guests + '</div>'
+    + '<div><span class="k">স্থান:</span>' + place + '</div>'
+    + '<div><span class="k">অনুষ্ঠান:</span>' + label + '</div>'
+    + (extra || '')
+    + '</div>';
+
+  const cellsFor = (item, cols) => {
+    let cells = '<td>' + toBanglaNum(item.n) + '</td><td>' + escapeHtml(item.label) + '</td>';
+    cols.forEach(c => {
+      const weighty = item.type === 'weight' || item.type === 'volume';
+      let v = '';
+      if (c === 'qty') v = toBanglaNum(formatByType(item.orderBase, item.type));
+      // The party sheet has no পাউন্ড column; a pound quantity goes in পিছ with
+      // its unit spelled out, since a bare number there reads as a count of loaves.
+      else if (c === 'pcs') {
+        if (item.type === 'count') v = toBanglaNum(Math.ceil(item.orderBase));
+        else if (item.type === 'pound') v = toBanglaNum(roundQty(item.orderBase)) + ' পাউন্ড';
+      }
+      else if (c === 'kg' && weighty && item.orderBase >= 1000) v = toBanglaNum(roundQty(item.orderBase / 1000));
+      else if (c === 'gm' && weighty && item.orderBase < 1000) v = toBanglaNum(Math.round(item.orderBase));
+      cells += '<td class="num">' + v + '</td>';
+    });
+    return cells;
+  };
+
+  const buildTable = (items, cols) => {
+    const table = document.createElement('table');
+    table.className = 'ps-table';
+    table.innerHTML = '<tr><th style="width:34px;">নং</th><th>দ্রব্যের নাম</th>'
+      + cols.map(c => '<th style="min-width:' + (c === 'qty' ? 100 : 70) + 'px;">' + COLS[c] + '</th>').join('')
+      + '</tr>';
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = item.section !== undefined
+        ? '<td colspan="' + (2 + cols.length) + '" class="ps-section">' + escapeHtml(item.section) + '</td>'
+        : cellsFor(item, cols);
+      table.appendChild(tr);
+    });
+    return table;
+  };
+
+  // One A4 page per sheet: one column, two columns past TWO_COLUMN_AFTER lines,
+  // and tighter type past DENSE_AFTER, so a long list still never spills over.
+  const layout = (pageDiv, lines, cols) => {
+    if (lines.length > TWO_COLUMN_AFTER) {
+      // Split near the middle; never leave a heading stranded at the bottom of the left column.
+      let half = Math.ceil(lines.length / 2);
+      while (half > 1 && lines[half - 1].section !== undefined) half -= 1;
+      pageDiv.classList.add('two-col');
+      if (lines.length > DENSE_AFTER) pageDiv.classList.add('dense');
+      const wrap = document.createElement('div');
+      wrap.className = 'ps-cols';
+      wrap.appendChild(buildTable(lines.slice(0, half), cols));
+      wrap.appendChild(buildTable(lines.slice(half), cols));
+      pageDiv.appendChild(wrap);
+    } else {
+      pageDiv.appendChild(buildTable(lines, cols));
+    }
+  };
+
+  const addPage = (titleHtml, titleClass, metaExtra, lines, cols, footerText) => {
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'ps-page';
+    pageDiv.innerHTML = '<div class="ps-brand">IQBAL HOSSAIN CATERING SERVICE</div>'
+      + '<div class="ps-title' + (titleClass ? ' ' + titleClass : '') + '">' + titleHtml + '</div>'
+      + metaHtml(metaExtra);
+    layout(pageDiv, lines, cols);
+    const footer = document.createElement('div');
+    footer.className = 'ps-page-footer';
+    footer.textContent = footerText;
+    pageDiv.appendChild(footer);
+    sheetEl.appendChild(pageDiv);
+  };
+
+  // A page of its own for each cook, first in the packet so it can be torn off and
+  // handed over. Nothing here is mixed with another chef's or the standard list.
+  split.active.forEach(chef => {
+    const rows = chefRows(data, split[chef]).map((r, i) => Object.assign({}, r, { n: i + 1 }));
+    if (!rows.length) return;
+    const dishList = escapeHtml(split.dishes[chef].join(', ') || '—');
+    addPage(escapeHtml(CHEF_LABELS[chef]) + ' — রান্নার তালিকা', 'ps-chef',
+      '<div class="ps-dishes"><span class="k">রান্নার আইটেম:</span>' + dishList + '</div>',
+      rows, ['qty'], CHEF_LABELS[chef] + ' — ' + split.dishes[chef].join(', '));
+  });
+
+  // The three paper forms, carrying the standard cook's share only.
   forms.forEach(sheet => {
     const cols = (sheet.columns || ['qty']).filter(c => COLS[c]);
 
@@ -1621,8 +1851,10 @@ function renderPrintSheet() {
       if (entry.section !== undefined) { printable.push({ section: entry.section }); return; }
       const row = data.rows[entry[0]];
       if (!row || row.orderQty === null) return;
+      const amount = split.S[entry[0]];
+      if (!(amount > 0.0005)) return;
       n += 1;
-      printable.push(Object.assign({ n: n }, row));
+      printable.push(Object.assign({ n: n }, row, { orderBase: amount }));
     });
     const lines = printable.filter((item, i) => {
       if (item.section === undefined) return true;
@@ -1631,72 +1863,7 @@ function renderPrintSheet() {
     });
     if (!lines.some(item => item.section === undefined)) return;
 
-    const cellsFor = item => {
-      let cells = '<td>' + toBanglaNum(item.n) + '</td><td>' + escapeHtml(item.label) + '</td>';
-      cols.forEach(c => {
-        const weighty = item.type === 'weight' || item.type === 'volume';
-        let v = '';
-        if (c === 'qty') v = toBanglaNum(formatByType(item.orderBase, item.type));
-        // The party sheet has no পাউন্ড column; a pound quantity goes in পিছ with
-        // its unit spelled out, since a bare number there reads as a count of loaves.
-        else if (c === 'pcs') {
-          if (item.type === 'count') v = toBanglaNum(Math.ceil(item.orderBase));
-          else if (item.type === 'pound') v = toBanglaNum(roundQty(item.orderBase)) + ' পাউন্ড';
-        }
-        else if (c === 'kg' && weighty && item.orderBase >= 1000) v = toBanglaNum(roundQty(item.orderBase / 1000));
-        else if (c === 'gm' && weighty && item.orderBase < 1000) v = toBanglaNum(Math.round(item.orderBase));
-        cells += '<td class="num">' + v + '</td>';
-      });
-      return cells;
-    };
-
-    const buildTable = items => {
-      const table = document.createElement('table');
-      table.className = 'ps-table';
-      table.innerHTML = '<tr><th style="width:34px;">নং</th><th>দ্রব্যের নাম</th>'
-        + cols.map(c => '<th style="min-width:' + (c === 'qty' ? 100 : 70) + 'px;">' + COLS[c] + '</th>').join('')
-        + '</tr>';
-      items.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = item.section !== undefined
-          ? '<td colspan="' + (2 + cols.length) + '" class="ps-section">' + escapeHtml(item.section) + '</td>'
-          : cellsFor(item);
-        table.appendChild(tr);
-      });
-      return table;
-    };
-
-    const pageDiv = document.createElement('div');
-    pageDiv.className = 'ps-page';
-    pageDiv.innerHTML = '<div class="ps-brand">IQBAL HOSSAIN CATERING SERVICE</div>'
-      + '<div class="ps-title">' + escapeHtml(sheet.title) + '</div>'
-      + '<div class="ps-meta">'
-      + '<div><span class="k">তারিখ:</span>' + dateDisplay + '</div>'
-      + '<div><span class="k">লোকসংখ্যা:</span>' + guests + '</div>'
-      + '<div><span class="k">স্থান:</span>' + place + '</div>'
-      + '<div><span class="k">অনুষ্ঠান:</span>' + label + '</div>'
-      + '</div>';
-
-    if (lines.length > TWO_COLUMN_AFTER) {
-      // Split near the middle; never leave a heading stranded at the bottom of the left column.
-      let half = Math.ceil(lines.length / 2);
-      while (half > 1 && lines[half - 1].section !== undefined) half -= 1;
-      pageDiv.classList.add('two-col');
-      if (lines.length > DENSE_AFTER) pageDiv.classList.add('dense');
-      const wrap = document.createElement('div');
-      wrap.className = 'ps-cols';
-      wrap.appendChild(buildTable(lines.slice(0, half)));
-      wrap.appendChild(buildTable(lines.slice(half)));
-      pageDiv.appendChild(wrap);
-    } else {
-      pageDiv.appendChild(buildTable(lines));
-    }
-
-    const footer = document.createElement('div');
-    footer.className = 'ps-page-footer';
-    footer.textContent = sheet.title;
-    pageDiv.appendChild(footer);
-    sheetEl.appendChild(pageDiv);
+    addPage(escapeHtml(sheet.title), '', '', lines, cols, sheet.title);
   });
 }
 

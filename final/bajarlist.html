@@ -311,18 +311,21 @@
     font-family: inherit; font-size: 12px; margin-left: 6px; padding: 1px 3px;
     border: 1px solid #ded2b8; border-radius: 4px; background: #fff; color: #7a6a4d;
   }
-  .dish-chip.chef-A, .dish-chip.chef-C { border-color: var(--maroon); }
-  .dish-chip.chef-A select.chef-sel, .dish-chip.chef-C select.chef-sel {
-    color: var(--maroon); font-weight: 700; border-color: #e0bcb4;
-  }
+  .dish-chip.chef-A { background: #f0d9d4; color: var(--maroon); }
+  .dish-chip.chef-A select.chef-sel { color: var(--maroon); font-weight: 700; border-color: #dcb4ab; background: #fffafa; }
+  .dish-chip.chef-C { background: var(--navy-light); color: var(--navy-dark); }
+  .dish-chip.chef-C select.chef-sel { color: var(--navy-dark); font-weight: 700; border-color: #adc2d8; background: #fbfdff; }
   .chef-badge {
     flex: none; display: inline-block; min-width: 17px; text-align: center;
     font-size: 11px; font-weight: 700; line-height: 16px; border-radius: 3px;
     background: var(--maroon); color: #fff; margin-left: 4px;
   }
+  .chef-badge.badge-C { background: var(--navy-dark); }
   .chef-split { flex: none; font-size: 11px; color: #8a7a5c; margin-left: 6px; white-space: nowrap; }
   .chef-preview { border-top: 2px solid var(--maroon); padding-top: 10px; }
   .chef-preview .sheet-head { font-size: 17px; font-weight: 700; color: var(--maroon); }
+  .chef-preview.chef-box-C { border-top-color: var(--navy-dark); }
+  .chef-preview.chef-box-C .sheet-head { color: var(--navy-dark); }
   .chef-dishes { font-size: 14px; color: #7a6a4d; margin: 0 0 8px; }
   .chef-note { font-size: 13px; color: #8a6a55; margin: 6px 0 0; }
 
@@ -1447,7 +1450,7 @@ function generateList() {
       // Which cooks this row's quantity is split between, if any. When part of it stays
       // on the paper form, say how much — the form prints that, not the total shown here.
       const chefs = ['A', 'C'].filter(c => split[c][row.id] > 0.0005);
-      const badges = chefs.map(c => '<span class="chef-badge" title="' + CHEF_LABELS[c] + ' এর পাতায় '
+      const badges = chefs.map(c => '<span class="chef-badge badge-' + c + '" title="' + CHEF_LABELS[c] + ' এর পাতায় '
         + toBanglaNum(formatByType(split[c][row.id], row.type)) + '">' + c + '</span>').join('');
       const shareNote = (chefs.length && split.S[row.id] > 0.0005)
         ? '<span class="chef-split" title="এই ফর্মে যতটা ছাপা হবে">ফর্মে '
@@ -1565,7 +1568,7 @@ function generateList() {
   split.active.forEach(chef => {
     const rows = chefRows(data, split[chef]);
     const box = document.createElement('div');
-    box.className = 'preview-cat chef-preview';
+    box.className = 'preview-cat chef-preview chef-box-' + chef;
 
     const head = document.createElement('div');
     head.className = 'sheet-head';

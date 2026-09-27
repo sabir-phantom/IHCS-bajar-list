@@ -1,6 +1,6 @@
 # Iqbal Hossain Catering — Order & Bajar List System
 
-Working plan and project record. Last updated 2026-09-22.
+Working plan and project record. Last updated 2026-09-27.
 
 ---
 
@@ -19,8 +19,9 @@ so it works by double-click and survives being copied to another machine.
 Bangla Menu/
 ├── plan.md            ← this file
 ├── final/             ← the live system
-│   ├── order_form.html    order entry, history, order sheet printing  (276 KB)
-│   ├── bajarlist.html     recipes, quantity calculation, market sheets (327 KB)
+│   ├── order_form.html    order entry, history, multi-time meals, auto-set menu,
+│   │                      universal item search, single-page print guard  (293 KB)
+│   ├── bajarlist.html     recipes, quantity calculation, market sheets (328 KB)
 │   ├── guide-en.html      user + maintainer guide, English
 │   ├── guide-bn.html      user + maintainer guide, Bangla
 │   └── bajar-data.json    the data file — CREATED BY THE USER, not yet set up
@@ -41,9 +42,11 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Order → bajar list handoff | Set menu tag, headcount, date, venue and item list pass through the URL |
 | Recipes | 28 dishes, per 100 guests, all ingredients resolve to form rows |
 | Forms | 3 printed sheets, ~260 rows, fully editable (names, units, rows, headings) |
-| Packages | 3 built in: স্ট্যান্ডার্ড কাচ্চি, রুটি কালিয়া, মোরগ পোলাও; more can be created in the app |
+| Packages & auto-select | Built-in packages auto-check their items on the order form; switching packages clears the previous package's auto-checked items without touching anything checked by hand; manually touched items are always preserved; live-synced from `bajarlist.html` via `localStorage` (`iqbal_catering_bajar_setmenus`) |
+| Multi-time meals | সকাল / দুপুর / বিকাল / সন্ধ্যা / রাত as multi-select checkboxes; selecting 2+ times splits the form into a dedicated headed section per time, each with its own category blocks and "আরেকটি মেনু যোগ করুন" button; single or no time keeps the flat layout |
+| Universal item search | A search bar above all blocks searches every category at once; results show a category badge per item; multi-time orders show a time-slot dropdown per result; already-checked items are marked and blocked from double-adding; clicking outside dismisses results |
 | Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations |
-| Printing | Only filled rows, no price columns, one page per sheet, measured against A4 |
+| Printing | Print styles shared between screen preview and printer; column count auto-chosen (1 / 2 / 3) based on item count vs. A4 printable height; scale guard shrinks font to ≥70% if even 3 columns overflow; manual font-size control overrides auto-scale; multi-time orders print with a bold underlined heading per time slot |
 | Fonts | Embedded — zero external requests |
 | Data file | Built and tested; **not yet switched on by the user** |
 | Documentation | Both guides written and current |
@@ -93,6 +96,27 @@ cards) and has been consolidated onto `m5`.
    Needs Chrome or Edge (File System Access API); the file handle is remembered in
    IndexedDB `iqbal-bajar` → `handles` → `dataFile`.
 
+### Set-menu to order-item mapping
+
+`bajarlist.html` stores packages under recipe-key dish names (e.g. `kachi`,
+`chickenRoast`, `borhani`). `order_form.html` displays fuller item names (e.g.
+`শাহী মাটন কাচ্চি বিরিয়ানী (চিনিগুড়া)`, `বোরহানী`). The one manual bridge
+between them is `DISH_TO_ORDER_ITEM` in `order_form.html`.
+
+**Rule:** a new *package* that uses only dishes already listed there needs no change —
+it auto-syncs via `localStorage`. Only a brand-new *dish* (recipe key) introduced
+in `bajarlist.html`'s `RECIPE_LIBRARY` and used in a package needs a new line added
+to `DISH_TO_ORDER_ITEM`.
+
+### Auto-checked item tracking
+
+`autoCheckedItems` (a `Set` in `order_form.html`) tracks which items the most recent
+package selection checked automatically. Switching to a different package calls
+`clearAutoCheckedItems()` to remove only those items before checking the new set.
+Any item the user clicks by hand is removed from `autoCheckedItems` at that moment,
+so it is never swept away by a later package change. The set resets on new order and
+on editing a history order.
+
 ---
 
 ## 4. Open items
@@ -118,6 +142,8 @@ cards) and has been consolidated onto `m5`.
       Confirm both bars show a green dot, and that it survives closing and reopening.
 - [ ] Test print all three sheets on the actual printer, A4, default margins.
 - [ ] Confirm the order history survived the move into `final/`.
+- [ ] Test print the order sheet with a multi-time order (e.g. দুপুর + রাত) and
+      confirm the time headings and column layout are correct on paper.
 
 ---
 
@@ -165,13 +191,23 @@ Object.keys(RECIPE_LIBRARY).forEach(k => (RECIPE_LIBRARY[k].ingredients || []).f
 
 **Two lists to keep in sync.** Built-in packages appear in `SET_MENUS` in
 `bajarlist.html` and in `BAJAR_SET_MENUS` in `order_form.html`. The keys must match.
-This duplication is deliberate: a shared `.js` file would break the moment someone
-copies only the HTML.
+New packages built by the user in the app sync automatically via `localStorage`
+(`iqbal_catering_bajar_setmenus`) and need no manual update in `order_form.html`.
+Only a hardcoded built-in package requires a matching entry in both files.
 
-**Print thresholds are measured, not guessed.** One column holds 22 lines; beyond
-that it splits into two columns, and beyond 56 the text tightens. Measured against
-A4's 703 × 1032 px printable area with the embedded font. Re-measure if the font or
-the row padding changes.
+**Adding a dish to `DISH_TO_ORDER_ITEM`.** Find `DISH_TO_ORDER_ITEM` in
+`order_form.html` and add:
+```js
+newDishKey: 'অর্ডার ফর্মে যেভাবে দেখায়',
+```
+Both keys (dish key in `RECIPE_LIBRARY` and the order-form item name) must match
+exactly, including capitalisation and spacing.
+
+**Print column thresholds.** One column holds ≈ 38 lines against A4's 1032 px
+printable height (180 px header + 22 px per line). Beyond 38 the layout switches
+to 2 columns; beyond 76 it switches to 3. Beyond 114 the scale guard kicks in.
+These are calculated from A4 dimensions — re-check only if the header height or
+font size changes significantly.
 
 **Editing the files.** They are large single files; use anchored search-and-replace
 rather than line numbers, and check the JavaScript parses afterwards:
@@ -193,3 +229,14 @@ node --check <extracted script>
 - **Only rows with a quantity print.** Chosen over printing the whole blank form.
 - **Unreadable values are flagged, never guessed.** Every uncertain transcription is
   listed in section 4 rather than quietly entered.
+- **Multi-time uses dedicated blocks, not per-item tags.** When 2+ times are selected,
+  the form shows a headed section per time (সকাল, দুপুর, etc.), each with its own
+  category blocks. The alternative (tagging each item with which times it belongs to)
+  was tried first and replaced in favour of this cleaner structure.
+- **Auto-select clears only its own items.** When switching packages, only items the
+  previous package auto-checked are removed; anything the user ticked by hand
+  survives the switch. A manual click on an auto-checked item transfers ownership
+  to the user at that moment.
+- **Print scale is calculated, not stored.** Column count and zoom are derived from
+  the actual rendered line count at print time, so no value needs updating when
+  menu content grows or shrinks.

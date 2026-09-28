@@ -86,10 +86,24 @@ with S.
 The cooks' sheets print last in the packet, one page and one merged table per cook, A
 before C — a cook is handed their own sheet, never half of one. Each page uses the same
 rules as the market sheets: one column to 22 rows, two columns beyond, dense type beyond
-56. Measured against the 1032px A4 page: 22 rows fill 989px in one column, 56 fill 963px
-in two, 100 fill 972px dense, and 110 reach 1051px and spill. `CHEF_PAGE_MAX` is set at
-100 and the review screen warns in red past it, rather than quietly printing a second
-sheet.
+56. Measured against the 1032px A4 page, one row at a time: 22 rows fill 989px in one
+column, 45 fill 828px in two, 56 fill 963px in two, and the true ceiling is 106 rows at
+1020px — 107 reaches 1035px and spills. `CHEF_PAGE_MAX` is deliberately set at 100, five
+rows short of the ceiling, because a long Bangla name can wrap to a second line and cost
+height; past it the review screen warns in red rather than quietly printing a second
+sheet. The ceiling is unreachable in practice: the whole master is 227 rows and the
+standard package uses 41.
+
+### Order form handoff — verified
+
+Tested over `http://localhost` (the desktop preview pane strips query strings from
+`file://`, which is why this went unverified for so long). `order_form.html`'s
+`openBajarList()` refuses without a set menu or with no items ticked, otherwise opens
+`bajarlist.html?setMenu=&guests=&date=&place=&label=&items=[…]`. On arrival the package
+is selected, the four header fields are filled, the dessert named in `items` is ticked,
+the review table is computed, and a notice names the set menu and lists any ordered item
+with no recipe behind it. Confirmed with the standard কাচ্চি package at 250 guests: 42
+rows carried a quantity and কাশ্মিরী চা was correctly flagged as having no recipe.
 
 The assignment lives in memory only and is never saved. That is deliberate: a stale
 assignment restored from last week would silently remove items from the shopping sheets.

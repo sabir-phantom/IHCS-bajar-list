@@ -328,6 +328,7 @@
   .chef-preview.chef-box-C .sheet-head { color: var(--navy-dark); }
   .chef-dishes { font-size: 14px; color: #7a6a4d; margin: 0 0 8px; }
   .chef-note { font-size: 13px; color: #8a6a55; margin: 6px 0 0; }
+  .chef-note.over { color: var(--maroon); font-weight: 600; }
 
 
   #print-sheet { display: none; }
@@ -1614,10 +1615,12 @@ function generateList() {
     box.appendChild(table);
 
     const note = document.createElement('div');
-    note.className = 'chef-note';
-    note.textContent = rows.length > TWO_COLUMN_AFTER
-      ? 'এই তালিকা আলাদা এক পাতায় দুই কলামে ছাপা হবে।'
-      : 'এই তালিকা আলাদা এক পাতায় ছাপা হবে।';
+    note.className = 'chef-note' + (rows.length > CHEF_PAGE_MAX ? ' over' : '');
+    note.textContent = rows.length > CHEF_PAGE_MAX
+      ? '⚠ তালিকা এত লম্বা যে এক পাতায় ধরবে না — কিছু আইটেম অন্য বাবুর্চিকে দিন।'
+      : (rows.length > TWO_COLUMN_AFTER
+          ? 'এই তালিকা আলাদা এক পাতায় দুই কলামে ছাপা হবে।'
+          : 'এই তালিকা আলাদা এক পাতায় ছাপা হবে।');
     box.appendChild(note);
 
     previewEl.appendChild(box);
@@ -1765,6 +1768,11 @@ function importDefaults(event) {
 const TWO_COLUMN_AFTER = 22;   // measured: 22 lines fill 989px of the 1032px A4 page
 // Past this many, the two columns also tighten so the sheet still fits one page.
 const DENSE_AFTER = 56;        // measured: 56 lines fill 963px in two columns
+// The ceiling for one cook's page. Measured on a clean page against A4's 1032px:
+// 100 rows in dense two-column type reach 972px, 110 reach 1051px and spill. No real
+// menu comes near it -- the whole standard package is 41 rows -- but a cook's list is
+// promised to be one sheet, so the review screen says when that promise cannot be kept.
+const CHEF_PAGE_MAX = 100;
 function renderPrintSheet() {
   const data = aggregate();
   const split = chefSplit(data);

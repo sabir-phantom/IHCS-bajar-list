@@ -86,8 +86,10 @@ with S.
 The cooks' sheets print last in the packet, one page and one merged table per cook, A
 before C — a cook is handed their own sheet, never half of one. Each page uses the same
 rules as the market sheets: one column to 22 rows, two columns beyond, dense type beyond
-56. Measured: a 30-row cook page is 612px and a 70-row page 734px, both inside the
-1032px A4 page.
+56. Measured against the 1032px A4 page: 22 rows fill 989px in one column, 56 fill 963px
+in two, 100 fill 972px dense, and 110 reach 1051px and spill. `CHEF_PAGE_MAX` is set at
+100 and the review screen warns in red past it, rather than quietly printing a second
+sheet.
 
 The assignment lives in memory only and is never saved. That is deliberate: a stale
 assignment restored from last week would silently remove items from the shopping sheets.

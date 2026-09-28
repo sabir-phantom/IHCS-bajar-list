@@ -102,8 +102,21 @@ Tested over `http://localhost` (the desktop preview pane strips query strings fr
 `bajarlist.html?setMenu=&guests=&date=&place=&label=&items=[…]`. On arrival the package
 is selected, the four header fields are filled, the dessert named in `items` is ticked,
 the review table is computed, and a notice names the set menu and lists any ordered item
-with no recipe behind it. Confirmed with the standard কাচ্চি package at 250 guests: 42
-rows carried a quantity and কাশ্মিরী চা was correctly flagged as having no recipe.
+with no recipe behind it. Confirmed with the standard কাচ্চি package at 250 guests and
+the real ভি.আই.পি menu list: 42 rows carried a quantity, শাহী জর্দা was picked up as the
+dessert, and seven items were flagged as having no recipe.
+
+That flag list is worth acting on. Three of them are real dishes whose ingredients
+therefore never reach the bajar list at all:
+
+- [ ] **আস্ত খাশীর রোস্ট** — no recipe, no form row
+- [ ] **চিকেন সাসলিক** — no recipe, no form row
+- [ ] **ভেটকী গ্রীল** — no recipe, no form row
+
+The other four are consumables that do have form rows to type a quantity into, so the
+flag is correct but harmless: মিনারেল ওয়াটার (rows পানি ১.৫ লিটার / ৫০০ মিলি),
+শাহী পান বক্স (বক্স পান), টিস্যু/তাওয়েল/সাবান (টিস্যু পেপার, টিস্যু বক্স),
+আলু বোখারার চাটনী (আলু বোখারা চাটনি).
 
 The assignment lives in memory only and is never saved. That is deliberate: a stale
 assignment restored from last week would silently remove items from the shopping sheets.

@@ -44,7 +44,8 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Recipes | 28 dishes, per 100 guests, all ingredients resolve to form rows |
 | Forms | 3 printed sheets, ~260 rows, fully editable (names, units, rows, headings) |
 | Packages | 3 built in: স্ট্যান্ডার্ড কাচ্চি, রুটি কালিয়া, মোরগ পোলাও; more can be created in the app. The order form's dropdown reads them live from `localStorage` (`iqbal_catering_bajar_setmenus`) |
-| Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations |
+| Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations, and a sticky search box that filters all three sheets at once |
+| Recipe editor | Ingredients are chosen through a searchable box with a menu the page draws itself; an unknown name offers to create the form row; narrow windows stack each ingredient as a card |
 | Chef assignment | Each dish of the package can go to বাবুর্চি S / A / C. A and C's ingredients leave the three normal sheets and print on a page of that cook's own, after them. Shares are split in proportion to each dish's contribution, so nothing is bought twice and nothing is mixed between cooks |
 | Printing | Only filled rows, no price columns, one page per sheet, measured against A4: one column to 22 lines, two columns beyond, dense type beyond 56 |
 | Fonts | Embedded — zero external requests |
@@ -188,6 +189,33 @@ It does not know which dishes a package contains — that stays in `bajarlist.ht
       two cook pages come out first and the shares add up to the full amount.
 
 ---
+
+### Recipe editor and list search
+
+`PICK_TO_ROW` / `ROW_TO_PICK` give every form row a display name that is unique. 18 names
+sit on more than one row (ঘি on three, ডিম on four), so the name alone cannot identify a
+row and the duplicates carry their sheet: `ঘি — পার্টি বাজার লিস্ট`. A bare ambiguous name
+resolves to nothing rather than guessing, which is what keeps "one ingredient, one row"
+true when a recipe is edited.
+
+The suggestion menu is drawn by the page, not by a `<datalist>`. The ingredient input sits
+inside `.rec-table-wrap`, which scrolls sideways on a narrow window; once scrolled, the
+input is clipped and a native popup anchored to it lands somewhere else. The menu is now
+fixed-positioned against the input's own rectangle and repositions on scroll.
+
+Typing an unknown name offers to create the row: pick a sheet and unit, and it is appended
+to that form, indexed, and bound to the recipe in one step. This is the only route by which
+a brand-new ingredient enters the system.
+
+**Two bugs worth remembering**, both the same shape:
+
+- The ✕ button did nothing. Clicking it blurred the focused ingredient box, the blur fired
+  `change`, and `change` redrew the table — so the button was detached before its click
+  could be delivered. Fixed by acting on `mousedown` with `preventDefault`, and by
+  inserting the create-row offer into one cell instead of redrawing.
+- A synthetic `.click()` in a test involves no focus, so it passed while the real button
+  was dead. **Reproduce pointer bugs with the pointer**, or at least with the full
+  mousedown → blur → click sequence.
 
 ## 5. Roadmap
 

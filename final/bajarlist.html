@@ -261,7 +261,24 @@
   .rec-tag.new { background: #e3f1ec; color: var(--green-dark); }
   .rec-dessert { display: flex; gap: 8px; align-items: center; margin: 0; font-weight: 500; color: #2b2620; }
   .rec-table-wrap { overflow-x: auto; }
-  .rec-table select.rec-row { width: 100%; min-width: 180px; font-family: inherit; font-size: 15px; padding: 4px 6px; }
+  .rec-table input.rec-pick {
+    width: 100%; min-width: 180px; font-family: inherit; font-size: 15px; padding: 4px 6px;
+    border: 1px solid #d8cdb5; border-radius: 6px; background: #fffefb;
+  }
+  .rec-table input.rec-pick.unknown { border-color: #e0bcb4; background: #fdf6f4; }
+  .rec-new {
+    margin-top: 5px; padding: 7px 9px; background: #fbf7ec;
+    border: 1px dashed #d9c89d; border-radius: 6px; font-size: 13px; color: #7a6a4d;
+  }
+  .rec-new strong { color: var(--maroon); }
+  .rec-new .rec-new-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+  .rec-new select { font-family: inherit; font-size: 13px; padding: 3px 5px; border: 1px solid #ded2b8; border-radius: 5px; background: #fff; }
+  .rec-new button {
+    font-family: inherit; font-size: 13px; font-weight: 600; padding: 4px 10px; cursor: pointer;
+    border: 1px solid var(--green); border-radius: 5px; background: var(--green); color: #fff;
+  }
+  .rec-new button:hover { filter: brightness(1.08); }
+  .rec-pick-hint { font-size: 12px; color: #a3906a; margin-top: 3px; }
   .rec-warn { font-size: 12px; color: #b1442f; margin-top: 2px; }
   .rec-add {
     justify-self: start; font-family: inherit; font-size: 14px; padding: 6px 12px; border-radius: 6px;
@@ -473,6 +490,7 @@
           <tbody id="rec-rows"></tbody>
         </table>
       </div>
+      <datalist id="rec-rowlist"></datalist>
       <button type="button" class="rec-add" onclick="addRecipeRow()">+ উপকরণ</button>
       <div class="pkg-actions">
         <button type="button" class="pkg-btn pkg-btn-new" onclick="saveRecipe()">সংরক্ষণ</button>
@@ -1407,6 +1425,7 @@ function escapeHtml(str) {
 function onFormsChanged() {
   saveForms();
   rebuildRowIndex();
+  rebuildPickIndex();
   generateList();
 }
 
@@ -2065,6 +2084,7 @@ function openRecipeEditor(key) {
   document.getElementById('rec-dessert').checked = isNew ? false : isDessert(key);
   document.getElementById('rec-delete').hidden = isNew || !rec.custom;
   document.getElementById('rec-restore').hidden = isNew || rec.custom || !rec.edited || !FACTORY_RECIPES[key];
+  rebuildPickIndex();   // the row list may have changed since the editor was last opened
   renderRecipeRows();
 
   document.getElementById('recipe-lib').open = true;
@@ -2077,18 +2097,57 @@ function closeRecipeEditor() {
   recipeDraft = null;
 }
 
-function rowOptions(selected) {
-  return '<option value="">— সারি বাছাই করুন —</option>' + forms.map(sheet =>
-    '<optgroup label="' + escapeHtml(sheet.title) + '">'
-    + sheet.rows.filter(r => r.section === undefined).map(r =>
-        '<option value="' + r[0] + '"' + (r[0] === selected ? ' selected' : '') + '>' + escapeHtml(r[1]) + '</option>').join('')
-    + '</optgroup>').join('');
+// Eighteen ingredient names appear on more than one row (ঘি sits on three, ডিম on four),
+// so the picker cannot key on the name alone: the recipe must bind to one specific row or
+// the "one ingredient, one row" rule breaks. Every row therefore gets a display name that
+// is unique — the plain name where it is unique, otherwise the name plus its sheet, plus
+// the row id if even that repeats.
+const PICK_TO_ROW = {};   // display name -> row id
+const ROW_TO_PICK = {};   // row id -> display name
+
+function rebuildPickIndex() {
+  Object.keys(PICK_TO_ROW).forEach(k => { delete PICK_TO_ROW[k]; });
+  Object.keys(ROW_TO_PICK).forEach(k => { delete ROW_TO_PICK[k]; });
+
+  const count = {};
+  forms.forEach(sheet => sheet.rows.forEach(r => {
+    if (r.section === undefined) count[r[1]] = (count[r[1]] || 0) + 1;
+  }));
+
+  forms.forEach(sheet => sheet.rows.forEach(r => {
+    if (r.section !== undefined) return;
+    let name = r[1];
+    if (count[name] > 1) name += ' — ' + sheet.title;
+    if (PICK_TO_ROW[name] !== undefined) name += ' (' + r[0] + ')';
+    PICK_TO_ROW[name] = r[0];
+    ROW_TO_PICK[r[0]] = name;
+  }));
+
+  const list = document.getElementById('rec-rowlist');
+  if (list) {
+    list.innerHTML = Object.keys(PICK_TO_ROW)
+      .map(n => '<option value="' + escapeHtml(n) + '"></option>').join('');
+  }
+}
+
+// Accepts the exact display name, or a plain row name when it is unambiguous.
+function resolvePick(text) {
+  const t = String(text || '').trim();
+  if (!t) return '';
+  if (PICK_TO_ROW[t] !== undefined) return PICK_TO_ROW[t];
+  const exact = Object.keys(PICK_TO_ROW).filter(n => n === t || n.indexOf(t + ' — ') === 0);
+  if (exact.length === 1) return PICK_TO_ROW[exact[0]];
+  return '';
 }
 
 function renderRecipeRows() {
   document.getElementById('rec-rows').innerHTML = recipeDraft.rows.map((r, i) =>
-    '<tr><td><select class="rec-row" data-i="' + i + '" aria-label="উপকরণ">' + rowOptions(r.rowId) + '</select>'
-    + (!r.rowId && r.orig ? '<div class="rec-warn">"' + escapeHtml(r.orig) + '" কোনো সারিতে মেলেনি — সারি বাছাই করুন</div>' : '')
+    '<tr><td><input class="rec-pick' + (r.typed && !r.rowId ? ' unknown' : '') + '" list="rec-rowlist" data-i="' + i + '"'
+      + ' value="' + escapeHtml(r.rowId && ROW_TO_PICK[r.rowId] ? ROW_TO_PICK[r.rowId] : (r.typed || r.orig || '')) + '"'
+      + ' placeholder="নাম লিখে খুঁজুন…" aria-label="উপকরণ" autocomplete="off">'
+    + (!r.rowId && i === 0 ? '<div class="rec-pick-hint">নাম লিখে খুঁজুন। তালিকায় না থাকলে নতুন উপকরণ তৈরি করার সুযোগ আসবে।</div>' : '')
+    + (r.typed && !r.rowId ? newRowOffer(r.typed, i) : '')
+    + (!r.rowId && r.orig && !r.typed ? '<div class="rec-warn">"' + escapeHtml(r.orig) + '" কোনো সারিতে মেলেনি — নাম লিখে বাছুন</div>' : '')
     + '</td><td><input type="number" min="0" step="any" class="qty-in rec-qty" data-i="' + i + '" value="' + (r.qty === '' ? '' : r.qty) + '" aria-label="প্রতি ১০০ জনে"></td>'
     + '<td><select class="unit-in rec-unit" data-i="' + i + '" aria-label="একক">'
     + UNIT_OPTIONS.map(o => '<option value="' + o[0] + '"' + (o[0] === r.unit ? ' selected' : '') + '>' + o[1] + '</option>').join('')
@@ -2096,16 +2155,71 @@ function renderRecipeRows() {
   ).join('');
 }
 
+// When the typed name matches no row, offer to create it — this is the only way a brand
+// new ingredient can enter the system, and it must land on a sheet so it can be printed.
+function newRowOffer(name, i) {
+  return '<div class="rec-new">'
+    + '<strong>"' + escapeHtml(name) + '"</strong> তালিকায় নেই। নতুন উপকরণ হিসেবে যোগ করবেন?'
+    + '<div class="rec-new-controls">'
+    + '<select class="rec-new-sheet" data-i="' + i + '" aria-label="কোন ফর্মে">'
+    + forms.map((f, si) => '<option value="' + si + '">' + escapeHtml(f.title) + '</option>').join('')
+    + '</select>'
+    + '<select class="rec-new-unit" data-i="' + i + '" aria-label="একক">'
+    + UNIT_OPTIONS.map(o => '<option value="' + o[0] + '"' + (o[0] === 'gm' ? ' selected' : '') + '>' + o[1] + '</option>').join('')
+    + '</select>'
+    + '<button type="button" class="rec-new-go" data-i="' + i + '">+ নতুন উপকরণ তৈরি করুন</button>'
+    + '</div></div>';
+}
+
+// Creates the form row, so the ingredient exists on the printed sheet from now on.
+function createRowFromRecipe(i) {
+  const row = recipeDraft.rows[i];
+  const name = String(row.typed || '').trim();
+  if (!name) return;
+  const sheetSel = document.querySelector('select.rec-new-sheet[data-i="' + i + '"]');
+  const unitSel = document.querySelector('select.rec-new-unit[data-i="' + i + '"]');
+  const sheet = forms[Number(sheetSel.value)];
+  const unit = unitSel.value;
+  const id = 'u' + Date.now();
+  sheet.rows.push([id, name, unit]);
+  onFormsChanged();
+  rebuildPickIndex();
+  row.rowId = id;
+  row.unit = unit;
+  row.typed = undefined;
+  row.orig = undefined;
+  renderRecipeRows();
+}
+
 const recRows = document.getElementById('rec-rows');
+// Typing resolves as you go, so picking from the browser's own filtered list just works.
+recRows.addEventListener('input', ev => {
+  const el = ev.target;
+  if (!el.classList.contains('rec-pick')) return;
+  const row = recipeDraft.rows[Number(el.dataset.i)];
+  if (!row) return;
+  const id = resolvePick(el.value);
+  if (id) {
+    row.rowId = id;
+    row.unit = ROW_INDEX[id].unit;
+    row.typed = undefined;
+    row.orig = undefined;
+    renderRecipeRows();
+    const next = document.querySelector('input.rec-qty[data-i="' + el.dataset.i + '"]');
+    if (next) next.focus();
+  } else {
+    row.rowId = '';
+    row.typed = el.value;
+    el.classList.toggle('unknown', Boolean(el.value.trim()));
+  }
+});
+
 recRows.addEventListener('change', ev => {
   const el = ev.target, row = recipeDraft.rows[Number(el.dataset.i)];
   if (!row) return;
-  if (el.classList.contains('rec-row')) {
-    row.rowId = el.value;
-    // Picking a row defaults the unit to the row's own unit.
-    if (el.value && ROW_INDEX[el.value]) row.unit = ROW_INDEX[el.value].unit;
-    row.orig = undefined;
-    renderRecipeRows();
+  if (el.classList.contains('rec-pick')) {
+    // Leaving the field with a name that matches nothing offers to create it.
+    if (!row.rowId && String(el.value).trim()) { row.typed = el.value; renderRecipeRows(); }
   } else if (el.classList.contains('rec-qty')) {
     row.qty = el.value;
   } else if (el.classList.contains('rec-unit')) {
@@ -2113,21 +2227,35 @@ recRows.addEventListener('change', ev => {
   }
 });
 recRows.addEventListener('click', ev => {
+  const make = ev.target.closest('button.rec-new-go');
+  if (make) { createRowFromRecipe(Number(make.dataset.i)); return; }
+
   const btn = ev.target.closest('button.row-del');
   if (!btn) return;
-  const row = recipeDraft.rows[Number(btn.dataset.i)];
-  const name = row && row.rowId && ROW_INDEX[row.rowId] ? ROW_INDEX[row.rowId].label : 'এই উপকরণ';
-  if (!confirm('"' + name + '" এই রেসিপি থেকে বাদ দেবেন?')) return;
-  recipeDraft.rows.splice(Number(btn.dataset.i), 1);
-  if (!recipeDraft.rows.length) recipeDraft.rows.push({ rowId: '', qty: '', unit: 'gm' });
+  const i = Number(btn.dataset.i);
+  const row = recipeDraft.rows[i];
+  if (!row) return;
+  // An empty line is removed without asking: confirming the deletion of nothing only
+  // made the button look broken, since the table always keeps one blank line.
+  const filled = Boolean(row.rowId) || String(row.qty) !== '' || Boolean(row.typed);
+  if (filled) {
+    const name = row.rowId && ROW_INDEX[row.rowId] ? ROW_INDEX[row.rowId].label : (row.typed || 'এই উপকরণ');
+    if (!confirm('"' + name + '" এই রেসিপি থেকে বাদ দেবেন?')) return;
+  }
+  if (recipeDraft.rows.length === 1) {
+    // The last line is cleared rather than removed, so the change is visible.
+    recipeDraft.rows[0] = { rowId: '', qty: '', unit: 'gm' };
+  } else {
+    recipeDraft.rows.splice(i, 1);
+  }
   renderRecipeRows();
 });
 
 function addRecipeRow() {
   recipeDraft.rows.push({ rowId: '', qty: '', unit: 'gm' });
   renderRecipeRows();
-  const selects = document.querySelectorAll('#rec-rows select.rec-row');
-  selects[selects.length - 1].focus();
+  const picks = document.querySelectorAll('#rec-rows input.rec-pick');
+  if (picks.length) picks[picks.length - 1].focus();
 }
 
 function saveRecipe() {

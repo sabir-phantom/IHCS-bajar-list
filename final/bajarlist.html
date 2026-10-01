@@ -2018,7 +2018,16 @@ function renderPrintSheet() {
     });
   };
 
+  // The dishes these sheets are buying for — the same line the cooks' pages carry, so
+  // whoever holds the packet can see at a glance which menu it was priced from. Dishes
+  // given to a cook are not on these sheets, so they are not named here either.
+  const sheetDishes = split.dishes.S.join(', ');
+  const sheetDishLine = sheetDishes
+    ? '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>' + escapeHtml(sheetDishes) + '</div>'
+    : '';
+
   // The three paper forms, carrying the standard cook's share only.
+  let sheetNo = 0;
   orderedForms().forEach(({ sheet }) => {
     const cols = (sheet.columns || ['qty']).filter(c => COLS[c]);
 
@@ -2041,7 +2050,8 @@ function renderPrintSheet() {
     });
     if (!lines.some(item => item.section === undefined)) return;
 
-    addPage(escapeHtml(sheet.title), '', lines, cols);
+    sheetNo += 1;
+    addPage(escapeHtml(sheet.title), sheetNo === 1 ? sheetDishLine : '', lines, cols);
   });
 
   addChefPage();

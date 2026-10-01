@@ -2376,6 +2376,17 @@ function newRowOffer(name, i) {
     + '</div></div>';
 }
 
+// Puts the "create this row" offer under the box it belongs to, touching nothing else.
+function showNewRowOffer(input) {
+  const i = Number(input.dataset.i);
+  const row = recipeDraft.rows[i];
+  if (!row) return;
+  const cell = input.parentElement;
+  const old = cell.querySelector('.rec-new');
+  if (old) old.remove();
+  cell.insertAdjacentHTML('beforeend', newRowOffer(row.typed, i));
+}
+
 // Creates the form row, so the ingredient exists on the printed sheet from now on.
 function createRowFromRecipe(i) {
   const row = recipeDraft.rows[i];
@@ -2406,6 +2417,8 @@ recRows.addEventListener('input', ev => {
   row.rowId = '';
   row.typed = el.value;
   el.classList.toggle('unknown', Boolean(el.value.trim()));
+  const stale = el.parentElement.querySelector('.rec-new');
+  if (stale) stale.remove();          // the offer names the old text; it returns on blur
   openPickMenu(el);
 });
 
@@ -2440,23 +2453,43 @@ recRows.addEventListener('change', ev => {
   const el = ev.target, row = recipeDraft.rows[Number(el.dataset.i)];
   if (!row) return;
   if (el.classList.contains('rec-pick')) {
-    // Leaving the field with a name that matches nothing offers to create it.
-    if (!row.rowId && String(el.value).trim()) { row.typed = el.value; renderRecipeRows(); }
+    // Leaving the field with a name that matches nothing offers to create it. The offer
+    // is inserted into this one cell rather than by redrawing the table: a redraw here
+    // happens while the pointer is going down on another button, and it would destroy
+    // that button before its click could land.
+    if (!row.rowId && String(el.value).trim()) { row.typed = el.value; showNewRowOffer(el); }
   } else if (el.classList.contains('rec-qty')) {
     row.qty = el.value;
   } else if (el.classList.contains('rec-unit')) {
     row.unit = el.value;
   }
 });
-recRows.addEventListener('click', ev => {
-  const make = ev.target.closest('button.rec-new-go');
-  if (make) { createRowFromRecipe(Number(make.dataset.i)); return; }
-
-  const btn = ev.target.closest('button.row-del');
+// These buttons act on mousedown, not click. A click arrives only after the focused
+// ingredient box has blurred, and that blur used to redraw the row — so the button was
+// gone before its click could be delivered, and pressing ✕ appeared to do nothing.
+// preventDefault keeps the focus where it is, so no blur happens at all.
+recRows.addEventListener('mousedown', ev => {
+  const btn = ev.target.closest('button.row-del, button.rec-new-go');
   if (!btn) return;
+  ev.preventDefault();
+  recipeRowAction(btn);
+});
+
+// Keyboard users press Enter or Space; the button never receives a mousedown then.
+recRows.addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  const btn = ev.target.closest ? ev.target.closest('button.row-del, button.rec-new-go') : null;
+  if (!btn) return;
+  ev.preventDefault();
+  recipeRowAction(btn);
+});
+
+function recipeRowAction(btn) {
+  if (btn.classList.contains('rec-new-go')) { createRowFromRecipe(Number(btn.dataset.i)); return; }
   const i = Number(btn.dataset.i);
   const row = recipeDraft.rows[i];
   if (!row) return;
+  closePickMenu();
   // An empty line is removed without asking: confirming the deletion of nothing only
   // made the button look broken, since the table always keeps one blank line.
   const filled = Boolean(row.rowId) || String(row.qty) !== '' || Boolean(row.typed);
@@ -2471,7 +2504,7 @@ recRows.addEventListener('click', ev => {
     recipeDraft.rows.splice(i, 1);
   }
   renderRecipeRows();
-});
+}
 
 function addRecipeRow() {
   recipeDraft.rows.push({ rowId: '', qty: '', unit: 'gm' });

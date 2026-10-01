@@ -279,10 +279,46 @@
   .rec-tag.new { background: #e3f1ec; color: var(--green-dark); }
   .rec-dessert { display: flex; gap: 8px; align-items: center; margin: 0; font-weight: 500; color: #2b2620; }
   .rec-table-wrap { overflow-x: auto; }
+  .rec-table th, .rec-table td { padding: 5px 6px; }
+  .rec-table th:nth-child(2), .rec-table td:nth-child(2) { width: 96px; }
+  .rec-table th:nth-child(3), .rec-table td:nth-child(3) { width: 86px; }
+  /* On a narrow window the four columns leave the name box unreadably thin and push the
+     ✕ out of reach, so each ingredient becomes a stacked card instead: name on its own
+     line, then amount, unit and ✕ across the bottom. */
+  @media (max-width: 640px) {
+    .rec-table, .rec-table tbody, .rec-table tr, .rec-table td { display: block; width: auto !important; }
+    .rec-table thead { display: none; }
+    .rec-table tr {
+      border: 1px solid #e6ddc6; border-radius: 8px; background: #fffdf7;
+      padding: 8px; margin-bottom: 8px;
+    }
+    .rec-table td { border: 0 !important; padding: 3px 0 !important; }
+    .rec-table td:nth-child(2) { display: inline-block; width: 44% !important; }
+    .rec-table td:nth-child(3) { display: inline-block; width: 38% !important; padding-left: 6px !important; }
+    .rec-table td:nth-child(4) { display: inline-block; width: 16% !important; text-align: right; }
+    .rec-table-wrap { overflow-x: visible; }
+  }
+  .rec-table input.rec-qty { min-width: 0; }
+  .rec-table select.rec-unit { min-width: 0; width: 100%; }
   .rec-table input.rec-pick {
-    width: 100%; min-width: 180px; font-family: inherit; font-size: 15px; padding: 4px 6px;
+    width: 100%; min-width: 0; font-family: inherit; font-size: 15px; padding: 4px 6px;
     border: 1px solid #d8cdb5; border-radius: 6px; background: #fffefb;
   }
+  /* The suggestion list is drawn by the page, not by the browser. A native <datalist>
+     popup is positioned against the input's box, and this input lives inside a wrapper
+     that scrolls sideways on a narrow window -- once that wrapper is scrolled the input
+     is clipped and the popup no longer lines up with it. Owning the menu keeps it on
+     the box, and fixed positioning keeps it clear of the wrapper's overflow. */
+  .pick-menu {
+    position: fixed; z-index: 60; background: #fff; border: 1px solid #d8cdb5;
+    border-radius: 8px; box-shadow: 0 8px 20px rgba(27, 52, 85, 0.18);
+    max-height: 264px; overflow-y: auto; font-size: 14px; padding: 4px 0;
+  }
+  .pick-menu .pick-item { padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+  .pick-menu .pick-item .pick-sheet { color: #a3906a; font-size: 12px; margin-right: 6px; }
+  .pick-menu .pick-item.sel, .pick-menu .pick-item:hover { background: #faf2df; }
+  .pick-menu .pick-none { padding: 7px 11px; color: var(--maroon); }
+  .pick-menu .pick-more { padding: 5px 11px; color: #a3906a; font-size: 12px; border-top: 1px solid #f0e8d6; }
   .rec-table input.rec-pick.unknown { border-color: #e0bcb4; background: #fdf6f4; }
   .rec-new {
     margin-top: 5px; padding: 7px 9px; background: #fbf7ec;
@@ -508,7 +544,6 @@
           <tbody id="rec-rows"></tbody>
         </table>
       </div>
-      <datalist id="rec-rowlist"></datalist>
       <button type="button" class="rec-add" onclick="addRecipeRow()">+ উপকরণ</button>
       <div class="pkg-actions">
         <button type="button" class="pkg-btn pkg-btn-new" onclick="saveRecipe()">সংরক্ষণ</button>
@@ -2182,6 +2217,7 @@ function openRecipeEditor(key) {
 }
 
 function closeRecipeEditor() {
+  closePickMenu();
   document.getElementById('recipe-editor').hidden = true;
   recipeDraft = null;
 }
@@ -2212,11 +2248,91 @@ function rebuildPickIndex() {
     ROW_TO_PICK[r[0]] = name;
   }));
 
-  const list = document.getElementById('rec-rowlist');
-  if (list) {
-    list.innerHTML = Object.keys(PICK_TO_ROW)
-      .map(n => '<option value="' + escapeHtml(n) + '"></option>').join('');
+}
+
+// ---------------- The ingredient suggestion menu ----------------
+let pickMenu = null, pickInput = null, pickItems = [], pickIndex = -1;
+
+function closePickMenu() {
+  if (pickMenu) pickMenu.remove();
+  pickMenu = null; pickInput = null; pickItems = []; pickIndex = -1;
+}
+
+function positionPickMenu() {
+  if (!pickMenu || !pickInput) return;
+  const r = pickInput.getBoundingClientRect();
+  // Off screen, or scrolled out of its own wrapper: the menu has nothing to sit on.
+  if (r.bottom < 0 || r.top > window.innerHeight) { closePickMenu(); return; }
+  const width = Math.max(r.width, 220);
+  const left = Math.min(Math.max(8, r.left), window.innerWidth - width - 8);
+  const below = window.innerHeight - r.bottom;
+  pickMenu.style.width = width + 'px';
+  pickMenu.style.left = left + 'px';
+  if (below < 180 && r.top > below) {
+    pickMenu.style.top = '';
+    pickMenu.style.bottom = (window.innerHeight - r.top + 4) + 'px';
+    pickMenu.style.maxHeight = Math.min(264, r.top - 12) + 'px';
+  } else {
+    pickMenu.style.bottom = '';
+    pickMenu.style.top = (r.bottom + 4) + 'px';
+    pickMenu.style.maxHeight = Math.min(264, below - 12) + 'px';
   }
+}
+
+const PICK_MENU_LIMIT = 40;
+
+function openPickMenu(input) {
+  const q = String(input.value || '').trim().toLowerCase();
+  const names = Object.keys(PICK_TO_ROW).filter(n => !q || n.toLowerCase().indexOf(q) !== -1);
+
+  if (!pickMenu) {
+    pickMenu = document.createElement('div');
+    pickMenu.className = 'pick-menu';
+    document.body.appendChild(pickMenu);
+  }
+  pickInput = input;
+  pickItems = names.slice(0, PICK_MENU_LIMIT);
+  pickIndex = -1;
+
+  if (!names.length) {
+    pickMenu.innerHTML = '<div class="pick-none">মেলেনি — নতুন উপকরণ হিসেবে যোগ করতে পারবেন</div>';
+  } else {
+    pickMenu.innerHTML = pickItems.map((n, i) => {
+      const cut = n.indexOf(' — ');
+      const label = cut === -1 ? n : n.slice(0, cut);
+      const sheet = cut === -1 ? '' : n.slice(cut + 3);
+      return '<div class="pick-item" data-n="' + i + '">' + escapeHtml(label)
+        + (sheet ? '<span class="pick-sheet"> — ' + escapeHtml(sheet) + '</span>' : '') + '</div>';
+    }).join('')
+      + (names.length > PICK_MENU_LIMIT
+          ? '<div class="pick-more">আরও ' + toBanglaNum(names.length - PICK_MENU_LIMIT) + 'টি — নাম লিখে ছেঁকে নিন</div>'
+          : '');
+  }
+  positionPickMenu();
+}
+
+function highlightPick(step) {
+  if (!pickMenu || !pickItems.length) return;
+  pickIndex = (pickIndex + step + pickItems.length) % pickItems.length;
+  [...pickMenu.querySelectorAll('.pick-item')].forEach((el, i) => el.classList.toggle('sel', i === pickIndex));
+  const sel = pickMenu.querySelector('.pick-item.sel');
+  if (sel) sel.scrollIntoView({ block: 'nearest' });
+}
+
+function choosePick(name) {
+  if (!pickInput) return;
+  const i = Number(pickInput.dataset.i);
+  const row = recipeDraft.rows[i];
+  const id = PICK_TO_ROW[name];
+  closePickMenu();
+  if (!row || !id) return;
+  row.rowId = id;
+  row.unit = ROW_INDEX[id].unit;
+  row.typed = undefined;
+  row.orig = undefined;
+  renderRecipeRows();
+  const qty = document.querySelector('input.rec-qty[data-i="' + i + '"]');
+  if (qty) qty.focus();
 }
 
 // Accepts the exact display name, or a plain row name when it is unambiguous.
@@ -2231,7 +2347,7 @@ function resolvePick(text) {
 
 function renderRecipeRows() {
   document.getElementById('rec-rows').innerHTML = recipeDraft.rows.map((r, i) =>
-    '<tr><td><input class="rec-pick' + (r.typed && !r.rowId ? ' unknown' : '') + '" list="rec-rowlist" data-i="' + i + '"'
+    '<tr><td><input class="rec-pick' + (r.typed && !r.rowId ? ' unknown' : '') + '" data-i="' + i + '"'
       + ' value="' + escapeHtml(r.rowId && ROW_TO_PICK[r.rowId] ? ROW_TO_PICK[r.rowId] : (r.typed || r.orig || '')) + '"'
       + ' placeholder="নাম লিখে খুঁজুন…" aria-label="উপকরণ" autocomplete="off">'
     + (!r.rowId && i === 0 ? '<div class="rec-pick-hint">নাম লিখে খুঁজুন। তালিকায় না থাকলে নতুন উপকরণ তৈরি করার সুযোগ আসবে।</div>' : '')
@@ -2281,27 +2397,44 @@ function createRowFromRecipe(i) {
 }
 
 const recRows = document.getElementById('rec-rows');
-// Typing resolves as you go, so picking from the browser's own filtered list just works.
+// Typing filters the menu; the row is only bound when a suggestion is actually chosen.
 recRows.addEventListener('input', ev => {
   const el = ev.target;
   if (!el.classList.contains('rec-pick')) return;
   const row = recipeDraft.rows[Number(el.dataset.i)];
   if (!row) return;
-  const id = resolvePick(el.value);
-  if (id) {
-    row.rowId = id;
-    row.unit = ROW_INDEX[id].unit;
-    row.typed = undefined;
-    row.orig = undefined;
-    renderRecipeRows();
-    const next = document.querySelector('input.rec-qty[data-i="' + el.dataset.i + '"]');
-    if (next) next.focus();
-  } else {
-    row.rowId = '';
-    row.typed = el.value;
-    el.classList.toggle('unknown', Boolean(el.value.trim()));
-  }
+  row.rowId = '';
+  row.typed = el.value;
+  el.classList.toggle('unknown', Boolean(el.value.trim()));
+  openPickMenu(el);
 });
+
+recRows.addEventListener('focusin', ev => {
+  if (ev.target.classList && ev.target.classList.contains('rec-pick')) openPickMenu(ev.target);
+});
+
+recRows.addEventListener('keydown', ev => {
+  const el = ev.target;
+  if (!el.classList || !el.classList.contains('rec-pick')) return;
+  if (ev.key === 'ArrowDown') { ev.preventDefault(); if (!pickMenu) openPickMenu(el); else highlightPick(1); }
+  else if (ev.key === 'ArrowUp') { ev.preventDefault(); highlightPick(-1); }
+  else if (ev.key === 'Enter') {
+    ev.preventDefault();
+    if (pickIndex >= 0 && pickItems[pickIndex]) choosePick(pickItems[pickIndex]);
+    else { const id = resolvePick(el.value); if (id) choosePick(ROW_TO_PICK[id]); }
+  }
+  else if (ev.key === 'Escape') { closePickMenu(); }
+});
+
+document.addEventListener('mousedown', ev => {
+  if (!pickMenu) return;
+  const item = ev.target.closest ? ev.target.closest('.pick-item') : null;
+  if (item) { ev.preventDefault(); choosePick(pickItems[Number(item.dataset.n)]); return; }
+  if (!ev.target.classList || !ev.target.classList.contains('rec-pick')) closePickMenu();
+});
+
+window.addEventListener('scroll', positionPickMenu, true);
+window.addEventListener('resize', positionPickMenu);
 
 recRows.addEventListener('change', ev => {
   const el = ev.target, row = recipeDraft.rows[Number(el.dataset.i)];

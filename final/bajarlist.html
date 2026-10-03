@@ -108,7 +108,10 @@
     border: 1px solid var(--gold-light); border-radius: 10px; padding: 16px 18px;
     background: #fffdf9; margin-bottom: 16px;
   }
-  .dish-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .dish-chip-row {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 8px; margin-top: 10px; align-items: stretch;
+  }
   .order-notice {
     margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 15px;
     background: #fdf6e3; border: 1px solid var(--gold-light); color: #6b5836;
@@ -260,9 +263,16 @@
     border: 1px dashed var(--gold); background: #fffdf4; color: #7a6a4d;
   }
   .dish-chip {
+    display: flex; align-items: center; gap: 6px;
     background: var(--gold-light); color: #7a6a4d; font-weight: 600; font-size: 14px;
-    padding: 5px 12px; border-radius: 999px;
+    padding: 5px 10px; border-radius: 8px;
   }
+  .dish-chip .dish-name {
+    flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .dish-chip .dish-group { flex: none; }
+  .dish-chip input.dish-guests { flex: none; margin-left: 0; }
+  .dish-chip select.chef-sel { flex: none; width: 104px; margin-left: 0; }
 
   .dessert-row { display: flex; gap: 22px; align-items: center; margin-top: 12px; }
   .pkg-group-label {
@@ -275,7 +285,10 @@
   }
   .dessert-row[hidden], .pkg-editor[hidden] { display: none; }
   .package-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  .package-bar select { flex: 1 1 260px; min-width: 0; }
+  .pkg-slot { display: flex; align-items: center; gap: 6px; flex: 1 1 300px; min-width: 0; }
+  .package-bar select { flex: 1 1 auto; min-width: 0; }
+  .pkg-btn-edit { padding: 8px 10px; flex: none; }
+  .pkg-btn-edit:disabled { opacity: 0.4; cursor: default; }
   .pkg-btn {
     font-family: inherit; font-size: 15px; font-weight: 600; padding: 8px 14px; border-radius: 6px;
     border: 1px solid var(--gold-light); background: #fff; color: var(--navy-dark); cursor: pointer;
@@ -539,12 +552,19 @@
   <h2 class="section">সেট মেনু প্যাকেজ</h2>
   <div class="package-box">
     <div class="package-bar">
-      <label class="pkg-group-label" for="bl-package">ভি.আই.পি</label>
-      <select id="bl-package" aria-label="ভি.আই.পি সেট মেনু"></select>
-      <label class="pkg-group-label" for="bl-package-packet">প্যাকেট</label>
-      <select id="bl-package-packet" aria-label="প্যাকেট সেট মেনু"></select>
-      <button type="button" class="pkg-btn" id="pkg-edit-btn" onclick="openPackageEditor(false)">✎ সম্পাদনা</button>
-      <button type="button" class="pkg-btn pkg-btn-new" onclick="openPackageEditor(true)">+ নতুন প্যাকেজ</button>
+      <span class="pkg-slot">
+        <label class="pkg-group-label" for="bl-package">ভি.আই.পি</label>
+        <select id="bl-package" aria-label="ভি.আই.পি সেট মেনু"></select>
+        <button type="button" class="pkg-btn pkg-btn-edit" id="pkg-edit-btn"
+                onclick="openPackageEditor(false, 'vip')" title="ভি.আই.পি প্যাকেজ সম্পাদনা">✎</button>
+      </span>
+      <span class="pkg-slot">
+        <label class="pkg-group-label" for="bl-package-packet">প্যাকেট</label>
+        <select id="bl-package-packet" aria-label="প্যাকেট সেট মেনু"></select>
+        <button type="button" class="pkg-btn pkg-btn-edit" id="pkg-edit-btn-packet"
+                onclick="openPackageEditor(false, 'packet')" title="প্যাকেট প্যাকেজ সম্পাদনা">✎</button>
+      </span>
+      <button type="button" class="pkg-btn pkg-btn-new" onclick="openPackageEditor(true, 'vip')">+ নতুন প্যাকেজ</button>
     </div>
 
     <div class="pkg-summary">
@@ -1308,15 +1328,20 @@ function populateSetMenuSelect() {
 }
 
 let editingKey = null;
+let editingGroup = null;
 
-function openPackageEditor(isNew) {
-  const currentKey = document.getElementById('bl-package').value;
-  if (!isNew && currentKey === 'fromOrder') return;
+// `group` says which of the two packages is being edited, so the packet menu is
+// reachable too; a new package is created into the group whose button was pressed.
+function openPackageEditor(isNew, group) {
+  editingGroup = GROUPS.filter(g => g.id === (group || 'vip'))[0] || GROUPS[0];
+  const currentKey = groupMenuKey(editingGroup);
+  if (!isNew && (!currentKey || currentKey === 'fromOrder')) return;
   editingKey = isNew ? null : currentKey;
   const menu = isNew ? { label: '', dishes: [], dessertOptions: [] } : SET_MENUS[currentKey];
   const desserts = menu.skipDessert ? [] : (menu.dessertOptions || []);
 
-  document.getElementById('pkg-editor-title').textContent = isNew ? 'নতুন প্যাকেজ' : 'প্যাকেজ সম্পাদনা';
+  document.getElementById('pkg-editor-title').textContent =
+    (isNew ? 'নতুন প্যাকেজ' : 'প্যাকেজ সম্পাদনা') + ' — ' + editingGroup.label;
   document.getElementById('pkg-name').value = menu.label;
 
   renderPackageChecks(menu.dishes, desserts);
@@ -1346,9 +1371,10 @@ function savePackage() {
     custom: editingKey ? Boolean(prev.custom) : true
   };
   saveSetMenus();
+  const target = editingGroup || GROUPS[0];
   closePackageEditor();
   populateSetMenuSelect();
-  document.getElementById('bl-package').value = key;
+  document.getElementById(target.select).value = key;
   renderSetMenuDetails();
 }
 
@@ -1361,8 +1387,17 @@ function deletePackage() {
   savePer100();
   saveSetMenus();
   closePackageEditor();
+  const target = editingGroup || GROUPS[0];
   populateSetMenuSelect();
-  document.getElementById('bl-package').value = Object.keys(SET_MENUS)[0];
+  // The deleted package was selected somewhere; put that slot back on something real.
+  GROUPS.forEach(g => {
+    const sel = document.getElementById(g.select);
+    if (sel.value === '' && g.id !== 'vip') return;
+    if (!SET_MENUS[sel.value]) sel.value = g.id === 'vip' ? Object.keys(SET_MENUS)[0] : '';
+  });
+  if (target.id === 'vip' && !SET_MENUS[document.getElementById('bl-package').value]) {
+    document.getElementById('bl-package').value = Object.keys(SET_MENUS)[0];
+  }
   renderSetMenuDetails();
 }
 
@@ -1371,7 +1406,11 @@ function currentSetMenu() {
 }
 
 function renderSetMenuDetails() {
-  document.getElementById('pkg-edit-btn').disabled = document.getElementById('bl-package').value === 'fromOrder';
+  GROUPS.forEach(g => {
+    const btn = document.getElementById(g.id === 'vip' ? 'pkg-edit-btn' : 'pkg-edit-btn-packet');
+    const key = groupMenuKey(g);
+    if (btn) btn.disabled = !key || key === 'fromOrder';
+  });
 
   // Dessert is chosen per group: each menu may offer its own, or none.
   const twoMenus = activeGroups().length > 1;
@@ -1425,7 +1464,8 @@ function renderDishChips() {
     const set = own !== undefined && own !== '';
     return '<span class="dish-chip chef-' + (chefOf(k) === 'S' ? 'S' : 'X') + '"'
       + (chefOf(k) === 'S' ? '' : ' style="background:' + chefTint(chefOf(k)) + ';color:' + chefInk(chefOf(k)) + '"')
-      + '>' + escapeHtml(RECIPE_LIBRARY[k].label)
+      + '><span class="dish-name" title="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
+      + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>'
       + (twoMenus ? '<span class="dish-group">' + (groupsOf[k] || []).map(id =>
             GROUPS.filter(g => g.id === id)[0].label).join('+') + '</span>' : '')
       + '<input type="number" min="0" step="1" class="dish-guests' + (set ? ' set' : '') + '" data-dish="' + k + '"'

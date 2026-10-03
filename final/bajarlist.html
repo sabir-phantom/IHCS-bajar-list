@@ -274,9 +274,16 @@
   .dish-chip-row.by-menu { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); align-items: start; }
   .dish-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .dish-col-head {
-    font-size: 12px; font-weight: 700; color: #7a6a4d; letter-spacing: 0.3px; padding: 0 0 2px 3px;
+    display: flex; align-items: flex-end; gap: 6px; padding: 0 10px 3px 10px;
+    font-size: 12px; font-weight: 700; color: #7a6a4d; letter-spacing: 0.3px;
   }
-  .dish-col-head span { font-weight: 400; color: #a3906a; }
+  .dish-col-head .col-title { flex: 1 1 auto; min-width: 0; }
+  .dish-col-head .col-count { font-weight: 400; color: #a3906a; }
+  /* Each sits over the control it names, so the widths must match the chip's. */
+  .dish-col-head .col-h {
+    flex: none; width: 56px; text-align: center; font-weight: 400; font-size: 11px; color: #a3906a;
+  }
+  .dish-col-head .col-h-chef { width: 66px; }
   .dish-chip .dish-group { flex: none; }
   .dish-chip input.dish-guests { flex: none; margin-left: 0; }
   .dish-chip select.chef-sel { flex: none; width: 66px; margin-left: 0; }
@@ -1484,21 +1491,30 @@ function renderDishChips() {
       + '</select></span>';
   };
 
+  // The column head names what each control is for: without it the number box and the
+  // dropdown beside a dish name say nothing about themselves.
+  const colHead = title => '<div class="dish-col-head">'
+    + '<span class="col-title">' + title + '</span>'
+    + '<span class="col-h">লোকসংখ্যা</span><span class="col-h col-h-chef">বাবুর্চি</span>'
+    + '</div>';
+
+  chipRow.className = 'dish-chip-row by-menu';
   if (twoMenus) {
     // One column per menu, so it reads as two lists rather than one long wrap. A dish
     // both menus serve is shown once, in the first column, tagged উভয়.
     const placed = {};
-    chipRow.className = 'dish-chip-row by-menu';
     chipRow.innerHTML = activeGroups().map(g => {
       const mine = keys.filter(k => (groupsOf[k] || []).indexOf(g.id) !== -1 && !placed[k]);
       mine.forEach(k => { placed[k] = true; });
-      return '<div class="dish-col"><div class="dish-col-head">' + escapeHtml(g.label)
-        + '<span> · ' + toBanglaNum(guestsOfGroup(g)) + ' জন</span></div>'
+      return '<div class="dish-col">'
+        + colHead(escapeHtml(g.label) + '<span class="col-count"> · ' + toBanglaNum(guestsOfGroup(g)) + ' জন</span>')
         + mine.map(chipFor).join('') + '</div>';
     }).join('');
   } else {
-    chipRow.className = 'dish-chip-row';
-    chipRow.innerHTML = keys.map(chipFor).join('');
+    // A single menu feeds everybody, so the column is not one group's.
+    chipRow.innerHTML = '<div class="dish-col">'
+      + colHead('সব অতিথি<span class="col-count"> · ' + toBanglaNum(totalGuests()) + ' জন</span>')
+      + keys.map(chipFor).join('') + '</div>';
   }
 
   chipRow.querySelectorAll('select.chef-sel').forEach(sel => {

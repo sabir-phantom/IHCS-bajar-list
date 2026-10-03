@@ -269,10 +269,17 @@
   }
   .dish-chip .dish-name {
     flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 700; color: var(--navy-dark);
   }
+  .dish-chip-row.by-menu { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); align-items: start; }
+  .dish-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .dish-col-head {
+    font-size: 12px; font-weight: 700; color: #7a6a4d; letter-spacing: 0.3px; padding: 0 0 2px 3px;
+  }
+  .dish-col-head span { font-weight: 400; color: #a3906a; }
   .dish-chip .dish-group { flex: none; }
   .dish-chip input.dish-guests { flex: none; margin-left: 0; }
-  .dish-chip select.chef-sel { flex: none; width: 104px; margin-left: 0; }
+  .dish-chip select.chef-sel { flex: none; width: 66px; margin-left: 0; }
 
   .dessert-row { display: flex; gap: 22px; align-items: center; margin-top: 12px; }
   .pkg-group-label {
@@ -301,7 +308,7 @@
   .pkg-btn-danger { color: #b1442f; border-color: #e9c3bd; margin-left: auto; }
   .pkg-btn-danger:hover { background: #fdf0ef; }
   .pkg-summary { display: flex; gap: 12px; align-items: baseline; margin-top: 14px; }
-  .pkg-summary .dish-chip-row { margin-top: 0; }
+  .pkg-summary .dish-chip-row { margin-top: 0; flex: 1 1 auto; min-width: 0; }
   .pkg-label { flex: none; font-size: 13px; color: #a3906a; letter-spacing: 0.4px; }
   .pkg-empty { font-size: 14px; color: #a3906a; font-style: italic; }
   .pkg-editor {
@@ -1459,23 +1466,40 @@ function renderDishChips() {
     return;
   }
   const ids = ['S'].concat(chefIds());
-  chipRow.innerHTML = keys.map(k => {
+
+  const chipFor = k => {
     const own = dishGuests[k];
     const set = own !== undefined && own !== '';
     return '<span class="dish-chip chef-' + (chefOf(k) === 'S' ? 'S' : 'X') + '"'
       + (chefOf(k) === 'S' ? '' : ' style="background:' + chefTint(chefOf(k)) + ';color:' + chefInk(chefOf(k)) + '"')
       + '><span class="dish-name" title="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
       + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>'
-      + (twoMenus ? '<span class="dish-group">' + (groupsOf[k] || []).map(id =>
-            GROUPS.filter(g => g.id === id)[0].label).join('+') + '</span>' : '')
+      + (twoMenus && (groupsOf[k] || []).length > 1 ? '<span class="dish-group">উভয়</span>' : '')
       + '<input type="number" min="0" step="1" class="dish-guests' + (set ? ' set' : '') + '" data-dish="' + k + '"'
         + ' value="' + (set ? own : '') + '" placeholder="' + (base[k] || totalGuests() || '') + '"'
         + ' title="এই আইটেম কত জনের জন্য" aria-label="লোকসংখ্যা">'
       + '<select class="chef-sel" data-dish="' + k + '" aria-label="বাবুর্চি">'
       + ids.map(c => '<option value="' + c + '"' + (c === chefOf(k) ? ' selected' : '') + '>'
-          + escapeHtml(c === 'S' ? 'বাবুর্চি: S' : chefName(c)) + '</option>').join('')
+          + escapeHtml(chefShort(c)) + '</option>').join('')
       + '</select></span>';
-  }).join('');
+  };
+
+  if (twoMenus) {
+    // One column per menu, so it reads as two lists rather than one long wrap. A dish
+    // both menus serve is shown once, in the first column, tagged উভয়.
+    const placed = {};
+    chipRow.className = 'dish-chip-row by-menu';
+    chipRow.innerHTML = activeGroups().map(g => {
+      const mine = keys.filter(k => (groupsOf[k] || []).indexOf(g.id) !== -1 && !placed[k]);
+      mine.forEach(k => { placed[k] = true; });
+      return '<div class="dish-col"><div class="dish-col-head">' + escapeHtml(g.label)
+        + '<span> · ' + toBanglaNum(guestsOfGroup(g)) + ' জন</span></div>'
+        + mine.map(chipFor).join('') + '</div>';
+    }).join('');
+  } else {
+    chipRow.className = 'dish-chip-row';
+    chipRow.innerHTML = keys.map(chipFor).join('');
+  }
 
   chipRow.querySelectorAll('select.chef-sel').forEach(sel => {
     sel.addEventListener('change', () => {
@@ -1725,6 +1749,15 @@ function chefName(id) {
   const c = chefs.filter(x => x.id === id)[0];
   return c ? c.name : id;
 }
+// What the per-dish dropdown shows: the letter alone for the built-in cooks, since the
+// box sits under a বাবুর্চি heading and does not need to repeat the word.
+function chefShort(id) {
+  if (id === 'S') return 'S';
+  const name = chefName(id);
+  const m = /^বাবুর্চি:\s*(.+)$/.exec(name);
+  return m ? m[1] : name;
+}
+
 // A badge needs something short: the letter for the built-in cooks, otherwise the
 // first character of the name the user typed.
 function chefBadge(id) {

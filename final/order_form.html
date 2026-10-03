@@ -862,12 +862,17 @@ function openBajarList() {
     return;
   }
 
-  const guests = toLatinNumber(data.guestVip) + toLatinNumber(data.guestPacket);
+  const vip = toLatinNumber(data.guestVip);
+  const packet = toLatinNumber(data.guestPacket);
+  const guests = vip + packet;
   const params = new URLSearchParams();
   if (data.date) params.set('date', data.date);
   if (data.place) params.set('place', data.place);
   const label = [data.name, data.program].filter(Boolean).join(' — ');
   if (label) params.set('label', label);
+  // Both numbers go across: the bajar list costs some dishes for the VIP count alone.
+  if (vip > 0) params.set('vip', String(vip));
+  if (packet > 0) params.set('packet', String(packet));
   if (guests > 0) params.set('guests', String(guests));
   params.set('setMenu', data.setMenu);
   params.set('items', JSON.stringify(itemNames));

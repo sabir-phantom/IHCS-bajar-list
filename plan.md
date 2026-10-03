@@ -75,6 +75,38 @@ file written under the old order still comes out right, and a sheet the user cre
 keeps its place at the end. The review screen renders in this order too, while each row
 still carries its original sheet index, so edits land on the right sheet.
 
+### Headcounts, per dish
+
+Two headcounts now: ভি.আই.পি and প্যাকেট, costed on their sum. `dishGuests[dishKey]` holds
+a number typed against one dish; `guestsFor()` falls back to the total, so a dish only
+differs when it was set by hand. Per job, never saved.
+
+This changes the shape of the calculation. A row fed by recipes is no longer
+`per100 × total/100`: each dish contributes `per100 × itsOwnHeadcount/100` and the row is
+their sum (`recipe.amount`). A value that has no dish behind it — hand-typed, or a package
+default — still scales on the total, which `effectivePer100().fixed` marks. `chefSplit()`
+weighs on the **scaled** amounts rather than per-100 figures, since with one dish at 700
+and another at 500 the per-100 numbers no longer reflect real shares.
+
+Verified by hand: সয়াবিন তেল (কাচ্চি 3 ltr/100 + চিকেন রোস্ট 2 ltr/100) gives 35 ltr with
+both at 700, and 31 with the roast at 500. Split between two cooks under mixed headcounts:
+21 + 10 = 31, drift 0.
+
+### The across-the-board reduction
+
+`reducePercent()` takes a percentage off every row last, after everything else, so it
+reduces whatever the row ended up with. `reduceExcluded[rowId]` keeps a row whole; the
+review table shows that tick in a পুরোটাই column, which only appears while a percentage is
+set. Per job, not saved — a stale tick would silently leave an ingredient out of a cut.
+
+### Chefs are a list
+
+`chefs` is a saved list of `{id, name}`, with `S` implicit and always present. Cooks are
+added by name at the foot of the page, deliberately understated. Removing one returns its
+dishes to standard and says how many first. Colours come from `CHEF_TINTS`/`CHEF_INKS` by
+position, so a third and fourth cook stay distinguishable; badges show the letter for the
+built-in cooks and the first characters of the name otherwise.
+
 ### Chef split
 
 A dish can be handed to বাবুর্চি A or C. `chefSplit()` divides every row's quantity
@@ -185,6 +217,8 @@ It does not know which dishes a package contains — that stays in `bajarlist.ht
 - [ ] `bajar-data.json` exists (22 Sep, 1 saved order). Open it from **both** pages and
       confirm each shows a green dot — `bajarlist.html` has changed a lot since then.
 - [ ] Test print all three sheets on the actual printer, A4, default margins.
+- [ ] Confirm with the owner which dishes are normally VIP-only, so the per-dish headcount
+      is typed rather than remembered wrongly.
 - [ ] Test print a job with a dish given to বাবুর্চি A and another to C: confirm the
       two cook pages come out first and the shares add up to the full amount.
 

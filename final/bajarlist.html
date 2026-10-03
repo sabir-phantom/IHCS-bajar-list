@@ -145,6 +145,40 @@
   .link-btn:hover { color: var(--maroon); }
   .link-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 3px; }
   .btn-save { background: var(--green); color: #fff; }
+  .guest-total { font-size: 14px; color: #7a6a4d; margin: 2px 0 0; }
+  .guest-total strong { color: var(--navy-dark); font-size: 15px; }
+  .guest-hint { color: #a3906a; font-size: 13px; }
+  .reduce-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 20px 0 0; padding: 9px 14px;
+    background: #fdf6f4; border: 1px solid #e9c3bd; border-radius: 10px;
+  }
+  .reduce-bar label { font-size: 14px; font-weight: 600; color: var(--maroon); white-space: nowrap; }
+  .reduce-bar input {
+    width: 86px; font-family: inherit; font-size: 15px; padding: 5px 8px;
+    border: 1px solid #d8cdb5; border-radius: 6px; background: #fff;
+  }
+  .reduce-pct { font-size: 15px; color: #7a6a4d; }
+  .reduce-note { font-size: 13px; color: #8a6a55; }
+  .chef-admin {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 22px 0 0; padding-top: 10px; border-top: 1px solid #efe7d4;
+    font-size: 12px; color: #a3906a;
+  }
+  .chef-admin-label { white-space: nowrap; }
+  .chef-admin-list { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chef-admin-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 1px 4px 1px 7px; border: 1px solid #e6ddc6; border-radius: 999px; color: #7a6a4d;
+  }
+  .chef-admin-chip button {
+    border: 0; background: none; color: #b9a984; cursor: pointer; font-size: 12px; padding: 0 2px;
+  }
+  .chef-admin-chip button:hover { color: var(--maroon); }
+  .chef-admin input {
+    font-family: inherit; font-size: 12px; padding: 3px 6px; width: 150px;
+    border: 1px solid #e6ddc6; border-radius: 5px; background: #fff;
+  }
   .list-search {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     margin: 22px 0 0; padding: 10px 14px;
@@ -382,21 +416,23 @@
     font-family: inherit; font-size: 12px; margin-left: 6px; padding: 1px 3px;
     border: 1px solid #ded2b8; border-radius: 4px; background: #fff; color: #7a6a4d;
   }
-  .dish-chip.chef-A { background: #f0d9d4; color: var(--maroon); }
-  .dish-chip.chef-A select.chef-sel { color: var(--maroon); font-weight: 700; border-color: #dcb4ab; background: #fffafa; }
-  .dish-chip.chef-C { background: var(--navy-light); color: var(--navy-dark); }
-  .dish-chip.chef-C select.chef-sel { color: var(--navy-dark); font-weight: 700; border-color: #adc2d8; background: #fbfdff; }
+  .dish-chip.chef-X select.chef-sel { font-weight: 700; background: #fff; }
   .chef-badge {
     flex: none; display: inline-block; min-width: 17px; text-align: center;
     font-size: 11px; font-weight: 700; line-height: 16px; border-radius: 3px;
     background: var(--maroon); color: #fff; margin-left: 4px;
   }
-  .chef-badge.badge-C { background: var(--navy-dark); }
   .chef-split { flex: none; font-size: 11px; color: #8a7a5c; margin-left: 6px; white-space: nowrap; }
   .chef-preview { border-top: 2px solid var(--maroon); padding-top: 10px; }
   .chef-preview .sheet-head { font-size: 17px; font-weight: 700; color: var(--maroon); }
-  .chef-preview.chef-box-C { border-top-color: var(--navy-dark); }
-  .chef-preview.chef-box-C .sheet-head { color: var(--navy-dark); }
+  input.dish-guests {
+    width: 56px; font-family: inherit; font-size: 12px; margin-left: 6px; padding: 1px 4px;
+    border: 1px solid #ded2b8; border-radius: 4px; background: #fff; color: #7a6a4d;
+  }
+  input.dish-guests.set { border-color: var(--navy-dark); color: var(--navy-dark); font-weight: 700; }
+  td.cut-cell { text-align: center; }
+  td.cut-cell input { width: 16px; height: 16px; }
+  tr.has-qty td.cut-cell input { accent-color: var(--maroon); }
   .chef-dishes { font-size: 14px; color: #7a6a4d; margin: 0 0 8px; }
   .chef-note { font-size: 13px; color: #8a6a55; margin: 6px 0 0; }
   .chef-note.over { color: var(--maroon); font-weight: 600; }
@@ -479,10 +515,17 @@
       <input type="text" id="bl-label" placeholder="যেমন: রহমান বাড়ির বিয়ে">
     </div>
     <div class="field">
-      <label for="bl-guests">লোকসংখ্যা</label>
-      <input type="number" id="bl-guests" placeholder="যেমন: 250" min="1">
+      <label for="bl-vip">লোকসংখ্যা — ভি.আই.পি</label>
+      <input type="number" id="bl-vip" placeholder="যেমন: 500" min="0">
+    </div>
+    <div class="field">
+      <label for="bl-packet">লোকসংখ্যা — প্যাকেট</label>
+      <input type="number" id="bl-packet" placeholder="যেমন: 200" min="0">
     </div>
   </div>
+  <div class="guest-total" id="bl-guest-total"></div>
+  <!-- Holds the two added together. Kept so anything reading one headcount still works. -->
+  <input type="hidden" id="bl-guests" value="">
 
   <h2 class="section">সেট মেনু প্যাকেজ</h2>
   <div class="package-box">
@@ -559,6 +602,13 @@
     <button class="btn btn-save" onclick="saveDefaults()">💾 এই সেট মেনুর ডিফল্ট হিসেবে সংরক্ষণ</button>
   </div>
 
+  <div class="reduce-bar">
+    <label for="bl-reduce">সব পরিমাণ কমান</label>
+    <input type="number" id="bl-reduce" min="0" max="100" step="any" placeholder="০" aria-label="শতাংশ কমান">
+    <span class="reduce-pct">%</span>
+    <span class="reduce-note" id="bl-reduce-note"></span>
+  </div>
+
   <div class="list-search" id="list-search-bar">
     <label for="row-search">উপকরণ খুঁজুন</label>
     <input type="search" id="row-search" placeholder="নাম লিখুন — যেমন: চিনি, ঘি, মরিচ" autocomplete="off"
@@ -581,6 +631,13 @@
       <button type="button" class="link-btn" id="df-reopen" hidden onclick="reopenDataFile()">ডেটা ফাইল আবার চালু করুন</button>
       <button type="button" class="link-btn" id="df-close" hidden onclick="disconnectDataFile()">ফাইল বিচ্ছিন্ন করুন</button>
     </span>
+  </div>
+
+  <div class="chef-admin">
+    <span class="chef-admin-label">বাবুর্চি তালিকা</span>
+    <span class="chef-admin-list" id="chef-admin-list"></span>
+    <input type="text" id="chef-new-name" placeholder="নতুন বাবুর্চির নাম" aria-label="নতুন বাবুর্চির নাম">
+    <button type="button" class="link-btn" onclick="addChef()">+ যোগ করুন</button>
   </div>
 
   <div class="footer-links">
@@ -1250,18 +1307,30 @@ function renderSetMenuDetails() {
 
 // Each dish of the package, with the cook it is assigned to.
 function renderDishChips() {
-  const keys = menuDishKeys(currentSetMenu()).filter(k => RECIPE_LIBRARY[k]);
+  const menu = currentSetMenu();
+  if (!menu) return;                 // called before the package list exists
+  const keys = menuDishKeys(menu).filter(k => RECIPE_LIBRARY[k]);
   const chipRow = document.getElementById('bl-dish-chips');
   if (!keys.length) {
     chipRow.innerHTML = '<span class="pkg-empty">রেসিপি-আইটেম নেই — নিচের তালিকায় পরিমাণ লিখুন</span>';
     return;
   }
-  chipRow.innerHTML = keys.map(k =>
-    '<span class="dish-chip chef-' + chefOf(k) + '">' + escapeHtml(RECIPE_LIBRARY[k].label)
-    + '<select class="chef-sel" data-dish="' + k + '" aria-label="বাবুর্চি">'
-    + CHEF_KEYS.map(c => '<option value="' + c + '"' + (c === chefOf(k) ? ' selected' : '') + '>'
-        + CHEF_LABELS[c] + '</option>').join('')
-    + '</select></span>').join('');
+  const ids = ['S'].concat(chefIds());
+  chipRow.innerHTML = keys.map(k => {
+    const own = dishGuests[k];
+    const set = own !== undefined && own !== '';
+    return '<span class="dish-chip chef-' + (chefOf(k) === 'S' ? 'S' : 'X') + '"'
+      + (chefOf(k) === 'S' ? '' : ' style="background:' + chefTint(chefOf(k)) + ';color:' + chefInk(chefOf(k)) + '"')
+      + '>' + escapeHtml(RECIPE_LIBRARY[k].label)
+      + '<input type="number" min="0" step="1" class="dish-guests' + (set ? ' set' : '') + '" data-dish="' + k + '"'
+        + ' value="' + (set ? own : '') + '" placeholder="' + (totalGuests() || '') + '"'
+        + ' title="এই আইটেম কত জনের জন্য" aria-label="লোকসংখ্যা">'
+      + '<select class="chef-sel" data-dish="' + k + '" aria-label="বাবুর্চি">'
+      + ids.map(c => '<option value="' + c + '"' + (c === chefOf(k) ? ' selected' : '') + '>'
+          + escapeHtml(c === 'S' ? 'বাবুর্চি: S' : chefName(c)) + '</option>').join('')
+      + '</select></span>';
+  }).join('');
+
   chipRow.querySelectorAll('select.chef-sel').forEach(sel => {
     sel.addEventListener('change', () => {
       chefAssign[sel.dataset.dish] = sel.value;
@@ -1269,17 +1338,63 @@ function renderDishChips() {
       generateList();
     });
   });
+  chipRow.querySelectorAll('input.dish-guests').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const v = inp.value.trim();
+      if (v === '') delete dishGuests[inp.dataset.dish]; else dishGuests[inp.dataset.dish] = v;
+      inp.classList.toggle('set', v !== '');
+      generateList();
+    });
+  });
 }
+
+// Colours for cooks beyond the first two, so each stays recognisable.
+const CHEF_TINTS = ['#f0d9d4', '#dbe6f0', '#dcebdd', '#f2e6cf', '#e6dcef', '#f7dfe6'];
+const CHEF_INKS  = ['#7d1f34', '#10233b', '#1f4d2c', '#7a5a16', '#4a2f6b', '#7d2448'];
+function chefRank(id) { const i = chefIds().indexOf(id); return i === -1 ? 0 : i; }
+function chefTint(id) { return CHEF_TINTS[chefRank(id) % CHEF_TINTS.length]; }
+function chefInk(id)  { return CHEF_INKS[chefRank(id) % CHEF_INKS.length]; }
 
 function renderOverrideFields() {
   // The manual meat field was removed; meat is entered in the খাসী row of the review table.
   document.getElementById('bl-overrides').innerHTML = '';
 }
 
-document.getElementById('bl-guests').addEventListener('input', () => {
-  // Guest count only rescales; per-100 values and one-off edits are untouched.
+// The two headcounts only rescale; per-100 values and one-off edits are untouched.
+// The hidden total is kept in step so anything reading a single headcount still works.
+function onGuestsChanged() {
+  const total = totalGuests();
+  document.getElementById('bl-guests').value = total ? String(total) : '';
+  const el = document.getElementById('bl-guest-total');
+  if (el) {
+    el.innerHTML = total
+      ? 'মোট <strong>' + toBanglaNum(total) + '</strong> জন — ভি.আই.পি ' + toBanglaNum(vipGuests())
+        + ' + প্যাকেট ' + toBanglaNum(packetGuests())
+        + '<span class="guest-hint"> · প্রতিটি আইটেমের পাশে আলাদা সংখ্যা লেখা যায়</span>'
+      : '';
+  }
+  renderDishChips();     // the placeholders show the new total
+  generateList();
+}
+['bl-vip', 'bl-packet'].forEach(id => {
+  document.getElementById(id).addEventListener('input', onGuestsChanged);
+});
+
+// The across-the-board reduction.
+document.getElementById('bl-reduce').addEventListener('input', () => {
   generateList();
 });
+
+function updateReduceNote() {
+  const note = document.getElementById('bl-reduce-note');
+  if (!note) return;
+  const pct = reducePercent();
+  const kept = Object.keys(reduceExcluded).filter(k => reduceExcluded[k]).length;
+  note.textContent = pct
+    ? toBanglaNum(roundQty(pct)) + '% কম ধরা হচ্ছে'
+      + (kept ? ' — ' + toBanglaNum(kept) + 'টি উপকরণ পুরোটাই থাকছে' : '')
+    : 'খালি রাখলে কোনো কমানো হবে না';
+}
 
 // ---------------- Aggregation ----------------
 function selectedDessertKey() {
@@ -1307,12 +1422,13 @@ function savePer100() {
 function recipePer100() {
   const menu = currentSetMenu();
   const dishKeys = menuDishKeys(menu);
-  const base = {};
-  const sources = {};          // rowId -> [{ label, base }], for the per-ingredient breakdown
+  const base = {};             // rowId -> per 100 guests, summed over the dishes
+  const amount = {};           // rowId -> what this order needs, each dish at its own headcount
+  const sources = {};          // rowId -> [{ key, label, base, amount }], for the breakdown
   const unmappedIngredients = [];
-  const note = (rowId, key, label, amount) => {
+  const note = (rowId, key, label, per100, qty) => {
     if (!sources[rowId]) sources[rowId] = [];
-    sources[rowId].push({ key: key, label: label, base: amount });
+    sources[rowId].push({ key: key, label: label, base: per100, amount: qty });
   };
 
   dishKeys.forEach(dishKey => {
@@ -1323,51 +1439,70 @@ function recipePer100() {
       const rowId = recipeRowId(name);
       if (!rowId) { unmappedIngredients.push(name); return; }
       const info = unitInfo(unit);
-      base[rowId] = (base[rowId] || 0) + qty * info.factor;
-      note(rowId, dishKey, dish.label, qty * info.factor);
+      const per100 = qty * info.factor;
+      const forThisDish = per100 * (guestsFor(dishKey) / 100);
+      base[rowId] = (base[rowId] || 0) + per100;
+      amount[rowId] = (amount[rowId] || 0) + forThisDish;
+      note(rowId, dishKey, dish.label, per100, forThisDish);
     });
     (dish.editable || []).forEach(e => {
       const rowId = ROW_ALIASES[e.label] || ROW_ALIASES['মুরগী'];
       if (!rowId) return;
       const info = unitInfo(e.unit);
-      base[rowId] = (base[rowId] || 0) + e.per100 * info.factor;
-      note(rowId, dishKey, dish.label, e.per100 * info.factor);
+      const per100 = e.per100 * info.factor;
+      const forThisDish = per100 * (guestsFor(dishKey) / 100);
+      base[rowId] = (base[rowId] || 0) + per100;
+      amount[rowId] = (amount[rowId] || 0) + forThisDish;
+      note(rowId, dishKey, dish.label, per100, forThisDish);
     });
   });
 
-  return { base: base, sources: sources, unmappedIngredients: unmappedIngredients };
+  return { base: base, amount: amount, sources: sources, unmappedIngredients: unmappedIngredients };
 }
 
 // The per-100 value actually in force for a row: a saved default wins over the recipe.
+// `fixed` marks a value that is not a sum of recipes, so it scales on the total headcount
+// rather than dish by dish.
 function effectivePer100(rowId, recipeBase) {
   const menuKey = document.getElementById('bl-package').value;
   const factor = unitInfo(ROW_INDEX[rowId].unit).factor;
 
   const saved = (per100Store[menuKey] || {})[rowId];
-  if (saved !== undefined && saved !== '') return parseFloat(saved) * factor;
+  if (saved !== undefined && saved !== '') return { value: parseFloat(saved) * factor, fixed: true };
 
   const confirmed = (SET_MENU_PER100[menuKey] || {})[rowId];
-  if (confirmed !== undefined) return confirmed * factor;
+  if (confirmed !== undefined) return { value: confirmed * factor, fixed: true };
 
-  return recipeBase[rowId];
+  return { value: recipeBase[rowId], fixed: false };
 }
 
 // Everything the review screen and the print sheet need.
 function aggregate() {
-  const guestCount = parseFloat(document.getElementById('bl-guests').value) || 0;
+  const guestCount = totalGuests();
   const scale = guestCount / 100;
   const recipe = recipePer100();
+  const pct = reducePercent();
 
   const rows = {};
   Object.keys(ROW_INDEX).forEach(rowId => {
     const row = ROW_INDEX[rowId];
     const factor = unitInfo(row.unit).factor;
-    const per100Base = effectivePer100(rowId, recipe.base);
+    const eff = effectivePer100(rowId, recipe.base);
+    const per100Base = eff.value;
     const hasPer100 = per100Base !== undefined && per100Base !== null;
     const oneOff = orderOverrides[rowId];
-    const orderBase = (oneOff !== undefined && oneOff !== '')
-      ? parseFloat(oneOff) * factor
-      : (hasPer100 ? per100Base * scale : null);
+
+    // A recipe row is summed dish by dish, each at its own headcount. A hand-typed or
+    // package-default value has no dish behind it, so it scales on the total.
+    let orderBase;
+    if (oneOff !== undefined && oneOff !== '') orderBase = parseFloat(oneOff) * factor;
+    else if (eff.fixed) orderBase = hasPer100 ? per100Base * scale : null;
+    else orderBase = (recipe.amount[rowId] === undefined) ? null : recipe.amount[rowId];
+
+    // The across-the-board reduction, last, so it reduces whatever the row ended up with.
+    const cut = reduceFactorFor(rowId);
+    const reduced = orderBase !== null && cut !== 1;
+    if (reduced) orderBase = orderBase * cut;
 
     rows[rowId] = {
       id: rowId,
@@ -1379,8 +1514,10 @@ function aggregate() {
       orderQty: (orderBase === null || isNaN(orderBase)) ? null : orderBase / factor,
       orderBase: orderBase,
       fromRecipe: recipe.base[rowId] !== undefined,
-      sources: recipe.sources[rowId] || [],
-      edited: oneOff !== undefined && oneOff !== ''
+      sources: (recipe.sources[rowId] || []).map(src => Object.assign({}, src, { amount: src.amount * cut })),
+      edited: oneOff !== undefined && oneOff !== '',
+      excluded: Boolean(reduceExcluded[rowId]),
+      reduced: reduced
     };
   });
 
@@ -1397,7 +1534,8 @@ function aggregate() {
     });
   });
 
-  return { guestCount: guestCount, rows: rows, manualLines: manualLines,
+  return { guestCount: guestCount, vip: vipGuests(), packet: packetGuests(),
+           reducePct: pct, rows: rows, manualLines: manualLines,
            unmappedIngredients: recipe.unmappedIngredients };
 }
 
@@ -1405,38 +1543,155 @@ function aggregate() {
 // A dish can be handed to a separate cook. Ingredients for বাবুর্চি A and বাবুর্চি C are
 // never merged with anything else: each chef's share leaves the three normal sheets and
 // prints on that chef's own page, so no item is bought twice.
-const CHEF_KEYS = ['S', 'A', 'C'];
-const CHEF_LABELS = { S: 'বাবুর্চি: S', A: 'বাবুর্চি: A', C: 'বাবুর্চি: C' };
+// 'S' is the standard cook and always exists; the rest are a list the user keeps. The
+// list is saved — cooks do not change often — while which dish each cook takes is not,
+// so a forgotten assignment can never quietly empty the main sheets.
+const FACTORY_CHEFS = [{ id: 'A', name: 'বাবুর্চি: A' }, { id: 'C', name: 'বাবুর্চি: C' }];
+const CHEFS_KEY = 'iqbal_catering_bajar_chefs';
+let chefs = JSON.parse(JSON.stringify(FACTORY_CHEFS));
 
-// dishKey -> 'S' | 'A' | 'C'. Deliberately not saved anywhere: every job starts with all
-// dishes standard, so a forgotten assignment can never quietly empty the main sheets.
+function loadChefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CHEFS_KEY) || 'null');
+    if (Array.isArray(saved) && saved.length) {
+      chefs = saved.filter(c => c && c.id && c.id !== 'S' && c.name);
+    }
+  } catch (e) { /* storage off: the two built-in cooks */ }
+}
+function saveChefs() {
+  try { localStorage.setItem(CHEFS_KEY, JSON.stringify(chefs)); } catch (e) { /* storage off */ }
+  scheduleFileWrite();
+}
+loadChefs();
+
+function chefIds() { return chefs.map(c => c.id); }
+function chefName(id) {
+  if (id === 'S') return 'স্ট্যান্ডার্ড';
+  const c = chefs.filter(x => x.id === id)[0];
+  return c ? c.name : id;
+}
+// A badge needs something short: the letter for the built-in cooks, otherwise the
+// first character of the name the user typed.
+function chefBadge(id) {
+  const name = chefName(id);
+  const m = /বাবুর্চি:\s*(\S+)/.exec(name);
+  return m ? m[1].slice(0, 2) : name.slice(0, 2);
+}
+
+// dishKey -> chef id. Not saved: every job starts with every dish standard.
 let chefAssign = {};
 function chefOf(dishKey) {
   const c = chefAssign[dishKey];
-  return (c === 'A' || c === 'C') ? c : 'S';
+  return (c && chefIds().indexOf(c) !== -1) ? c : 'S';
+}
+
+function renderChefAdmin() {
+  const box = document.getElementById('chef-admin-list');
+  if (!box) return;
+  box.innerHTML = chefs.length
+    ? chefs.map(c => '<span class="chef-admin-chip" style="border-color:' + chefInk(c.id) + '">'
+        + escapeHtml(c.name)
+        + '<button type="button" title="বাদ দিন" aria-label="বাদ দিন" data-chef="' + c.id + '">✕</button>'
+        + '</span>').join('')
+    : '<span>কোনো বাবুর্চি নেই</span>';
+  box.querySelectorAll('button[data-chef]').forEach(b => {
+    b.addEventListener('click', () => removeChef(b.dataset.chef));
+  });
+}
+
+function addChef() {
+  const input = document.getElementById('chef-new-name');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  if (chefs.some(c => c.name === name)) { alert('"' + name + '" নামে একজন বাবুর্চি আছেন।'); return; }
+  chefs.push({ id: 'chef' + Date.now(), name: name });
+  saveChefs();
+  input.value = '';
+  renderChefAdmin();
+  renderDishChips();
+  generateList();
+}
+
+function removeChef(id) {
+  const c = chefs.filter(x => x.id === id)[0];
+  if (!c) return;
+  const assigned = Object.keys(chefAssign).filter(k => chefAssign[k] === id).length;
+  const msg = assigned
+    ? '"' + c.name + '" বাদ দেবেন? ' + toBanglaNum(assigned) + 'টি আইটেম স্ট্যান্ডার্ডে ফিরে যাবে।'
+    : '"' + c.name + '" বাদ দেবেন?';
+  if (!confirm(msg)) return;
+  Object.keys(chefAssign).forEach(k => { if (chefAssign[k] === id) delete chefAssign[k]; });
+  chefs = chefs.filter(x => x.id !== id);
+  saveChefs();
+  renderChefAdmin();
+  renderDishChips();
+  generateList();
+}
+
+// ---------------- Headcounts ----------------
+// Two numbers now, not one. A dish is normally cooked for everybody, but some are for
+// the VIP guests only, so each dish carries its own headcount, pre-filled with the
+// total and overwritable. Per job, like the chef assignment.
+let dishGuests = {};
+
+function guestNum(id) {
+  const el = document.getElementById(id);
+  const v = el ? parseFloat(el.value) : 0;
+  return isNaN(v) || v < 0 ? 0 : v;
+}
+function vipGuests() { return guestNum('bl-vip'); }
+function packetGuests() { return guestNum('bl-packet'); }
+function totalGuests() { return vipGuests() + packetGuests(); }
+
+function guestsFor(dishKey) {
+  const v = dishGuests[dishKey];
+  if (v === undefined || v === '' || isNaN(Number(v))) return totalGuests();
+  return Number(v);
+}
+
+// ---------------- The across-the-board reduction ----------------
+// A percentage off every ingredient, except the ones ticked to keep. Per job.
+let reduceExcluded = {};
+function reducePercent() {
+  const v = parseFloat((document.getElementById('bl-reduce') || {}).value);
+  if (isNaN(v) || v <= 0) return 0;
+  return Math.min(v, 100);
+}
+function reduceFactorFor(rowId) {
+  const pct = reducePercent();
+  if (!pct || reduceExcluded[rowId]) return 1;
+  return 1 - pct / 100;
 }
 
 // Splits each row's quantity between the chefs in proportion to how much each chef's
 // dishes contribute to that row. A row with no recipe behind it (typed by hand, or a
 // package default) belongs to no dish, so all of it stays standard.
 function chefSplit(data) {
-  const out = { S: {}, A: {}, C: {} };
+  const ids = ['S'].concat(chefIds());
+  if (!currentSetMenu()) return { S: {}, dishes: { S: [] }, active: [] };
+  const out = {};
+  ids.forEach(id => { out[id] = {}; });
+
   Object.keys(data.rows).forEach(rowId => {
     const row = data.rows[rowId];
     if (row.orderQty === null) return;
-    const total = row.sources.reduce((sum, src) => sum + src.base, 0);
+    // Weighed on the scaled amounts, not the per-100 figures: with a dish cooked for 500
+    // and another for 200, their per-100 numbers no longer reflect their real shares.
+    const total = row.sources.reduce((sum, src) => sum + src.amount, 0);
     if (!row.sources.length || total <= 0) { out.S[rowId] = row.orderBase; return; }
-    CHEF_KEYS.forEach(chef => {
-      const part = row.sources.reduce((sum, src) => sum + (chefOf(src.key) === chef ? src.base : 0), 0);
+    ids.forEach(chef => {
+      const part = row.sources.reduce((sum, src) => sum + (chefOf(src.key) === chef ? src.amount : 0), 0);
       if (part > 0) out[chef][rowId] = row.orderBase * (part / total);
     });
   });
-  const dishes = { S: [], A: [], C: [] };
+
+  const dishes = {};
+  ids.forEach(id => { dishes[id] = []; });
   menuDishKeys(currentSetMenu()).forEach(k => {
     if (RECIPE_LIBRARY[k]) dishes[chefOf(k)].push(RECIPE_LIBRARY[k].label);
   });
   out.dishes = dishes;
-  out.active = ['A', 'C'].filter(c => Object.keys(out[c]).length > 0);
+  out.active = chefIds().filter(c => Object.keys(out[c]).length > 0);
   return out;
 }
 
@@ -1526,6 +1781,8 @@ function generateList() {
   const data = aggregate();
   const split = chefSplit(data);
   const query = rowSearchQuery();
+  const showCut = data.reducePct > 0;   // the keep-whole column only matters while reducing
+  const colCount = showCut ? 6 : 5;
   let matchCount = 0;
   const previewEl = document.getElementById('bl-preview');
   previewEl.innerHTML = '';
@@ -1564,7 +1821,9 @@ function generateList() {
     table.innerHTML = '<tr><th style="width:40px;">নং</th><th>দ্রব্যের নাম</th>'
       + '<th style="width:110px;">প্রতি ১০০ জনে</th>'
       + '<th style="width:110px;">এই অর্ডারে</th>'
-      + '<th style="width:90px;">একক</th></tr>';
+      + '<th style="width:90px;">একক</th>'
+      + (showCut ? '<th style="width:74px;" title="এই উপকরণে শতাংশ কমানো হবে না">পুরোটাই</th>' : '')
+      + '</tr>';
 
     // Only rows and headings the user added can be deleted; the paper-form rows stay.
     const delBtn = (ri) => '<button type="button" class="row-del" data-act="del" data-sheet="' + si
@@ -1573,7 +1832,7 @@ function generateList() {
     const sectionRow = (ri) => {
       const entry = sheet.rows[ri];
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td colspan="5" class="review-section"><div class="cell-with-del">'
+      tr.innerHTML = '<td colspan="' + colCount + '" class="review-section"><div class="cell-with-del">'
         + '<input class="section-in" data-sheet="' + si + '" data-idx="' + ri + '" value="' + escapeHtml(entry.section) + '">'
         + (entry.added ? delBtn(ri) : '') + '</div></td>';
       return tr;
@@ -1591,10 +1850,11 @@ function generateList() {
       const flag = disputed ? ' <span class="disputed" title="' + escapeHtml(disputed) + '">⚠</span>' : '';
       // Which cooks this row's quantity is split between, if any. When part of it stays
       // on the paper form, say how much — the form prints that, not the total shown here.
-      const chefs = ['A', 'C'].filter(c => split[c][row.id] > 0.0005);
-      const badges = chefs.map(c => '<span class="chef-badge badge-' + c + '" title="' + CHEF_LABELS[c] + ' এর পাতায় '
-        + toBanglaNum(formatByType(split[c][row.id], row.type)) + '">' + c + '</span>').join('');
-      const shareNote = (chefs.length && split.S[row.id] > 0.0005)
+      const rowChefs = chefIds().filter(c => split[c] && split[c][row.id] > 0.0005);
+      const badges = rowChefs.map(c => '<span class="chef-badge" style="background:' + chefInk(c) + '"'
+        + ' title="' + escapeHtml(chefName(c)) + ' এর পাতায় '
+        + toBanglaNum(formatByType(split[c][row.id], row.type)) + '">' + escapeHtml(chefBadge(c)) + '</span>').join('');
+      const shareNote = (rowChefs.length && split.S[row.id] > 0.0005)
         ? '<span class="chef-split" title="এই ফর্মে যতটা ছাপা হবে">ফর্মে '
           + toBanglaNum(formatByType(split.S[row.id], row.type)) + '</span>' : '';
       const unitSel = '<select class="unit-in" data-sheet="' + si + '" data-idx="' + ri + '">'
@@ -1616,7 +1876,11 @@ function generateList() {
           'data-row="' + row.id + '" value="' + (row.per100 === '' ? '' : roundQty(row.per100)) + '"></td>' +
         '<td><input type="number" min="0" step="any" class="qty-in order-in" ' +
           'data-row="' + row.id + '" value="' + (row.orderQty === null ? '' : roundQty(row.orderQty)) + '"></td>' +
-        '<td>' + unitSel + '</td>';
+        '<td>' + unitSel + '</td>'
+        + (showCut
+            ? '<td class="cut-cell"><input type="checkbox" class="cut-keep" data-row="' + row.id + '"'
+              + (row.excluded ? ' checked' : '') + ' aria-label="পুরো পরিমাণ রাখুন"></td>'
+            : '');
 
       if (!open) return [tr];
 
@@ -1689,7 +1953,7 @@ function generateList() {
     if (withoutQty.length) {
       const open = Boolean(emptyOpen[sheet.key]);
       const toggle = document.createElement('tr');
-      toggle.innerHTML = '<td colspan="5" class="review-divider">'
+      toggle.innerHTML = '<td colspan="' + colCount + '" class="review-divider">'
         + '<button type="button" class="empty-toggle" data-act="toggle-empty" data-key="' + sheet.key + '"'
         + ' aria-expanded="' + (open ? 'true' : 'false') + '">'
         + (open ? '▾' : '▸') + ' পরিমাণ নেই — ' + toBanglaNum(withoutQty.length) + 'টি সারি'
@@ -1732,16 +1996,18 @@ function generateList() {
     previewEl.appendChild(none);
   }
   updateSearchCount(query, matchCount);
+  updateReduceNote();
 
   // What each chef's own page will print. Read-only: quantities are edited above.
   split.active.forEach(chef => {
     const rows = chefRows(data, split[chef]);
     const box = document.createElement('div');
-    box.className = 'preview-cat chef-preview chef-box-' + chef;
+    box.className = 'preview-cat chef-preview';
+    box.style.borderTopColor = chefInk(chef);
 
     const head = document.createElement('div');
     head.className = 'sheet-head';
-    head.innerHTML = '<span>' + CHEF_LABELS[chef] + ' — আলাদা পাতা</span>'
+    head.innerHTML = '<span>' + escapeHtml(chefName(chef)) + ' — আলাদা পাতা</span>'
       + '<span class="sheet-count">' + toBanglaNum(rows.length) + 'টি উপকরণ</span>';
     box.appendChild(head);
 
@@ -1787,7 +2053,12 @@ function handleReviewChange(ev) {
   const sheet = el.dataset.sheet !== undefined ? forms[Number(el.dataset.sheet)] : null;
   const idx = el.dataset.idx !== undefined ? Number(el.dataset.idx) : null;
 
-  if (el.classList.contains('per100-in')) {
+  if (el.classList.contains('cut-keep')) {
+    // Ticked means this ingredient keeps its full amount while everything else is cut.
+    if (el.checked) reduceExcluded[el.dataset.row] = true;
+    else delete reduceExcluded[el.dataset.row];
+    generateList();
+  } else if (el.classList.contains('per100-in')) {
     // Editing per-100 rescales this order.
     const rowId = el.dataset.row;
     const menuKey = document.getElementById('bl-package').value;
@@ -1926,7 +2197,10 @@ function renderPrintSheet() {
   const dateDisplay = dateVal ? toBanglaNum(dateVal.split('-').reverse().join('/')) : '—';
   const place = escapeHtml(document.getElementById('bl-place').value || '—');
   const label = escapeHtml(document.getElementById('bl-label').value || '—');
-  const guests = toBanglaNum(data.guestCount);
+  const guests = toBanglaNum(data.guestCount)
+    + (data.vip && data.packet
+        ? ' (ভি.আই.পি ' + toBanglaNum(data.vip) + ' + প্যাকেট ' + toBanglaNum(data.packet) + ')'
+        : '');
 
   // Price columns (দর / টাকা / মোট টাকা) are not printed.
   const COLS = { pcs: 'পিছ', kg: 'কেজি', gm: 'গ্রাম', qty: 'পরিমাণ' };
@@ -2008,7 +2282,7 @@ function renderPrintSheet() {
   const addChefPage = () => {
     const CHEF_PAGE_TITLE = 'বাবুর্চির রান্নার তালিকা';
     const chefLines = chef => chefRows(data, split[chef]).map((r, i) => Object.assign({}, r, { n: i + 1 }));
-    const chefHead = chef => '<div class="ps-chef-name">' + escapeHtml(CHEF_LABELS[chef]) + ' —</div>'
+    const chefHead = chef => '<div class="ps-chef-name">' + escapeHtml(chefName(chef)) + ' —</div>'
       + '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>'
       + escapeHtml(split.dishes[chef].join(', ') || '—') + '</div>';
 
@@ -2117,7 +2391,13 @@ function applyIncomingOrder(order) {
   if (p.get('date')) document.getElementById('bl-date').value = p.get('date');
   if (p.get('place')) document.getElementById('bl-place').value = p.get('place');
   if (p.get('label')) document.getElementById('bl-label').value = p.get('label');
-  if (p.get('guests')) document.getElementById('bl-guests').value = p.get('guests');
+  // Two headcounts now. An older link carrying only a total puts it all in ভি.আই.পি.
+  if (p.get('vip')) document.getElementById('bl-vip').value = p.get('vip');
+  if (p.get('packet')) document.getElementById('bl-packet').value = p.get('packet');
+  if (!p.get('vip') && !p.get('packet') && p.get('guests')) {
+    document.getElementById('bl-vip').value = p.get('guests');
+  }
+  onGuestsChanged();
 
   if (order.dessertKey) chosenDessert = order.dessertKey;
 }
@@ -2613,7 +2893,7 @@ function snapshotAll() {
   Object.keys(SET_MENUS).forEach(k => { if (k !== 'fromOrder') setMenus[k] = SET_MENUS[k]; });
   return {
     app: 'iqbal-bajar', version: 2, savedAt: new Date().toISOString(),
-    per100: per100Store, forms: forms, setMenus: setMenus, recipes: savedRecipes()
+    per100: per100Store, forms: forms, setMenus: setMenus, recipes: savedRecipes(), chefs: chefs
   };
 }
 
@@ -2625,6 +2905,11 @@ function resetTo(target, factory) {
 // Replaces whichever parts `d` carries; parts it lacks are left alone (older backups).
 function applyAll(d) {
   if (d.per100 && typeof d.per100 === 'object') per100Store = d.per100;
+  if (Array.isArray(d.chefs)) {
+    chefs = d.chefs.filter(c => c && c.id && c.id !== 'S' && c.name);
+    saveChefs();
+    renderChefAdmin();
+  }
   if (Array.isArray(d.forms) && d.forms.length) forms = d.forms;
   if (d.recipes && typeof d.recipes === 'object') {
     resetTo(RECIPE_LIBRARY, FACTORY_RECIPES);
@@ -2802,6 +3087,7 @@ if (incomingOrder && !incomingOrder.setMenuKey && incomingOrder.dishes.length) {
   };
 }
 
+renderChefAdmin();
 populateSetMenuSelect();
 
 if (incomingOrder) {
@@ -2814,6 +3100,7 @@ if (incomingOrder) {
 }
 
 renderSetMenuDetails();
+onGuestsChanged();          // fills the hidden total and each dish's placeholder
 
 if (incomingOrder) {
   renderOrderNotice(incomingOrder);

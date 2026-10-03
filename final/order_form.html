@@ -721,7 +721,8 @@
     <input type="text" id="global-guest-packet" placeholder="প্যাকেট">
     <span class="set-menu-field">
       সেট মেনু:
-      <select id="global-set-menu"></select>
+      <select id="global-set-menu" aria-label="ভি.আই.পি সেট মেনু"></select>
+      <select id="global-set-menu-packet" aria-label="প্যাকেট সেট মেনু" title="প্যাকেট আলাদা মেনু হলে"></select>
     </span>
   </div>
 
@@ -807,12 +808,18 @@ const BAJAR_SET_MENUS = [
 ];
 
 function populateSetMenuField() {
-  const sel = document.getElementById('global-set-menu');
+  ['global-set-menu', 'global-set-menu-packet'].forEach(id => fillSetMenuSelect(id));
+}
+
+function fillSetMenuSelect(id) {
+  const sel = document.getElementById(id);
   if (!sel) return;
+  const keep = sel.value;
   sel.innerHTML = '';
   const none = document.createElement('option');
   none.value = '';
-  none.textContent = '— প্রযোজ্য নয় —';
+  // The packet guests usually eat the same menu; a second one is the exception.
+  none.textContent = id === 'global-set-menu' ? '— প্রযোজ্য নয় —' : '— প্যাকেট আলাদা নয় —';
   sel.appendChild(none);
   // Packages created on the bajar list page are saved in this browser; include them.
   const menus = BAJAR_SET_MENUS.slice();
@@ -832,6 +839,7 @@ function populateSetMenuField() {
     opt.textContent = m.label;
     sel.appendChild(opt);
   });
+  if (keep) sel.value = keep;
 }
 
 // Reads a guest-count field that may hold Bangla or Latin digits, or free text.
@@ -875,6 +883,7 @@ function openBajarList() {
   if (packet > 0) params.set('packet', String(packet));
   if (guests > 0) params.set('guests', String(guests));
   params.set('setMenu', data.setMenu);
+  if (data.setMenuPacket) params.set('setMenuPacket', data.setMenuPacket);
   params.set('items', JSON.stringify(itemNames));
 
   window.open('bajarlist.html?' + params.toString(), '_blank');
@@ -1254,6 +1263,7 @@ function gatherOrderData() {
     guestVip: document.getElementById('global-guest-vip').value.trim(),
     guestPacket: document.getElementById('global-guest-packet').value.trim(),
     setMenu: document.getElementById('global-set-menu').value,
+    setMenuPacket: document.getElementById('global-set-menu-packet').value,
     categories: categories
   };
 }
@@ -1346,6 +1356,7 @@ function startNewOrder() {
   document.getElementById('cust-place').value = '';
   document.getElementById('cust-program').value = '';
   document.getElementById('global-set-menu').value = '';
+  document.getElementById('global-set-menu-packet').value = '';
   document.getElementById('global-guest-vip').value = '';
   document.getElementById('global-guest-packet').value = '';
   globalGuestCount.vip = '';
@@ -1373,6 +1384,7 @@ function editHistoryOrder(id) {
   document.getElementById('cust-place').value = order.place || '';
   document.getElementById('cust-program').value = order.program || '';
   document.getElementById('global-set-menu').value = order.setMenu || '';
+  document.getElementById('global-set-menu-packet').value = order.setMenuPacket || '';
 
   // Set DOM first so any state-capture during render reads the new values, not stale ones
   document.getElementById('global-guest-vip').value = order.guestVip || '';

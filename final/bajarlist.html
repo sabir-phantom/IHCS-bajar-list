@@ -175,6 +175,7 @@
     border: 0; background: none; color: #b9a984; cursor: pointer; font-size: 12px; padding: 0 2px;
   }
   .chef-admin-chip button:hover { color: var(--maroon); }
+  .chef-admin-edit { display: inline-flex; align-items: center; gap: 8px; }
   .chef-admin input {
     font-family: inherit; font-size: 12px; padding: 3px 6px; width: 150px;
     border: 1px solid #e6ddc6; border-radius: 5px; background: #fff;
@@ -264,6 +265,14 @@
   }
 
   .dessert-row { display: flex; gap: 22px; align-items: center; margin-top: 12px; }
+  .pkg-group-label {
+    font-size: 13px; font-weight: 700; color: #7a6a4d; white-space: nowrap;
+    padding: 0 2px 0 6px;
+  }
+  .pkg-group-label:first-child { padding-left: 0; }
+  .dish-chip .dish-group {
+    font-size: 11px; color: #a3906a; margin-left: 5px; padding-left: 5px; border-left: 1px solid #ded2b8;
+  }
   .dessert-row[hidden], .pkg-editor[hidden] { display: none; }
   .package-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .package-bar select { flex: 1 1 260px; min-width: 0; }
@@ -530,7 +539,10 @@
   <h2 class="section">সেট মেনু প্যাকেজ</h2>
   <div class="package-box">
     <div class="package-bar">
-      <select id="bl-package" aria-label="সেট মেনু প্যাকেজ"></select>
+      <label class="pkg-group-label" for="bl-package">ভি.আই.পি</label>
+      <select id="bl-package" aria-label="ভি.আই.পি সেট মেনু"></select>
+      <label class="pkg-group-label" for="bl-package-packet">প্যাকেট</label>
+      <select id="bl-package-packet" aria-label="প্যাকেট সেট মেনু"></select>
       <button type="button" class="pkg-btn" id="pkg-edit-btn" onclick="openPackageEditor(false)">✎ সম্পাদনা</button>
       <button type="button" class="pkg-btn pkg-btn-new" onclick="openPackageEditor(true)">+ নতুন প্যাকেজ</button>
     </div>
@@ -540,6 +552,7 @@
       <div class="dish-chip-row" id="bl-dish-chips"></div>
     </div>
     <div class="dessert-row" id="bl-dessert-row" hidden></div>
+    <div class="dessert-row" id="bl-dessert-row-packet" hidden></div>
 
     <div class="pkg-editor" id="pkg-editor" hidden>
       <h3 class="pkg-editor-title" id="pkg-editor-title">নতুন প্যাকেজ</h3>
@@ -636,8 +649,12 @@
   <div class="chef-admin">
     <span class="chef-admin-label">বাবুর্চি তালিকা</span>
     <span class="chef-admin-list" id="chef-admin-list"></span>
-    <input type="text" id="chef-new-name" placeholder="নতুন বাবুর্চির নাম" aria-label="নতুন বাবুর্চির নাম">
-    <button type="button" class="link-btn" onclick="addChef()">+ যোগ করুন</button>
+    <button type="button" class="link-btn" id="chef-edit-toggle" onclick="toggleChefEdit()">সম্পাদনা</button>
+    <span class="chef-admin-edit" id="chef-admin-edit" hidden>
+      <input type="text" id="chef-new-name" placeholder="নতুন বাবুর্চির নাম" aria-label="নতুন বাবুর্চির নাম">
+      <button type="button" class="link-btn" onclick="addChef()">+ যোগ করুন</button>
+      <button type="button" class="link-btn" onclick="restoreChefs()">ডিফল্টে ফেরান</button>
+    </span>
   </div>
 
   <div class="footer-links">
@@ -1186,28 +1203,108 @@ function saveSetMenus() {
   scheduleFileWrite();
 }
 
-// The dessert the user has picked; kept across redraws of the radio buttons.
-let chosenDessert = null;
+// VIP guests and packet guests sometimes eat different menus — 500 on কাচ্চি while 200
+// have রুটি কালিয়া — so there is a package per group. One package alone feeds everybody.
+const GROUPS = [
+  { id: 'vip',    label: 'ভি.আই.পি', select: 'bl-package',        dessertRow: 'bl-dessert-row' },
+  { id: 'packet', label: 'প্যাকেট',   select: 'bl-package-packet', dessertRow: 'bl-dessert-row-packet' }
+];
 
-// Dishes whose recipes count for this package, including the chosen dessert.
-function menuDishKeys(menu) {
+// The dessert picked for each group; kept across redraws of the radio buttons.
+let chosenDessert = { vip: null, packet: null };
+
+function groupMenuKey(g) {
+  const el = document.getElementById(g.select);
+  return el ? el.value : '';
+}
+function groupMenu(g) {
+  const key = groupMenuKey(g);
+  return key && SET_MENUS[key] ? SET_MENUS[key] : null;
+}
+function groupGuests(g) {
+  return g.id === 'vip' ? vipGuests() : packetGuests();
+}
+
+// Groups that actually have a package chosen.
+function activeGroups() {
+  return GROUPS.filter(g => groupMenu(g));
+}
+
+// How many people a group cooks for. A single package feeds everyone, so it takes the
+// whole headcount rather than only its own half.
+function guestsOfGroup(g) {
+  return activeGroups().length <= 1 ? totalGuests() : groupGuests(g);
+}
+
+// Dishes of one group, including that group's chosen dessert.
+function dishKeysOfGroup(g) {
+  const menu = groupMenu(g);
+  if (!menu) return [];
   const opts = menu.skipDessert ? [] : (menu.dessertOptions || []);
-  const d = selectedDessertKey();
+  const d = chosenDessert[g.id];
   return menu.dishes.concat(d && opts.indexOf(d) !== -1 ? [d] : []);
 }
 
-function populateSetMenuSelect() {
-  const sel = document.getElementById('bl-package');
-  const keep = sel.value;
-  sel.innerHTML = '';
-  Object.keys(SET_MENUS).forEach(key => {
-    const opt = document.createElement('option');
-    opt.value = key;
-    opt.textContent = SET_MENUS[key].label;
-    sel.appendChild(opt);
+// dishKey -> the headcount it is cooked for, before any per-dish override.
+function dishBaseGuests() {
+  const map = {};
+  activeGroups().forEach(g => {
+    const n = guestsOfGroup(g);
+    dishKeysOfGroup(g).forEach(k => { map[k] = (map[k] || 0) + n; });
   });
-  if (keep && SET_MENUS[keep]) sel.value = keep;
-  sel.onchange = () => { closePackageEditor(); renderSetMenuDetails(); };
+  return map;
+}
+
+// dishKey -> which groups cook it, for the labels on the chips.
+function dishGroupIds() {
+  const map = {};
+  activeGroups().forEach(g => dishKeysOfGroup(g).forEach(k => {
+    (map[k] = map[k] || []).push(g.id);
+  }));
+  return map;
+}
+
+// Every dish in play, across both groups, each named once.
+function allDishKeys() {
+  const seen = [];
+  activeGroups().forEach(g => dishKeysOfGroup(g).forEach(k => {
+    if (seen.indexOf(k) === -1) seen.push(k);
+  }));
+  return seen;
+}
+
+// Kept for the few callers that still think in terms of one menu.
+function menuDishKeys(menu) {
+  if (menu && menu !== currentSetMenu()) {
+    const opts = menu.skipDessert ? [] : (menu.dessertOptions || []);
+    const d = chosenDessert.vip;
+    return menu.dishes.concat(d && opts.indexOf(d) !== -1 ? [d] : []);
+  }
+  return allDishKeys();
+}
+
+function populateSetMenuSelect() {
+  GROUPS.forEach(g => {
+    const sel = document.getElementById(g.select);
+    const keep = sel.value;
+    sel.innerHTML = '';
+    // The packet group may have no menu of its own, in which case the other package
+    // feeds everybody — which is how every job worked before this existed.
+    if (g.id !== 'vip') {
+      const none = document.createElement('option');
+      none.value = '';
+      none.textContent = '— আলাদা মেনু নেই —';
+      sel.appendChild(none);
+    }
+    Object.keys(SET_MENUS).forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = SET_MENUS[key].label;
+      sel.appendChild(opt);
+    });
+    if (keep && (SET_MENUS[keep] || keep === '')) sel.value = keep;
+    sel.onchange = () => { closePackageEditor(); renderSetMenuDetails(); };
+  });
 }
 
 let editingKey = null;
@@ -1274,30 +1371,35 @@ function currentSetMenu() {
 }
 
 function renderSetMenuDetails() {
-  const pkg = currentSetMenu();
   document.getElementById('pkg-edit-btn').disabled = document.getElementById('bl-package').value === 'fromOrder';
 
-  // Dessert: one choice among the package's options, or no row at all.
-  const dessertRow = document.getElementById('bl-dessert-row');
-  const opts = (pkg.skipDessert ? [] : (pkg.dessertOptions || [])).filter(k => RECIPE_LIBRARY[k]);
-  if (!opts.length) {
-    dessertRow.hidden = true;
-    dessertRow.innerHTML = '';
-  } else {
+  // Dessert is chosen per group: each menu may offer its own, or none.
+  const twoMenus = activeGroups().length > 1;
+  GROUPS.forEach(g => {
+    const row = document.getElementById(g.dessertRow);
+    const menu = groupMenu(g);
+    const opts = (!menu || menu.skipDessert ? [] : (menu.dessertOptions || [])).filter(k => RECIPE_LIBRARY[k]);
+    if (!opts.length) {
+      row.hidden = true;
+      row.innerHTML = '';
+      return;
+    }
     // '' means no dessert at all: a deliberate choice, so it is not overridden here.
-    if (chosenDessert !== '' && opts.indexOf(chosenDessert) === -1) chosenDessert = opts[0];
-    dessertRow.hidden = false;
+    if (chosenDessert[g.id] !== '' && opts.indexOf(chosenDessert[g.id]) === -1) chosenDessert[g.id] = opts[0];
+    row.hidden = false;
+    const name = 'dessert-' + g.id;
     const choice = (value, label) =>
-      '<label><input type="radio" name="dessert" value="' + value + '"'
-      + (value === chosenDessert ? ' checked' : '') + '> ' + label + '</label>';
-    dessertRow.innerHTML = '<strong style="color:#7a6a4d;">মিষ্টান্ন:</strong>'
+      '<label><input type="radio" name="' + name + '" value="' + value + '"'
+      + (value === chosenDessert[g.id] ? ' checked' : '') + '> ' + label + '</label>';
+    row.innerHTML = '<strong style="color:#7a6a4d;">মিষ্টান্ন'
+      + (twoMenus ? ' (' + g.label + ')' : '') + ':</strong>'
       + opts.map(k => choice(k, escapeHtml(RECIPE_LIBRARY[k].label))).join('')
       + choice('', 'মিষ্টান্ন ছাড়া');
-    dessertRow.querySelectorAll('input').forEach(r => r.addEventListener('change', () => {
-      chosenDessert = r.value;
+    row.querySelectorAll('input').forEach(r => r.addEventListener('change', () => {
+      chosenDessert[g.id] = r.value;
       renderSetMenuDetails();
     }));
-  }
+  });
 
   // After the dessert radios exist, so the chosen dessert gets a chef dropdown too.
   renderDishChips();
@@ -1307,9 +1409,11 @@ function renderSetMenuDetails() {
 
 // Each dish of the package, with the cook it is assigned to.
 function renderDishChips() {
-  const menu = currentSetMenu();
-  if (!menu) return;                 // called before the package list exists
-  const keys = menuDishKeys(menu).filter(k => RECIPE_LIBRARY[k]);
+  if (!activeGroups().length) return;      // called before the package list exists
+  const keys = allDishKeys().filter(k => RECIPE_LIBRARY[k]);
+  const base = dishBaseGuests();
+  const groupsOf = dishGroupIds();
+  const twoMenus = activeGroups().length > 1;
   const chipRow = document.getElementById('bl-dish-chips');
   if (!keys.length) {
     chipRow.innerHTML = '<span class="pkg-empty">রেসিপি-আইটেম নেই — নিচের তালিকায় পরিমাণ লিখুন</span>';
@@ -1322,8 +1426,10 @@ function renderDishChips() {
     return '<span class="dish-chip chef-' + (chefOf(k) === 'S' ? 'S' : 'X') + '"'
       + (chefOf(k) === 'S' ? '' : ' style="background:' + chefTint(chefOf(k)) + ';color:' + chefInk(chefOf(k)) + '"')
       + '>' + escapeHtml(RECIPE_LIBRARY[k].label)
+      + (twoMenus ? '<span class="dish-group">' + (groupsOf[k] || []).map(id =>
+            GROUPS.filter(g => g.id === id)[0].label).join('+') + '</span>' : '')
       + '<input type="number" min="0" step="1" class="dish-guests' + (set ? ' set' : '') + '" data-dish="' + k + '"'
-        + ' value="' + (set ? own : '') + '" placeholder="' + (totalGuests() || '') + '"'
+        + ' value="' + (set ? own : '') + '" placeholder="' + (base[k] || totalGuests() || '') + '"'
         + ' title="এই আইটেম কত জনের জন্য" aria-label="লোকসংখ্যা">'
       + '<select class="chef-sel" data-dish="' + k + '" aria-label="বাবুর্চি">'
       + ids.map(c => '<option value="' + c + '"' + (c === chefOf(k) ? ' selected' : '') + '>'
@@ -1420,8 +1526,7 @@ function savePer100() {
 // Per-100 base quantities computed from the recipes of the selected set menu.
 // Returns { rowId: baseQty } in base units (gm / ml / pcs), before any user edits.
 function recipePer100() {
-  const menu = currentSetMenu();
-  const dishKeys = menuDishKeys(menu);
+  const dishKeys = allDishKeys();
   const base = {};             // rowId -> per 100 guests, summed over the dishes
   const amount = {};           // rowId -> what this order needs, each dish at its own headcount
   const sources = {};          // rowId -> [{ key, label, base, amount }], for the breakdown
@@ -1463,17 +1568,28 @@ function recipePer100() {
 // The per-100 value actually in force for a row: a saved default wins over the recipe.
 // `fixed` marks a value that is not a sum of recipes, so it scales on the total headcount
 // rather than dish by dish.
+// A value saved against a package, or confirmed by the owner, belongs to that package —
+// so with two menus in play each contributes at its own group's headcount, and the row is
+// their sum. `amount` is what this order needs; `value` is the per-100 figure to show.
 function effectivePer100(rowId, recipeBase) {
-  const menuKey = document.getElementById('bl-package').value;
   const factor = unitInfo(ROW_INDEX[rowId].unit).factor;
+  let per100 = 0, amount = 0, found = false;
 
-  const saved = (per100Store[menuKey] || {})[rowId];
-  if (saved !== undefined && saved !== '') return { value: parseFloat(saved) * factor, fixed: true };
+  activeGroups().forEach(g => {
+    const menuKey = groupMenuKey(g);
+    const saved = (per100Store[menuKey] || {})[rowId];
+    const confirmed = (SET_MENU_PER100[menuKey] || {})[rowId];
+    let v;
+    if (saved !== undefined && saved !== '') v = parseFloat(saved);
+    else if (confirmed !== undefined) v = confirmed;
+    else return;
+    found = true;
+    per100 += v * factor;
+    amount += v * factor * (guestsOfGroup(g) / 100);
+  });
 
-  const confirmed = (SET_MENU_PER100[menuKey] || {})[rowId];
-  if (confirmed !== undefined) return { value: confirmed * factor, fixed: true };
-
-  return { value: recipeBase[rowId], fixed: false };
+  if (found) return { value: per100, amount: amount, fixed: true };
+  return { value: recipeBase[rowId], amount: undefined, fixed: false };
 }
 
 // Everything the review screen and the print sheet need.
@@ -1496,7 +1612,7 @@ function aggregate() {
     // package-default value has no dish behind it, so it scales on the total.
     let orderBase;
     if (oneOff !== undefined && oneOff !== '') orderBase = parseFloat(oneOff) * factor;
-    else if (eff.fixed) orderBase = hasPer100 ? per100Base * scale : null;
+    else if (eff.fixed) orderBase = eff.amount;
     else orderBase = (recipe.amount[rowId] === undefined) ? null : recipe.amount[rowId];
 
     // The across-the-board reduction, last, so it reduces whatever the row ended up with.
@@ -1522,8 +1638,7 @@ function aggregate() {
   });
 
   // Manual lines (e.g. মাংস — বস কর্তৃক নির্ধারিত) stay free text.
-  const menu = currentSetMenu();
-  const dishKeys = menuDishKeys(menu);
+  const dishKeys = allDishKeys();
   const manualLines = [];
   dishKeys.forEach(dishKey => {
     const dish = RECIPE_LIBRARY[dishKey];
@@ -1585,18 +1700,42 @@ function chefOf(dishKey) {
   return (c && chefIds().indexOf(c) !== -1) ? c : 'S';
 }
 
+// The list is shown but not editable until সম্পাদনা is pressed: a cook removed by a
+// stray click would quietly send their dishes back to the standard sheets.
+let chefEditOpen = false;
+
+function toggleChefEdit() {
+  chefEditOpen = !chefEditOpen;
+  document.getElementById('chef-admin-edit').hidden = !chefEditOpen;
+  document.getElementById('chef-edit-toggle').textContent = chefEditOpen ? 'সম্পাদনা বন্ধ' : 'সম্পাদনা';
+  renderChefAdmin();
+  if (chefEditOpen) document.getElementById('chef-new-name').focus();
+}
+
 function renderChefAdmin() {
   const box = document.getElementById('chef-admin-list');
   if (!box) return;
   box.innerHTML = chefs.length
     ? chefs.map(c => '<span class="chef-admin-chip" style="border-color:' + chefInk(c.id) + '">'
         + escapeHtml(c.name)
-        + '<button type="button" title="বাদ দিন" aria-label="বাদ দিন" data-chef="' + c.id + '">✕</button>'
+        + (chefEditOpen
+            ? '<button type="button" title="বাদ দিন" aria-label="বাদ দিন" data-chef="' + c.id + '">✕</button>'
+            : '')
         + '</span>').join('')
     : '<span>কোনো বাবুর্চি নেই</span>';
   box.querySelectorAll('button[data-chef]').forEach(b => {
     b.addEventListener('click', () => removeChef(b.dataset.chef));
   });
+}
+
+function restoreChefs() {
+  if (!confirm('বাবুর্চি তালিকা ডিফল্টে ফেরাবেন? নিজের যোগ করা নামগুলো বাদ যাবে।')) return;
+  chefAssign = {};
+  chefs = JSON.parse(JSON.stringify(FACTORY_CHEFS));
+  saveChefs();
+  renderChefAdmin();
+  renderDishChips();
+  generateList();
 }
 
 function addChef() {
@@ -1645,8 +1784,9 @@ function totalGuests() { return vipGuests() + packetGuests(); }
 
 function guestsFor(dishKey) {
   const v = dishGuests[dishKey];
-  if (v === undefined || v === '' || isNaN(Number(v))) return totalGuests();
-  return Number(v);
+  if (v !== undefined && v !== '' && !isNaN(Number(v))) return Number(v);
+  const base = dishBaseGuests()[dishKey];
+  return base === undefined ? totalGuests() : base;
 }
 
 // ---------------- The across-the-board reduction ----------------
@@ -1668,7 +1808,7 @@ function reduceFactorFor(rowId) {
 // package default) belongs to no dish, so all of it stays standard.
 function chefSplit(data) {
   const ids = ['S'].concat(chefIds());
-  if (!currentSetMenu()) return { S: {}, dishes: { S: [] }, active: [] };
+  if (!activeGroups().length) return { S: {}, dishes: { S: [] }, active: [] };
   const out = {};
   ids.forEach(id => { out[id] = {}; });
 
@@ -1687,7 +1827,7 @@ function chefSplit(data) {
 
   const dishes = {};
   ids.forEach(id => { dishes[id] = []; });
-  menuDishKeys(currentSetMenu()).forEach(k => {
+  allDishKeys().forEach(k => {
     if (RECIPE_LIBRARY[k]) dishes[chefOf(k)].push(RECIPE_LIBRARY[k].label);
   });
   out.dishes = dishes;
@@ -2133,6 +2273,11 @@ function resetForms() {
 }
 
 function saveDefaults() {
+  if (activeGroups().length > 1) {
+    alert('দুটি মেনু চালু আছে — কোন প্যাকেজের ডিফল্ট হবে তা ঠিক করা যাচ্ছে না।\n'
+      + 'একটি মেনু রেখে সংরক্ষণ করুন, অথবা মানগুলো শুধু এই অর্ডারের জন্য রাখুন।');
+    return;
+  }
   const menuKey = document.getElementById('bl-package').value;
   const menu = currentSetMenu();
   if (!per100Store[menuKey] || Object.keys(per100Store[menuKey]).length === 0) {
@@ -2391,6 +2536,10 @@ function applyIncomingOrder(order) {
   if (p.get('date')) document.getElementById('bl-date').value = p.get('date');
   if (p.get('place')) document.getElementById('bl-place').value = p.get('place');
   if (p.get('label')) document.getElementById('bl-label').value = p.get('label');
+  // A second package for the packet guests, when they eat something different.
+  if (p.get('setMenuPacket') && SET_MENUS[p.get('setMenuPacket')]) {
+    document.getElementById('bl-package-packet').value = p.get('setMenuPacket');
+  }
   // Two headcounts now. An older link carrying only a total puts it all in ভি.আই.পি.
   if (p.get('vip')) document.getElementById('bl-vip').value = p.get('vip');
   if (p.get('packet')) document.getElementById('bl-packet').value = p.get('packet');
@@ -2399,7 +2548,7 @@ function applyIncomingOrder(order) {
   }
   onGuestsChanged();
 
-  if (order.dessertKey) chosenDessert = order.dessertKey;
+  if (order.dessertKey) chosenDessert.vip = order.dessertKey;
 }
 
 function renderOrderNotice(order) {

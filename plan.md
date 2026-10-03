@@ -75,6 +75,26 @@ file written under the old order still comes out right, and a sheet the user cre
 keeps its place at the end. The review screen renders in this order too, while each row
 still carries its original sheet index, so edits land on the right sheet.
 
+### Two menus in one job
+
+VIP guests and packet guests sometimes eat different menus, so there is a package per
+group: `GROUPS` = vip, packet. One package alone feeds everybody — `guestsOfGroup()`
+returns the whole headcount when only one group is active — which is exactly the old
+behaviour, so nothing changes for an ordinary job.
+
+`dishBaseGuests()` maps each dish to the headcount of the group(s) cooking it, summing
+when a dish is in both menus. `allDishKeys()` is the union across groups, and dessert is
+chosen per group. A package-level value (a saved default, or an owner-confirmed one in
+`SET_MENU_PER100`) belongs to its own package, so `effectivePer100()` sums each group's
+value at that group's headcount: ভাতের চাউল at 600/100 on কাচ্চি gives 3 kg for 500 VIP
+guests rather than for all 700.
+
+Saving per-100 defaults is refused while two menus are active, since there is no way to
+tell which package the value belongs to.
+
+Verified: সয়াবিন তেল across both menus is 15 + 10 + 4 = 29 ltr, an ingredient both menus
+need lands on one row as the sum, and the chef split still has zero drift.
+
 ### Headcounts, per dish
 
 Two headcounts now: ভি.আই.পি and প্যাকেট, costed on their sum. `dishGuests[dishKey]` holds
@@ -100,6 +120,11 @@ review table shows that tick in a পুরোটাই column, which only appea
 set. Per job, not saved — a stale tick would silently leave an ingredient out of a cut.
 
 ### Chefs are a list
+
+The footer line is read-only until সম্পাদনা is pressed: the owner found it too open to
+edit or delete, and a deleted cook silently returns their dishes to the standard sheets.
+ডিফল্টে ফেরান restores just A and C.
+
 
 `chefs` is a saved list of `{id, name}`, with `S` implicit and always present. Cooks are
 added by name at the foot of the page, deliberately understated. Removing one returns its

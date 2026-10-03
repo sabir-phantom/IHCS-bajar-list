@@ -113,6 +113,12 @@
   <h3>Header</h3>
   <p>Date, venue, event name and <strong>লোকসংখ্যা</strong> (headcount). Everything is calculated from the headcount: recipes are stored per 100 people and scaled. Type 250 and every amount becomes two and a half times the per-100 figure.</p>
 
+  <h3>Two menus in one job</h3>
+  <p>There are two package dropdowns: one for <strong>ভি.আই.পি</strong> and one for <strong>প্যাকেট</strong>. Leave the packet one on <em>— আলাদা মেনু নেই —</em> and the first package feeds everybody, exactly as before.</p>
+  <p>Choose a second and each menu is costed for its own guests: 500 on কাচ্চি and 200 on রুটি কালিয়া means কাচ্চি's dishes are made for 500 and রুটি কালিয়া's for 200. Each dish chip shows which menu it belongs to.</p>
+  <p><strong>An ingredient both menus need still lands on one line</strong>, as the sum: সয়াবিন তেল at 3 লিটার/100 for কাচ্চি, 2 for চিকেন রোস্ট and 2 for বিফ কালিয়া comes out as 15 + 10 + 4 = 29 লিটার. Each menu picks its own dessert.</p>
+  <div class="note">While two menus are in play, the <kbd>এই সেট মেনুর ডিফল্ট</kbd> button will not save: it cannot tell which package a per-100 value belongs to. Keep one menu selected to save defaults.</div>
+
   <h3>Headcount: VIP and প্যাকেট</h3>
   <p>Two boxes, not one. Everything is costed on the two added together — 500 VIP + 200 প্যাকেট = 700 — and the line beneath shows that total.</p>
   <p><strong>A dish cooked for fewer people gets its own number.</strong> Beside each dish in the আইটেম row is a small box showing the total in grey. Type 500 into চিকেন রোস্ট and that dish alone is costed for 500 while কাচ্চি stays at 700; the box turns dark to show it was set by hand. Clear it and the dish follows the total again. Set fresh each job.</p>
@@ -189,7 +195,7 @@
   <p>The ingredient box is a search box. Start typing and the list narrows to matching rows &mdash; there are over 200, so this is faster than scrolling. Eighteen names sit on more than one row (&#2328;&#2495; is on three, &#2465;&#2495;&#2478; on four); those are listed with their sheet after the name, so you always pick a specific row.</p>
   <p>The suggestions are drawn by the page itself, directly under the box. Arrow keys move through them, Enter picks, Escape closes. On a narrow window each ingredient becomes a stacked card &mdash; name on its own line, then amount, unit and &#10005; &mdash; so nothing has to be scrolled sideways to reach.</p>
   <p><strong>If the name matches nothing</strong>, the box turns pink and offers to create it: choose which of the three sheets it belongs on, choose its unit, and press <kbd>+ &#2472;&#2468;&#2497;&#2472; &#2441;&#2474;&#2453;&#2480;&#2467; &#2468;&#2504;&#2480;&#2495; &#2453;&#2480;&#2497;&#2472;</kbd>. The row is added to that form permanently and selected for this recipe in one step.</p>
-  <p><strong>More cooks:</strong> at the very foot of the page is a small বাবুর্চি তালিকা line. Type a name, press <kbd>+ যোগ করুন</kbd>, and that cook appears in every dish's dropdown and gets their own printed page under that name. Removing a cook returns their dishes to standard, and says how many first. The list is saved; who cooks what is not.</p>
+  <p><strong>More cooks:</strong> at the very foot of the page is a small বাবুর্চি তালিকা line listing the cooks. It is <strong>read-only until you press সম্পাদনা</strong> — a cook deleted by a stray click would quietly send their dishes back to the standard sheets. With editing on you can type a name and press <kbd>+ যোগ করুন</kbd>, remove a cook with ✕ (it says how many dishes return to standard first), or press <kbd>ডিফল্টে ফেরান</kbd> to go back to just A and C. The list is saved; who cooks what is not.</p>
   <p>The red &#10005; removes an ingredient line. A line you have filled in asks for confirmation; an empty line is removed straight away.</p>
 
   <div class="note"><strong>Why ingredients pick a row rather than free text:</strong> every ingredient must land on a row of the printed form, so that two dishes using the same item add up into one line instead of being bought twice.</div>

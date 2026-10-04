@@ -179,6 +179,8 @@
   }
   .chef-admin-chip button:hover { color: var(--maroon); }
   .chef-admin-edit { display: inline-flex; align-items: center; gap: 8px; }
+  /* An author display rule beats the hidden attribute's UA style, so say it again. */
+  .chef-admin-edit[hidden] { display: none; }
   .chef-admin input {
     font-family: inherit; font-size: 12px; padding: 3px 6px; width: 150px;
     border: 1px solid #e6ddc6; border-radius: 5px; background: #fff;
@@ -302,6 +304,8 @@
   .pkg-slot { display: flex; align-items: center; gap: 6px; flex: 1 1 300px; min-width: 0; }
   .package-bar select { flex: 1 1 auto; min-width: 0; }
   .pkg-btn-edit { padding: 8px 10px; flex: none; }
+  .pkg-btn-add { font-weight: 700; color: var(--green); border-color: #bcd9c6; }
+  .pkg-btn-add:hover { background: #f0f8f2; }
   .pkg-btn-edit:disabled { opacity: 0.4; cursor: default; }
   .pkg-btn {
     font-family: inherit; font-size: 15px; font-weight: 600; padding: 8px 14px; border-radius: 6px;
@@ -571,14 +575,17 @@
         <select id="bl-package" aria-label="ভি.আই.পি সেট মেনু"></select>
         <button type="button" class="pkg-btn pkg-btn-edit" id="pkg-edit-btn"
                 onclick="openPackageEditor(false, 'vip')" title="ভি.আই.পি প্যাকেজ সম্পাদনা">✎</button>
+        <button type="button" class="pkg-btn pkg-btn-edit pkg-btn-add"
+                onclick="openPackageEditor(true, 'vip')" title="নতুন প্যাকেজ তৈরি করে ভি.আই.পি ঘরে বসান">+</button>
       </span>
       <span class="pkg-slot">
         <label class="pkg-group-label" for="bl-package-packet">প্যাকেট</label>
         <select id="bl-package-packet" aria-label="প্যাকেট সেট মেনু"></select>
         <button type="button" class="pkg-btn pkg-btn-edit" id="pkg-edit-btn-packet"
                 onclick="openPackageEditor(false, 'packet')" title="প্যাকেট প্যাকেজ সম্পাদনা">✎</button>
+        <button type="button" class="pkg-btn pkg-btn-edit pkg-btn-add"
+                onclick="openPackageEditor(true, 'packet')" title="নতুন প্যাকেজ তৈরি করে প্যাকেট ঘরে বসান">+</button>
       </span>
-      <button type="button" class="pkg-btn pkg-btn-new" onclick="openPackageEditor(true, 'vip')">+ নতুন প্যাকেজ</button>
     </div>
 
     <div class="pkg-summary">

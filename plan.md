@@ -97,6 +97,24 @@ loading an old one, check those two rows read পিছ.
 `DISH_MATCHERS` learned both dishes, and `chickenRoast` now excludes আস্ত — without that
 it swallowed "আস্ত মুরগির রোস্ট" on the way past, since it matches any রোস্ট.
 
+### The dishes are a checklist, not the package
+
+`picked[dishKey]` = `'vip' | 'packet' | 'both'` is now the source of truth for what this
+job cooks; `pickedBy[dishKey]` records which preset ticked it. Choosing a package calls
+`applyPreset()`, which clears only its own previous picks and then ticks its dishes, so a
+hand-ticked item survives a package change. Every recipe is listed with a tick box in two
+columns, in library order — the list never reorders, which is what made an earlier
+"chosen items float to the top" version unusable.
+
+`dishBaseGuests()` reads the group off `picked`, so a dish marked ভি.আই.পি costs for the
+VIP count, প্যাকেট for the packet count, and উভয় for the total. Desserts are ordinary
+checklist items; the per-group dessert radios and `chosenDessert` are gone.
+
+An incoming order ticks what it names, including dishes no package covers — so আস্ত খাসি
+ordered against the কাচ্চি package is costed rather than only reported missing. Order of
+startup matters: `applyIncomingOrder()` fills the package slots and headcounts first,
+then the presets run.
+
 ### Two menus in one job
 
 VIP guests and packet guests sometimes eat different menus, so there is a package per

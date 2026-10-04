@@ -185,6 +185,52 @@
     font-family: inherit; font-size: 12px; padding: 3px 6px; width: 150px;
     border: 1px solid #e6ddc6; border-radius: 5px; background: #fff;
   }
+  .item-pick { margin-top: 12px; }
+  .item-pick-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .item-pick-bar input {
+    flex: 1 1 auto; font-family: inherit; font-size: 14px; padding: 5px 9px;
+    border: 1px solid #d8cdb5; border-radius: 6px; background: #fff;
+  }
+  .item-count { font-size: 13px; color: var(--navy-dark); white-space: nowrap; }
+  .only-picked { font-size: 13px; color: #7a6a4d; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 8px; }
+  #item-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(296px, 1fr)); gap: 0 14px; align-items: start; }
+  .item-col { min-width: 0; }
+  .item-row {
+    display: flex; align-items: center; gap: 4px; padding: 4px 6px;
+    border-bottom: 1px solid #f0e8d6;
+  }
+  .item-row:hover { background: #fbf7ec; }
+  .item-row.on { background: var(--gold-light); border-bottom-color: #e2d4a8; }
+  .item-row input.tick { flex: none; width: 16px; height: 16px; accent-color: var(--green); margin: 0 2px 0 0; }
+  .item-row .nm { color: #5a4d36; font-weight: 400; }
+  .item-row.on .nm { color: var(--navy-dark); font-weight: 700; }
+  .item-row.off select, .item-row.off input.n { visibility: hidden; }
+  .item-row .nm { flex: 1 1 auto; min-width: 0; font-weight: 700; color: var(--navy-dark);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+  .item-row select, .item-row input {
+    font-family: inherit; font-size: 11px; padding: 1px 2px; border: 1px solid #ded2b8;
+    border-radius: 4px; background: #fff; color: #7a6a4d; flex: none;
+  }
+  .item-row select.g { width: 62px; }
+  .item-row input.n { width: 44px; }
+  .item-row select.c { width: 50px; }
+  .item-row .nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  .item-row .drop {
+    flex: none; border: 0; background: none; color: #b9a984; cursor: pointer; font-size: 13px; padding: 0 2px;
+  }
+  .item-row .drop:hover { color: var(--maroon); }
+  .item-rest-label, .item-head { font-size: 12px; color: #a3906a; margin: 10px 0 5px 2px; }
+  .item-rest { display: flex; flex-wrap: wrap; gap: 6px; }
+  .item-add {
+    font-family: inherit; font-size: 13px; padding: 4px 11px; cursor: pointer;
+    border: 1px solid #ded2b8; border-radius: 999px; background: #fff; color: #5a4d36;
+  }
+  .item-add:hover { background: #faf2df; border-color: var(--gold); }
+  .item-cols-head { display: flex; gap: 4px; padding: 0 6px 2px; font-size: 11px; color: #a3906a; }
+  .item-cols-head .s1 { flex: 1 1 auto; }
+  .item-cols-head .s2 { width: 62px; text-align: center; }
+  .item-cols-head .s3 { width: 44px; text-align: center; }
+  .item-cols-head .s4 { width: 50px; text-align: center; }
   .list-search {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     margin: 22px 0 0; padding: 10px 14px;
@@ -592,8 +638,14 @@
       <span class="pkg-label">আইটেম</span>
       <div class="dish-chip-row" id="bl-dish-chips"></div>
     </div>
-    <div class="dessert-row" id="bl-dessert-row" hidden></div>
-    <div class="dessert-row" id="bl-dessert-row-packet" hidden></div>
+    <div class="item-pick">
+      <div class="item-pick-bar">
+        <input type="search" id="item-search" placeholder="আইটেম খুঁজুন…" aria-label="আইটেম খুঁজুন">
+        <span class="item-count" id="item-count"></span>
+      </div>
+      <label class="only-picked"><input type="checkbox" id="only-picked"> শুধু বাছাই করা দেখান</label>
+      <div id="item-list"></div>
+    </div>
 
     <div class="pkg-editor" id="pkg-editor" hidden>
       <h3 class="pkg-editor-title" id="pkg-editor-title">নতুন প্যাকেজ</h3>
@@ -1281,12 +1333,9 @@ function saveSetMenus() {
 // VIP guests and packet guests sometimes eat different menus — 500 on কাচ্চি while 200
 // have রুটি কালিয়া — so there is a package per group. One package alone feeds everybody.
 const GROUPS = [
-  { id: 'vip',    label: 'ভি.আই.পি', select: 'bl-package',        dessertRow: 'bl-dessert-row' },
-  { id: 'packet', label: 'প্যাকেট',   select: 'bl-package-packet', dessertRow: 'bl-dessert-row-packet' }
+  { id: 'vip',    label: 'ভি.আই.পি', select: 'bl-package' },
+  { id: 'packet', label: 'প্যাকেট',   select: 'bl-package-packet' }
 ];
-
-// The dessert picked for each group; kept across redraws of the radio buttons.
-let chosenDessert = { vip: null, packet: null };
 
 function groupMenuKey(g) {
   const el = document.getElementById(g.select);
@@ -1312,49 +1361,60 @@ function guestsOfGroup(g) {
 }
 
 // Dishes of one group, including that group's chosen dessert.
-function dishKeysOfGroup(g) {
-  const menu = groupMenu(g);
-  if (!menu) return [];
+// DEMO: the dishes of this job are a selection, not whatever the package holds.
+// picked[dishKey] = 'vip' | 'packet' | 'both'
+let picked = {};
+// Which preset ticked a dish, so changing preset clears only its own picks.
+let pickedBy = {};
+
+function pickDish(k, group, byPreset) {
+  picked[k] = group || 'both';
+  if (byPreset) pickedBy[k] = byPreset; else delete pickedBy[k];
+}
+function dropDish(k) { delete picked[k]; delete pickedBy[k]; delete dishGuests[k]; delete chefAssign[k]; }
+
+// Choosing a package ticks its dishes. Anything ticked by hand survives the change.
+function applyPreset(g) {
+  const key = groupMenuKey(g);
+  Object.keys(pickedBy).forEach(k => { if (pickedBy[k] === g.id) dropDish(k); });
+  const menu = key ? SET_MENUS[key] : null;
+  if (!menu) return;
+  const dishes = menu.dishes.slice();
   const opts = menu.skipDessert ? [] : (menu.dessertOptions || []);
-  const d = chosenDessert[g.id];
-  return menu.dishes.concat(d && opts.indexOf(d) !== -1 ? [d] : []);
+  if (opts.length) dishes.push(opts[0]);          // its first dessert, changeable after
+  dishes.forEach(k => {
+    if (!RECIPE_LIBRARY[k]) return;
+    // A dish both presets want is cooked for everybody.
+    pickDish(k, picked[k] && picked[k] !== g.id ? 'both' : g.id, g.id);
+  });
+}
+
+function dishKeysOfGroup(g) {
+  return Object.keys(picked).filter(k => picked[k] === g.id || picked[k] === 'both');
 }
 
 // dishKey -> the headcount it is cooked for, before any per-dish override.
 function dishBaseGuests() {
   const map = {};
-  activeGroups().forEach(g => {
-    const n = guestsOfGroup(g);
-    dishKeysOfGroup(g).forEach(k => { map[k] = (map[k] || 0) + n; });
+  Object.keys(picked).forEach(k => {
+    map[k] = picked[k] === 'vip' ? vipGuests()
+           : picked[k] === 'packet' ? packetGuests()
+           : totalGuests();
   });
   return map;
 }
 
-// dishKey -> which groups cook it, for the labels on the chips.
 function dishGroupIds() {
   const map = {};
-  activeGroups().forEach(g => dishKeysOfGroup(g).forEach(k => {
-    (map[k] = map[k] || []).push(g.id);
-  }));
+  Object.keys(picked).forEach(k => { map[k] = picked[k] === 'both' ? ['vip', 'packet'] : [picked[k]]; });
   return map;
 }
 
-// Every dish in play, across both groups, each named once.
-function allDishKeys() {
-  const seen = [];
-  activeGroups().forEach(g => dishKeysOfGroup(g).forEach(k => {
-    if (seen.indexOf(k) === -1) seen.push(k);
-  }));
-  return seen;
-}
+function allDishKeys() { return Object.keys(picked); }
 
 // Kept for the few callers that still think in terms of one menu.
 function menuDishKeys(menu) {
-  if (menu && menu !== currentSetMenu()) {
-    const opts = menu.skipDessert ? [] : (menu.dessertOptions || []);
-    const d = chosenDessert.vip;
-    return menu.dishes.concat(d && opts.indexOf(d) !== -1 ? [d] : []);
-  }
+  if (menu && menu !== currentSetMenu()) return menu.dishes.slice();
   return allDishKeys();
 }
 
@@ -1378,7 +1438,7 @@ function populateSetMenuSelect() {
       sel.appendChild(opt);
     });
     if (keep && (SET_MENUS[keep] || keep === '')) sel.value = keep;
-    sel.onchange = () => { closePackageEditor(); renderSetMenuDetails(); };
+    sel.onchange = () => { closePackageEditor(); applyPreset(g); renderSetMenuDetails(); };
   });
 }
 
@@ -1467,112 +1527,81 @@ function renderSetMenuDetails() {
     if (btn) btn.disabled = !key || key === 'fromOrder';
   });
 
-  // Dessert is chosen per group: each menu may offer its own, or none.
-  const twoMenus = activeGroups().length > 1;
-  GROUPS.forEach(g => {
-    const row = document.getElementById(g.dessertRow);
-    const menu = groupMenu(g);
-    const opts = (!menu || menu.skipDessert ? [] : (menu.dessertOptions || [])).filter(k => RECIPE_LIBRARY[k]);
-    if (!opts.length) {
-      row.hidden = true;
-      row.innerHTML = '';
-      return;
-    }
-    // '' means no dessert at all: a deliberate choice, so it is not overridden here.
-    if (chosenDessert[g.id] !== '' && opts.indexOf(chosenDessert[g.id]) === -1) chosenDessert[g.id] = opts[0];
-    row.hidden = false;
-    const name = 'dessert-' + g.id;
-    const choice = (value, label) =>
-      '<label><input type="radio" name="' + name + '" value="' + value + '"'
-      + (value === chosenDessert[g.id] ? ' checked' : '') + '> ' + label + '</label>';
-    row.innerHTML = '<strong style="color:#7a6a4d;">মিষ্টান্ন'
-      + (twoMenus ? ' (' + g.label + ')' : '') + ':</strong>'
-      + opts.map(k => choice(k, escapeHtml(RECIPE_LIBRARY[k].label))).join('')
-      + choice('', 'মিষ্টান্ন ছাড়া');
-    row.querySelectorAll('input').forEach(r => r.addEventListener('change', () => {
-      chosenDessert[g.id] = r.value;
-      renderSetMenuDetails();
-    }));
-  });
-
-  // After the dessert radios exist, so the chosen dessert gets a chef dropdown too.
   renderDishChips();
   renderOverrideFields();
   generateList();   // the list always reflects the current set menu
 }
 
 // Each dish of the package, with the cook it is assigned to.
-function renderDishChips() {
-  if (!activeGroups().length) return;      // called before the package list exists
-  const keys = allDishKeys().filter(k => RECIPE_LIBRARY[k]);
-  const base = dishBaseGuests();
-  const groupsOf = dishGroupIds();
-  const twoMenus = activeGroups().length > 1;
-  const chipRow = document.getElementById('bl-dish-chips');
-  if (!keys.length) {
-    chipRow.innerHTML = '<span class="pkg-empty">রেসিপি-আইটেম নেই — নিচের তালিকায় পরিমাণ লিখুন</span>';
-    return;
-  }
-  const ids = ['S'].concat(chefIds());
+const GROUP_LABEL = { vip: 'ভি.আই.পি', packet: 'প্যাকেট', both: 'উভয়' };
 
-  const chipFor = k => {
+// DEMO: every recipe is a line with a tick box. Ticking adds it to this job; the line
+// keeps its place in the list either way, so nothing jumps around as you work.
+function renderDishChips() {
+  const list = document.getElementById('item-list');
+  if (!list) return;
+
+  const q = (document.getElementById('item-search').value || '').trim().toLowerCase();
+  const onlyPicked = document.getElementById('only-picked').checked;
+  const ids = ['S'].concat(chefIds());
+  const base = dishBaseGuests();
+
+  const keys = Object.keys(RECIPE_LIBRARY).filter(k => {
+    if (onlyPicked && !picked[k]) return false;
+    return !q || RECIPE_LIBRARY[k].label.toLowerCase().indexOf(q) !== -1;
+  });
+
+  const rowHtml = k => {
+    const on = Boolean(picked[k]);
     const own = dishGuests[k];
     const set = own !== undefined && own !== '';
-    return '<span class="dish-chip chef-' + (chefOf(k) === 'S' ? 'S' : 'X') + '"'
-      + (chefOf(k) === 'S' ? '' : ' style="background:' + chefTint(chefOf(k)) + ';color:' + chefInk(chefOf(k)) + '"')
-      + '><span class="dish-name" title="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
+    return '<div class="item-row ' + (on ? 'on' : 'off') + '">'
+      + '<input type="checkbox" class="tick" data-dish="' + k + '"' + (on ? ' checked' : '')
+        + ' aria-label="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
+      + '<span class="nm" title="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
       + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>'
-      + (twoMenus && (groupsOf[k] || []).length > 1 ? '<span class="dish-group">উভয়</span>' : '')
-      + '<input type="number" min="0" step="1" class="dish-guests' + (set ? ' set' : '') + '" data-dish="' + k + '"'
-        + ' value="' + (set ? own : '') + '" placeholder="' + (base[k] || totalGuests() || '') + '"'
-        + ' title="এই আইটেম কত জনের জন্য" aria-label="লোকসংখ্যা">'
-      + '<select class="chef-sel" data-dish="' + k + '" aria-label="বাবুর্চি">'
+      + '<select class="g" data-dish="' + k + '" aria-label="কোন মেনু"' + (on ? '' : ' disabled') + '>'
+      + ['vip', 'packet', 'both'].map(v => '<option value="' + v + '"'
+          + (picked[k] === v ? ' selected' : '') + '>' + GROUP_LABEL[v] + '</option>').join('')
+      + '</select>'
+      + '<input type="number" min="0" step="1" class="n dish-guests" data-dish="' + k + '"'
+        + ' value="' + (set ? own : '') + '" placeholder="' + (on ? (base[k] || '') : '') + '"'
+        + (on ? '' : ' disabled') + ' aria-label="লোকসংখ্যা">'
+      + '<select class="c chef-sel" data-dish="' + k + '" aria-label="বাবুর্চি"' + (on ? '' : ' disabled') + '>'
       + ids.map(c => '<option value="' + c + '"' + (c === chefOf(k) ? ' selected' : '') + '>'
           + escapeHtml(chefShort(c)) + '</option>').join('')
-      + '</select></span>';
+      + '</select>'
+      + '</div>';
   };
 
-  // The column head names what each control is for: without it the number box and the
-  // dropdown beside a dish name say nothing about themselves.
-  const colHead = title => '<div class="dish-col-head">'
-    + '<span class="col-title">' + title + '</span>'
-    + '<span class="col-h">লোকসংখ্যা</span><span class="col-h col-h-chef">বাবুর্চি</span>'
-    + '</div>';
+  // Half the list down each column, so the eye reads top-to-bottom rather than across.
+  const head = '<div class="item-cols-head"><span class="s1"></span><span class="s2">মেনু</span>'
+    + '<span class="s3">জন</span><span class="s4">বাবুর্চি</span></div>';
+  const half = Math.ceil(keys.length / 2);
+  list.innerHTML = keys.length
+    ? '<div class="item-col">' + head + keys.slice(0, half).map(rowHtml).join('') + '</div>'
+      + '<div class="item-col">' + head + keys.slice(half).map(rowHtml).join('') + '</div>'
+    : '<div class="item-rest-label">কিছু মেলেনি।</div>';
 
-  chipRow.className = 'dish-chip-row by-menu';
-  if (twoMenus) {
-    // One column per menu, so it reads as two lists rather than one long wrap. A dish
-    // both menus serve is shown once, in the first column, tagged উভয়.
-    const placed = {};
-    chipRow.innerHTML = activeGroups().map(g => {
-      const mine = keys.filter(k => (groupsOf[k] || []).indexOf(g.id) !== -1 && !placed[k]);
-      mine.forEach(k => { placed[k] = true; });
-      return '<div class="dish-col">'
-        + colHead(escapeHtml(g.label) + '<span class="col-count"> · ' + toBanglaNum(guestsOfGroup(g)) + ' জন</span>')
-        + mine.map(chipFor).join('') + '</div>';
-    }).join('');
-  } else {
-    // A single menu feeds everybody, so the column is not one group's.
-    chipRow.innerHTML = '<div class="dish-col">'
-      + colHead('সব অতিথি<span class="col-count"> · ' + toBanglaNum(totalGuests()) + ' জন</span>')
-      + keys.map(chipFor).join('') + '</div>';
-  }
+  const n = Object.keys(picked).length;
+  document.getElementById('item-count').textContent = toBanglaNum(n) + 'টি বাছাই';
 
-  chipRow.querySelectorAll('select.chef-sel').forEach(sel => {
-    sel.addEventListener('change', () => {
-      chefAssign[sel.dataset.dish] = sel.value;
-      renderDishChips();
-      generateList();
-    });
-  });
-  chipRow.querySelectorAll('input.dish-guests').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const v = inp.value.trim();
-      if (v === '') delete dishGuests[inp.dataset.dish]; else dishGuests[inp.dataset.dish] = v;
-      inp.classList.toggle('set', v !== '');
-      generateList();
-    });
-  });
+  list.querySelectorAll('input.tick').forEach(el => el.addEventListener('change', () => {
+    if (el.checked) pickDish(el.dataset.dish, 'both', null); else dropDish(el.dataset.dish);
+    renderDishChips(); generateList();
+  }));
+  list.querySelectorAll('select.g').forEach(el => el.addEventListener('change', () => {
+    picked[el.dataset.dish] = el.value; delete pickedBy[el.dataset.dish];
+    renderDishChips(); generateList();
+  }));
+  list.querySelectorAll('select.chef-sel').forEach(el => el.addEventListener('change', () => {
+    chefAssign[el.dataset.dish] = el.value; renderDishChips(); generateList();
+  }));
+  list.querySelectorAll('input.dish-guests').forEach(el => el.addEventListener('input', () => {
+    const v = el.value.trim();
+    if (v === '') delete dishGuests[el.dataset.dish]; else dishGuests[el.dataset.dish] = v;
+    generateList();
+  }));
 }
 
 // Colours for cooks beyond the first two, so each stays recognisable.
@@ -1608,6 +1637,9 @@ function onGuestsChanged() {
 });
 
 // The across-the-board reduction.
+document.getElementById('item-search').addEventListener('input', () => { renderDishChips(); });
+document.getElementById('only-picked').addEventListener('change', () => { renderDishChips(); });
+
 document.getElementById('bl-reduce').addEventListener('input', () => {
   generateList();
 });
@@ -2678,7 +2710,11 @@ function applyIncomingOrder(order) {
   }
   onGuestsChanged();
 
-  if (order.dessertKey) chosenDessert.vip = order.dessertKey;
+  // The dessert named in the order is just another item to tick.
+  if (order.dessertKey && RECIPE_LIBRARY[order.dessertKey]) pickDish(order.dessertKey, 'both', null);
+  // Items the order named that no package covers are ticked too, so they are costed
+  // instead of only being reported as missing.
+  (order.dishes || []).forEach(k => { if (RECIPE_LIBRARY[k] && !picked[k]) pickDish(k, 'both', null); });
 }
 
 function renderOrderNotice(order) {
@@ -3375,9 +3411,14 @@ if (incomingOrder) {
   } else if (SET_MENUS.fromOrder) {
     document.getElementById('bl-package').value = 'fromOrder';
   }
+  // Fills the two package slots and the headcounts, so the presets below have
+  // something to work from.
   applyIncomingOrder(incomingOrder);
 }
 
+// Presets tick their own dishes; anything the order itself named survives, because
+// applyPreset only clears what that same preset ticked.
+GROUPS.forEach(applyPreset);
 renderSetMenuDetails();
 onGuestsChanged();          // fills the hidden total and each dish's placeholder
 

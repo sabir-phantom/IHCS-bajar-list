@@ -800,7 +800,7 @@
 
 <script>
 // Set menus that have bajar-list recipes behind them.
-// KEEP IN SYNC with SET_MENUS in bajarlist.html -- the keys must match.
+// KEEP IN SYNC with SET_MENUS in index.html (the bajar list) -- the keys must match.
 const BAJAR_SET_MENUS = [
   { key: 'standardKachi', label: 'স্ট্যান্ডার্ড কাচ্চি প্যাকেজ (৬ আইটেম)' },
   { key: 'rutiKalia', label: 'রুটি কালিয়া' },
@@ -852,7 +852,7 @@ function toLatinNumber(str) {
 }
 
 // Hands the current order over to the bajar list generator. The recipe matching
-// lives in bajarlist.html, so we pass the raw selected item names through.
+// lives in index.html (the bajar list), so we pass the raw selected item names through.
 function openBajarList() {
   const data = gatherOrderData();
 
@@ -886,7 +886,8 @@ function openBajarList() {
   if (data.setMenuPacket) params.set('setMenuPacket', data.setMenuPacket);
   params.set('items', JSON.stringify(itemNames));
 
-  window.open('bajarlist.html?' + params.toString(), '_blank');
+  // The bajar list is index.html: it is the landing page of the published site.
+  window.open('index.html?' + params.toString(), '_blank');
 }
 
 function toBanglaNum(str) {
@@ -1572,7 +1573,7 @@ function changeFontSize(direction) {
 }
 
 
-// ---------------- Data file (shared with bajarlist.html) ----------------
+// ---------------- Data file (shared with the bajar list) ----------------
 // One bajar-data.json holds both pages. This page owns the "orderForm" section
 // and leaves every other key exactly as it found it.
 const DATA_FILE_SUPPORTED = typeof window.showSaveFilePicker === 'function' && typeof indexedDB !== 'undefined';

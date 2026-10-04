@@ -21,13 +21,17 @@ Bangla Menu/
 ├── final/             ← the live system
 │   ├── order_form.html    order entry, history, per-category item search,
 │   │                      set menu tag, order sheet printing            (276 KB)
-│   ├── bajarlist.html     recipes, quantity calculation, chef pages,
+│   ├── index.html         recipes, quantity calculation, chef pages,
 │   │                      market sheets                                (327 KB)
 │   ├── guide-en.html      user + maintainer guide, English
 │   ├── guide-bn.html      user + maintainer guide, Bangla
 │   └── bajar-data.json    the data file — created 22 Sep, holds 1 saved order
 └── old/               superseded order form versions, reference only
 ```
+
+The bajar list is named `index.html` because the repository is published with GitHub
+Pages (`.github/workflows/static.yml` serves the `final/` folder), so it is the site's
+landing page. `order_form.html` opens it by that name.
 
 Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Recipes`
 (the master `bazaar list.pdf` and the individual recipe cards).
@@ -157,7 +161,7 @@ standard package uses 41.
 Tested over `http://localhost` (the desktop preview pane strips query strings from
 `file://`, which is why this went unverified for so long). `order_form.html`'s
 `openBajarList()` refuses without a set menu or with no items ticked, otherwise opens
-`bajarlist.html?setMenu=&guests=&date=&place=&label=&items=[…]`. On arrival the package
+`index.html?setMenu=&setMenuPacket=&vip=&packet=&date=&place=&label=&items=[…]`. On arrival the package
 is selected, the four header fields are filled, the dessert named in `items` is ticked,
 the review table is computed, and a notice names the set menu and lists any ordered item
 with no recipe behind it. Confirmed with the standard কাচ্চি package at 250 guests and
@@ -209,14 +213,14 @@ cards) and has been consolidated onto `m5`.
 
 ### Set menus across the two pages
 
-`bajarlist.html` owns the packages. `order_form.html` carries its own built-in list in
+`index.html` owns the packages. `order_form.html` carries its own built-in list in
 `BAJAR_SET_MENUS` and merges anything the user created, read live from `localStorage`
 (`iqbal_catering_bajar_setmenus`). Packages made in the app therefore appear in the
 order form's dropdown without any edit; only a new *hardcoded* package needs a matching
 entry in both files.
 
 The order form passes the chosen package to the bajar list by key, through the URL.
-It does not know which dishes a package contains — that stays in `bajarlist.html`.
+It does not know which dishes a package contains — that stays in `index.html`.
 
 ---
 
@@ -240,7 +244,7 @@ It does not know which dishes a package contains — that stays in `bajarlist.ht
 ### Needs a real-world run
 
 - [ ] `bajar-data.json` exists (22 Sep, 1 saved order). Open it from **both** pages and
-      confirm each shows a green dot — `bajarlist.html` has changed a lot since then.
+      confirm each shows a green dot — `index.html` has changed a lot since then.
 - [ ] Test print all three sheets on the actual printer, A4, default margins.
 - [ ] Confirm with the owner which dishes are normally VIP-only, so the per-dish headcount
       is typed rather than remembered wrongly.
@@ -325,7 +329,7 @@ keeping.
 
 **Adding a recipe.** Use the রেসিপি লাইব্রেরি in the app — it saves to browser storage
 and the data file. To make a recipe permanent for every copy of the file, add it to
-`RECIPE_LIBRARY` in `bajarlist.html` as
+`RECIPE_LIBRARY` in `index.html` as
 `{ label, dessert?, ingredients: [[rowId, qtyPer100, unit], …] }`.
 
 **Unit kinds must match.** A weight amount on a row whose unit is `pcs` is multiplied
@@ -342,7 +346,7 @@ Object.keys(RECIPE_LIBRARY).forEach(k => (RECIPE_LIBRARY[k].ingredients || []).f
 ```
 
 **Two lists to keep in sync.** Built-in packages appear in `SET_MENUS` in
-`bajarlist.html` and in `BAJAR_SET_MENUS` in `order_form.html`. The keys must match.
+`index.html` and in `BAJAR_SET_MENUS` in `order_form.html`. The keys must match.
 New packages built by the user in the app sync automatically via `localStorage`
 (`iqbal_catering_bajar_setmenus`) and need no manual update in `order_form.html`.
 Only a hardcoded built-in package requires a matching entry in both files.

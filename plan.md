@@ -83,6 +83,10 @@ still carries its original sheet index, so edits land on the right sheet.
 
 আস্ত খাসি and আস্ত মুরগির রোস্ট were added from the owner's list. Both are dressed with
 লেটুস পাতা, বিট and মুলা; the খাসি also takes চান্দি তবক, মার্বেল and one সুই-সুতা set.
+The papaya is recorded as 1.5 কেজি of বড় পেঁপে rather than "1 piece": that row is kept in
+কেজি because মিক্সড ভেজিটেবল buys 3 কেজি of it, and one ingredient stays on one row. The
+owner gave 1.5 কেজি as the weight of a whole one.
+
 Neither carries the animal itself — like the rest of the meat that is the owner's call,
 typed into খাশীর মাংস or the মোরগ row by hand.
 
@@ -242,9 +246,6 @@ It does not know which dishes a package contains — that stays in `index.html`.
 
 ### Needs the owner's answer
 
-- [ ] **আস্ত খাসি: the weight of one papaya.** The recipe is in, less its papaya: the
-      row is counted in কেজি and the owner asked for one whole fruit, so it needs the
-      weight of one before it can be recorded without a unit mismatch.
 - [ ] **চিকেন রোস্ট / জালি কাবাব carry no chicken.** Follows the master bazaar list,
       but it means the standard কাচ্চি package buys no মুরগী at all. Confirm that
       chicken is bought separately like the meat, or give an amount per 100.

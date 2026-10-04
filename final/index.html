@@ -481,20 +481,36 @@
     background: var(--cream-card); border-radius: 12px; padding: 18px 20px 20px;
     box-shadow: 0 18px 44px rgba(16, 35, 59, 0.3);
   }
-  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
   .modal-head strong { font-size: 18px; color: var(--navy-dark); }
   .modal-x {
     font-family: inherit; font-size: 15px; line-height: 1; cursor: pointer; color: #7a6a4d;
     background: #fff; border: 1px solid #e0d4b8; border-radius: 6px; padding: 5px 9px;
   }
   .modal-x:hover { color: var(--maroon); border-color: #e9c3bd; }
-  .modal-sec { margin-top: 14px; }
-  .modal-sec h4 {
-    margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #a3906a; letter-spacing: 0.4px;
+  .modal-sec {
+    margin-top: 14px; padding: 12px 14px 13px;
+    background: #fff; border: 1px solid #ece3cd; border-radius: 10px;
   }
+  .modal-sec h4 {
+    margin: 0; font-size: 15px; font-weight: 700; color: var(--navy-dark);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .modal-sec h4 .ico { font-size: 15px; }
+  .modal-sec .hint { margin: 2px 0 9px; font-size: 12.5px; color: #a3906a; }
   .modal-sec .data-bar, .modal-sec .chef-admin, .modal-sec .footer-links { margin-top: 0; }
-  .modal-sec .chef-admin { border-top: 0; padding-top: 0; }
-  .modal-sec .footer-links { border-top: 0; padding-top: 0; justify-content: flex-start; gap: 14px; }
+  /* No box inside a box: the card is the frame now. */
+  .modal-sec .data-bar { border: 0; background: none; padding: 0; gap: 8px 12px; }
+  .modal-sec .chef-admin { border-top: 0; padding-top: 0; font-size: 13px; }
+  .modal-sec .footer-links { border-top: 0; padding-top: 0; justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
+  /* Actions in here read as buttons, not as a row of underlined words. */
+  .modal .link-btn {
+    text-decoration: none; padding: 5px 11px; border: 1px solid #e0d4b8; border-radius: 6px;
+    background: #fffdf7; color: #5a4d36; font-size: 13px;
+  }
+  .modal .link-btn:hover { background: #faf2df; border-color: var(--gold); color: var(--maroon); }
+  .modal .data-actions { margin-left: 0; gap: 8px; }
+  .modal #data-status { flex: 1 1 100%; }
 
   .data-bar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 22px;
@@ -784,7 +800,8 @@
       </div>
 
       <section class="modal-sec">
-        <h4>ডেটা ফাইল</h4>
+        <h4><span class="ico" aria-hidden="true">🗄️</span> ডেটা ফাইল</h4>
+        <p class="hint">অর্ডার, রেসিপি আর ফর্মের পরিবর্তন কোথায় জমা থাকবে। ফাইল চালু থাকলে প্রতিটি বদল নিজে থেকেই সেখানে লেখা হয়।</p>
         <div class="data-bar" id="data-bar" data-state="local">
           <span class="data-dot" aria-hidden="true"></span>
           <span id="data-status">ডেটা এই ব্রাউজারে আছে — নিরাপদ রাখতে একটি ডেটা ফাইল তৈরি করুন</span>
@@ -798,7 +815,8 @@
       </section>
 
       <section class="modal-sec">
-        <h4>বাবুর্চি তালিকা</h4>
+        <h4><span class="ico" aria-hidden="true">👨‍🍳</span> বাবুর্চি তালিকা</h4>
+        <p class="hint">আইটেম ভাগ করে দেওয়ার জন্য বাবুর্চিদের নাম। প্রতিজনের নিজের রঙ থাকে, আর তার আইটেমগুলো আলাদা পাতায় ছাপে।</p>
         <div class="chef-admin">
           <span class="chef-admin-list" id="chef-admin-list"></span>
           <button type="button" class="link-btn" id="chef-edit-toggle" onclick="toggleChefEdit()">সম্পাদনা</button>
@@ -811,7 +829,8 @@
       </section>
 
       <section class="modal-sec">
-        <h4>ব্যাকআপ ও ফর্ম</h4>
+        <h4><span class="ico" aria-hidden="true">💾</span> ব্যাকআপ ও ফর্ম</h4>
+        <p class="hint">সবকিছু একটি ফাইলে নামিয়ে রাখুন, আগের ব্যাকআপ ফিরিয়ে আনুন, বা ছাপা ফর্মের সারিগুলো আদি অবস্থায় ফেরান।</p>
         <div class="footer-links">
           <button type="button" class="link-btn" onclick="exportDefaults()">ব্যাকআপ ডাউনলোড</button>
           <button type="button" class="link-btn" onclick="document.getElementById('bl-import').click()">ব্যাকআপ থেকে পুনরুদ্ধার</button>

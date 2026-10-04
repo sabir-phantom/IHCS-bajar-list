@@ -97,6 +97,18 @@ loading an old one, check those two rows read পিছ.
 `DISH_MATCHERS` learned both dishes, and `chickenRoast` now excludes আস্ত — without that
 it swallowed "আস্ত মুরগির রোস্ট" on the way past, since it matches any রোস্ট.
 
+### Settings live in one dialog
+
+The data-file bar, the cook list and the backup links were three separate blocks at the
+foot of the page. They are now three sections of a single ⚙ সেটিংস dialog, opened from
+one line at the bottom. The elements kept their ids and moved wholesale, so every handler
+that writes to them — `setDataStatus`, `renderChefAdmin`, the import file input — is
+untouched.
+
+The line that opens it still reports the data state in words and with the coloured dot,
+because that warning is the one thing that must not need a click to be seen: a data file
+left unconnected is how a month of order history is lost.
+
 ### Cook colours
 
 A cook's colour is stored on the cook (`chefs[].color`), chosen from `CHEF_COLORS` when

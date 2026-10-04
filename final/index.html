@@ -460,6 +460,42 @@
     justify-self: start; font-family: inherit; font-size: 14px; padding: 6px 12px; border-radius: 6px;
     cursor: pointer; border: 1px dashed var(--gold); background: #fffdf4; color: #7a6a4d;
   }
+  .settings-line { display: flex; justify-content: center; margin-top: 22px; padding-top: 12px; border-top: 1px solid var(--gold-light); }
+  .settings-open {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font-family: inherit; font-size: 13px; color: #7a6a4d;
+    background: #faf6ea; border: 1px solid var(--gold-light); border-radius: 999px; padding: 5px 14px;
+  }
+  .settings-open:hover { background: #f6efdc; color: var(--maroon); }
+  .settings-gear { color: #a3906a; }
+  .settings-open[data-state="ok"] .data-dot { background: var(--green); }
+  .settings-open[data-state="warn"] .data-dot { background: #c7771c; }
+
+  .modal-back {
+    position: fixed; inset: 0; z-index: 80; background: rgba(27, 32, 45, 0.45);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-back[hidden] { display: none; }
+  .modal {
+    width: 100%; max-width: 620px; max-height: 86vh; overflow-y: auto;
+    background: var(--cream-card); border-radius: 12px; padding: 18px 20px 20px;
+    box-shadow: 0 18px 44px rgba(16, 35, 59, 0.3);
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .modal-head strong { font-size: 18px; color: var(--navy-dark); }
+  .modal-x {
+    font-family: inherit; font-size: 15px; line-height: 1; cursor: pointer; color: #7a6a4d;
+    background: #fff; border: 1px solid #e0d4b8; border-radius: 6px; padding: 5px 9px;
+  }
+  .modal-x:hover { color: var(--maroon); border-color: #e9c3bd; }
+  .modal-sec { margin-top: 14px; }
+  .modal-sec h4 {
+    margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #a3906a; letter-spacing: 0.4px;
+  }
+  .modal-sec .data-bar, .modal-sec .chef-admin, .modal-sec .footer-links { margin-top: 0; }
+  .modal-sec .chef-admin { border-top: 0; padding-top: 0; }
+  .modal-sec .footer-links { border-top: 0; padding-top: 0; justify-content: flex-start; gap: 14px; }
+
   .data-bar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 22px;
     padding: 10px 14px; border: 1px solid var(--gold-light); border-radius: 8px;
@@ -730,33 +766,60 @@
   <button type="button" id="to-top" class="to-top" hidden aria-label="উপরে যান" title="উপরে যান">↑</button>
 
 
-  <div class="data-bar" id="data-bar" data-state="local">
-    <span class="data-dot" aria-hidden="true"></span>
-    <span id="data-status">ডেটা এই ব্রাউজারে সংরক্ষিত আছে</span>
-    <span class="data-actions">
-      <button type="button" class="link-btn" id="df-new" onclick="connectDataFile(true)">নতুন ডেটা ফাইল তৈরি করুন</button>
-      <button type="button" class="link-btn" id="df-open" onclick="connectDataFile(false)">ডেটা ফাইল খুলুন</button>
-      <button type="button" class="link-btn" id="df-reopen" hidden onclick="reopenDataFile()">ডেটা ফাইল আবার চালু করুন</button>
-      <button type="button" class="link-btn" id="df-close" hidden onclick="disconnectDataFile()">ফাইল বিচ্ছিন্ন করুন</button>
-    </span>
+  <!-- One line at the foot of the page: it still shows whether the data is safe,
+       and opens everything else in a dialog. -->
+  <div class="settings-line">
+    <button type="button" class="settings-open" id="settings-open" onclick="openSettings()">
+      <span class="data-dot" id="data-dot-brief" aria-hidden="true"></span>
+      <span id="data-brief">ডেটা এই ব্রাউজারে আছে</span>
+      <span class="settings-gear">⚙ সেটিংস</span>
+    </button>
   </div>
 
-  <div class="chef-admin">
-    <span class="chef-admin-label">বাবুর্চি তালিকা</span>
-    <span class="chef-admin-list" id="chef-admin-list"></span>
-    <button type="button" class="link-btn" id="chef-edit-toggle" onclick="toggleChefEdit()">সম্পাদনা</button>
-    <span class="chef-admin-edit" id="chef-admin-edit" hidden>
-      <input type="text" id="chef-new-name" placeholder="নতুন বাবুর্চির নাম" aria-label="নতুন বাবুর্চির নাম">
-      <button type="button" class="link-btn" onclick="addChef()">+ যোগ করুন</button>
-      <button type="button" class="link-btn" onclick="restoreChefs()">ডিফল্টে ফেরান</button>
-    </span>
-  </div>
+  <div class="modal-back" id="settings-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-head">
+        <strong id="settings-title">সেটিংস</strong>
+        <button type="button" class="modal-x" onclick="closeSettings()" aria-label="বন্ধ করুন">✕</button>
+      </div>
 
-  <div class="footer-links">
-    <button type="button" class="link-btn" onclick="exportDefaults()">ব্যাকআপ ডাউনলোড</button>
-    <button type="button" class="link-btn" onclick="document.getElementById('bl-import').click()">ব্যাকআপ থেকে পুনরুদ্ধার</button>
-    <input type="file" id="bl-import" accept=".json" style="display:none" onchange="importDefaults(event)">
-    <button type="button" class="link-btn" onclick="resetForms()">ফর্ম আগের অবস্থায় ফেরান</button>
+      <section class="modal-sec">
+        <h4>ডেটা ফাইল</h4>
+        <div class="data-bar" id="data-bar" data-state="local">
+          <span class="data-dot" aria-hidden="true"></span>
+          <span id="data-status">ডেটা এই ব্রাউজারে আছে — নিরাপদ রাখতে একটি ডেটা ফাইল তৈরি করুন</span>
+          <span class="data-actions">
+            <button type="button" class="link-btn" id="df-new" onclick="connectDataFile(true)">নতুন ডেটা ফাইল তৈরি করুন</button>
+            <button type="button" class="link-btn" id="df-open" onclick="connectDataFile(false)">ডেটা ফাইল খুলুন</button>
+            <button type="button" class="link-btn" id="df-reopen" hidden onclick="reopenDataFile()">ডেটা ফাইল আবার চালু করুন</button>
+            <button type="button" class="link-btn" id="df-close" hidden onclick="disconnectDataFile()">ফাইল বিচ্ছিন্ন করুন</button>
+          </span>
+        </div>
+      </section>
+
+      <section class="modal-sec">
+        <h4>বাবুর্চি তালিকা</h4>
+        <div class="chef-admin">
+          <span class="chef-admin-list" id="chef-admin-list"></span>
+          <button type="button" class="link-btn" id="chef-edit-toggle" onclick="toggleChefEdit()">সম্পাদনা</button>
+          <span class="chef-admin-edit" id="chef-admin-edit" hidden>
+            <input type="text" id="chef-new-name" placeholder="নতুন বাবুর্চির নাম" aria-label="নতুন বাবুর্চির নাম">
+            <button type="button" class="link-btn" onclick="addChef()">+ যোগ করুন</button>
+            <button type="button" class="link-btn" onclick="restoreChefs()">ডিফল্টে ফেরান</button>
+          </span>
+        </div>
+      </section>
+
+      <section class="modal-sec">
+        <h4>ব্যাকআপ ও ফর্ম</h4>
+        <div class="footer-links">
+          <button type="button" class="link-btn" onclick="exportDefaults()">ব্যাকআপ ডাউনলোড</button>
+          <button type="button" class="link-btn" onclick="document.getElementById('bl-import').click()">ব্যাকআপ থেকে পুনরুদ্ধার</button>
+          <input type="file" id="bl-import" accept=".json" style="display:none" onchange="importDefaults(event)">
+          <button type="button" class="link-btn" onclick="resetForms()">ফর্ম আগের অবস্থায় ফেরান</button>
+        </div>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -3303,9 +3366,33 @@ function idb(mode, fn) {
   });
 }
 
+function openSettings() {
+  document.getElementById('settings-modal').hidden = false;
+  document.getElementById('settings-modal').focus();
+}
+function closeSettings() {
+  document.getElementById('settings-modal').hidden = true;
+}
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && !document.getElementById('settings-modal').hidden) closeSettings();
+});
+document.getElementById('settings-modal').addEventListener('mousedown', ev => {
+  if (ev.target.id === 'settings-modal') closeSettings();   // a click outside the card
+});
+
 function setDataStatus(text, state) {
   document.getElementById('data-status').textContent = text;
   document.getElementById('data-bar').dataset.state = state;
+  // The line at the foot of the page keeps saying whether the data is safe, even with
+  // the dialog shut — hiding that behind a click is how a file goes unconnected.
+  const brief = document.getElementById('data-brief');
+  const open = document.getElementById('settings-open');
+  if (brief && open) {
+    open.dataset.state = state;
+    brief.textContent = state === 'ok' ? 'ডেটা ফাইলে সংরক্ষিত হচ্ছে'
+      : state === 'warn' ? 'ডেটা ফাইল চালু নেই — দেখুন'
+      : 'ডেটা শুধু এই ব্রাউজারে আছে';
+  }
   const connected = state === 'ok';
   const waiting = state === 'warn' && Boolean(dataFileHandle);
   document.getElementById('df-new').hidden = connected || waiting || !DATA_FILE_SUPPORTED;

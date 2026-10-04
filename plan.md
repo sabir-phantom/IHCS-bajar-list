@@ -97,6 +97,14 @@ loading an old one, check those two rows read পিছ.
 `DISH_MATCHERS` learned both dishes, and `chickenRoast` now excludes আস্ত — without that
 it swallowed "আস্ত মুরগির রোস্ট" on the way past, since it matches any রোস্ট.
 
+### Cook colours
+
+A cook's colour is stored on the cook (`chefs[].color`), chosen from `CHEF_COLORS` when
+they are added, taking the first shade nobody is using. It was keyed on list position
+before, which meant removing a cook silently repainted everyone below them. A checklist
+row wears its cook's colour; the standard cook keeps the gold. A list saved before
+colours existed gets one assigned per cook on load.
+
 ### The dishes are a checklist, not the package
 
 `picked[dishKey]` = `'vip' | 'packet' | 'both'` is now the source of truth for what this

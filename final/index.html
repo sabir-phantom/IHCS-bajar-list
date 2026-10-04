@@ -192,6 +192,7 @@
     border: 1px solid #d8cdb5; border-radius: 6px; background: #fff;
   }
   .item-count { font-size: 13px; color: var(--navy-dark); white-space: nowrap; }
+  .chef-admin-chip { background: #fff; }
   .only-picked { font-size: 13px; color: #7a6a4d; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 8px; }
   #item-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(296px, 1fr)); gap: 0 14px; align-items: start; }
   .item-col { min-width: 0; }
@@ -202,6 +203,7 @@
   .item-row:hover { background: #fbf7ec; }
   .item-row.on { background: var(--gold-light); border-bottom-color: #e2d4a8; }
   .item-row input.tick { flex: none; width: 16px; height: 16px; accent-color: var(--green); margin: 0 2px 0 0; }
+  .item-row.chefed input.tick { accent-color: currentColor; }
   .item-row .nm { color: #5a4d36; font-weight: 400; }
   .item-row.on .nm { color: var(--navy-dark); font-weight: 700; }
   .item-row.off select, .item-row.off input.n { visibility: hidden; }
@@ -1555,10 +1557,16 @@ function renderDishChips() {
     const on = Boolean(picked[k]);
     const own = dishGuests[k];
     const set = own !== undefined && own !== '';
-    return '<div class="item-row ' + (on ? 'on' : 'off') + '">'
+    // A ticked row wears its cook's colour; the standard cook keeps the plain gold.
+    const chef = chefOf(k);
+    const tinted = on && chef !== 'S';
+    return '<div class="item-row ' + (on ? 'on' : 'off') + '"'
+      + (tinted ? ' style="background:' + chefTint(chef) + ';border-bottom-color:' + chefTint(chef) + '"' : '')
+      + '>'
       + '<input type="checkbox" class="tick" data-dish="' + k + '"' + (on ? ' checked' : '')
         + ' aria-label="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
-      + '<span class="nm" title="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
+      + '<span class="nm" title="' + escapeHtml(RECIPE_LIBRARY[k].label) + '"'
+      + (tinted ? ' style="color:' + chefInk(chef) + '"' : '') + '>'
       + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>'
       + '<select class="g" data-dish="' + k + '" aria-label="কোন মেনু"' + (on ? '' : ' disabled') + '>'
       + ['vip', 'packet', 'both'].map(v => '<option value="' + v + '"'
@@ -1605,11 +1613,37 @@ function renderDishChips() {
 }
 
 // Colours for cooks beyond the first two, so each stays recognisable.
-const CHEF_TINTS = ['#f0d9d4', '#dbe6f0', '#dcebdd', '#f2e6cf', '#e6dcef', '#f7dfe6'];
-const CHEF_INKS  = ['#7d1f34', '#10233b', '#1f4d2c', '#7a5a16', '#4a2f6b', '#7d2448'];
-function chefRank(id) { const i = chefIds().indexOf(id); return i === -1 ? 0 : i; }
-function chefTint(id) { return CHEF_TINTS[chefRank(id) % CHEF_TINTS.length]; }
-function chefInk(id)  { return CHEF_INKS[chefRank(id) % CHEF_INKS.length]; }
+// Each cook keeps their own colour, chosen when they are added and stored with them, so
+// removing one does not shuffle everybody else's.
+const CHEF_COLORS = [
+  { tint: '#f0d9d4', ink: '#7d1f34' },   // maroon
+  { tint: '#dbe6f0', ink: '#10233b' },   // navy
+  { tint: '#dcebdd', ink: '#1f4d2c' },   // green
+  { tint: '#f2e6cf', ink: '#7a5a16' },   // amber
+  { tint: '#e6dcef', ink: '#4a2f6b' },   // violet
+  { tint: '#f7dfe6', ink: '#7d2448' },   // rose
+  { tint: '#d9ecee', ink: '#1a5560' },   // teal
+  { tint: '#eadfd6', ink: '#6b4423' }    // brown
+];
+
+// The first colour nobody is using yet; once they are all taken it starts over.
+function nextChefColor() {
+  const taken = chefs.map(c => c.color).filter(Boolean);
+  const free = CHEF_COLORS.findIndex(c => taken.indexOf(c.ink) === -1);
+  return CHEF_COLORS[free === -1 ? chefs.length % CHEF_COLORS.length : free];
+}
+
+function chefColor(id) {
+  const c = chefs.filter(x => x.id === id)[0];
+  if (c && c.color) {
+    const hit = CHEF_COLORS.filter(x => x.ink === c.color)[0];
+    if (hit) return hit;
+  }
+  const i = chefIds().indexOf(id);
+  return CHEF_COLORS[(i === -1 ? 0 : i) % CHEF_COLORS.length];
+}
+function chefTint(id) { return chefColor(id).tint; }
+function chefInk(id)  { return chefColor(id).ink; }
 
 function renderOverrideFields() {
   // The manual meat field was removed; meat is entered in the খাসী row of the review table.
@@ -1814,7 +1848,10 @@ function aggregate() {
 // 'S' is the standard cook and always exists; the rest are a list the user keeps. The
 // list is saved — cooks do not change often — while which dish each cook takes is not,
 // so a forgotten assignment can never quietly empty the main sheets.
-const FACTORY_CHEFS = [{ id: 'A', name: 'বাবুর্চি: A' }, { id: 'C', name: 'বাবুর্চি: C' }];
+const FACTORY_CHEFS = [
+  { id: 'A', name: 'বাবুর্চি: A', color: '#7d1f34' },
+  { id: 'C', name: 'বাবুর্চি: C', color: '#10233b' }
+];
 const CHEFS_KEY = 'iqbal_catering_bajar_chefs';
 let chefs = JSON.parse(JSON.stringify(FACTORY_CHEFS));
 
@@ -1823,6 +1860,8 @@ function loadChefs() {
     const saved = JSON.parse(localStorage.getItem(CHEFS_KEY) || 'null');
     if (Array.isArray(saved) && saved.length) {
       chefs = saved.filter(c => c && c.id && c.id !== 'S' && c.name);
+      // Lists saved before cooks carried a colour: hand them one each, in order.
+      chefs.forEach((c, i) => { if (!c.color) c.color = CHEF_COLORS[i % CHEF_COLORS.length].ink; });
     }
   } catch (e) { /* storage off: the two built-in cooks */ }
 }
@@ -1905,7 +1944,7 @@ function addChef() {
   const name = input.value.trim();
   if (!name) { input.focus(); return; }
   if (chefs.some(c => c.name === name)) { alert('"' + name + '" নামে একজন বাবুর্চি আছেন।'); return; }
-  chefs.push({ id: 'chef' + Date.now(), name: name });
+  chefs.push({ id: 'chef' + Date.now(), name: name, color: nextChefColor().ink });
   saveChefs();
   input.value = '';
   renderChefAdmin();

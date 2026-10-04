@@ -930,6 +930,31 @@ plainPolao: {
       ['p33', 100, 'gm'], ['m13', 200, 'gm'], ['m3', 2, 'ltr'], ['p24', 60, 'gm'],
       ['p23', 50, 'gm'], ['v29', 1.5, 'kg'], ['n4', 50, 'gm'], ['n15', 100, 'gm']
     ]
+  },
+
+  // The two whole roasts. Both are dressed the same way; the খাসি also carries the
+  // silver leaf, marbles and the needle and thread used to sew and present it.
+  // The animal itself is not here: like the other meat it is the owner's call, and is
+  // typed into the খাশীর মাংস / মোরগ row by hand.
+  astoKhasi: {
+    label: 'আস্ত খাসি',
+    ingredients: [
+      ['w6', 100, 'gm'],          // লেটুস পাতা
+      ['v16', 1, 'pcs'],          // বিট
+      ['v17', 1, 'pcs'],          // মুলা
+      ['p72', 5, 'pcs'],          // চান্দি তবক
+      ['p71', 2, 'pcs'],          // মার্বেল
+      ['p73', 1, 'pcs']           // সুই-সুতা, one set
+    ]
+  },
+
+  astoMurgiRoast: {
+    label: 'আস্ত মুরগির রোস্ট',
+    ingredients: [
+      ['w6', 100, 'gm'],          // লেটুস পাতা
+      ['v16', 1, 'pcs'],          // বিট
+      ['v17', 1, 'pcs']           // মুলা
+    ]
   }
 };
 
@@ -937,12 +962,19 @@ plainPolao: {
 // Order-form names carry extra words ("শাহী মাটন কাচ্চি (সিলসিলা)"), so we match on substrings.
 const DISH_MATCHERS = [
   { key: 'kachi', words: ['কাচ্চি'] },
-  { key: 'chickenRoast', words: ['রোস্ট'], not: ['খাশী', 'খাশি', 'খাসী', 'খাসি', 'মাটন', 'গরু', 'বিফ'] },
+  // 'আস্ত' is excluded too: a whole roast is its own dish, and this matcher would
+  // otherwise swallow "আস্ত মুরগির রোস্ট" on the way past.
+  { key: 'chickenRoast', words: ['রোস্ট'], not: ['খাশী', 'খাশি', 'খাসী', 'খাসি', 'মাটন', 'গরু', 'বিফ', 'আস্ত'] },
   { key: 'jaliKabab', words: ['জালি'] },
   { key: 'borhani', words: ['বোরহানি', 'বোরহানী'] },
   { key: 'pieceSalad', words: ['সালাদ'] },
   { key: 'zarda', words: ['জদ্দা', 'জর্দা'] },
-  { key: 'firni', words: ['ফির্নি', 'ফিরনি'] }
+  { key: 'firni', words: ['ফির্নি', 'ফিরনি'] },
+  // The whole roasts. The chickenRoast matcher above already refuses anything with
+  // খাশী in it, so "আস্ত খাশীর রোস্ট" falls through to here rather than being counted
+  // as a chicken roast.
+  { key: 'astoKhasi', words: ['আস্ত খাশী', 'আস্ত খাসি', 'আস্ত খাশি', 'আস্ত খাসী'] },
+  { key: 'astoMurgiRoast', words: ['আস্ত মুরগ', 'আস্ত মোরগ', 'আস্ত মুরগি'] }
 ];
 const DESSERT_KEYS = ['zarda', 'firni'];
 
@@ -1055,7 +1087,7 @@ const SHEETS = [
       ['v11', 'আনারস', 'pcs'], ['v12', 'কমলা লেবু', 'pcs'],
       ['v13', 'খেজুরের গুড়', 'kg'], ['v14', 'কচি লাউ', 'pcs'],
       { section: 'আস্ত খাসী ডেকোরেশন' },
-      ['v15', 'বড় পেঁপে', 'kg'], ['v16', 'বিট', 'kg'], ['v17', 'মুলা', 'kg'],
+      ['v15', 'বড় পেঁপে', 'kg'], ['v16', 'বিট', 'pcs'], ['v17', 'মুলা', 'pcs'],
       { section: 'সবজী' },
       ['v18', 'পেঁপে', 'kg'], ['v19', 'গাজর', 'kg'], ['v20', 'বেগুন', 'kg'],
       ['v21', 'মিষ্টি কুমড়া', 'kg'], ['v22', 'ব্রকলি', 'kg'], ['v23', 'ফুল কপি', 'kg'],

@@ -79,6 +79,20 @@ file written under the old order still comes out right, and a sheet the user cre
 keeps its place at the end. The review screen renders in this order too, while each row
 still carries its original sheet index, so edits land on the right sheet.
 
+### The whole roasts
+
+আস্ত খাসি and আস্ত মুরগির রোস্ট were added from the owner's list. Both are dressed with
+লেটুস পাতা, বিট and মুলা; the খাসি also takes চান্দি তবক, মার্বেল and one সুই-সুতা set.
+Neither carries the animal itself — like the rest of the meat that is the owner's call,
+typed into খাশীর মাংস or the মোরগ row by hand.
+
+বিট and মুলা were কেজি rows and are now পিছ, which was safe because no recipe used
+either. **A data file written before this change still holds them as কেজি**, so after
+loading an old one, check those two rows read পিছ.
+
+`DISH_MATCHERS` learned both dishes, and `chickenRoast` now excludes আস্ত — without that
+it swallowed "আস্ত মুরগির রোস্ট" on the way past, since it matches any রোস্ট.
+
 ### Two menus in one job
 
 VIP guests and packet guests sometimes eat different menus, so there is a package per
@@ -228,6 +242,9 @@ It does not know which dishes a package contains — that stays in `index.html`.
 
 ### Needs the owner's answer
 
+- [ ] **আস্ত খাসি: the weight of one papaya.** The recipe is in, less its papaya: the
+      row is counted in কেজি and the owner asked for one whole fruit, so it needs the
+      weight of one before it can be recorded without a unit mismatch.
 - [ ] **চিকেন রোস্ট / জালি কাবাব carry no chicken.** Follows the master bazaar list,
       but it means the standard কাচ্চি package buys no মুরগী at all. Confirm that
       chicken is bought separately like the meat, or give an amount per 100.

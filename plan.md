@@ -130,6 +130,26 @@ before, which meant removing a cook silently repainted everyone below them. A ch
 row wears its cook's colour; the standard cook keeps the gold. A list saved before
 colours existed gets one assigned per cook on load.
 
+### Items with no recipe
+
+An item can be on a job with no ingredients at all: bought ready-made, sourced by the
+cook, or simply not written down yet. There is no flag for it — `hasNoIngredients(key)`
+is true exactly while the item holds no `ingredients` and no `editable` lines, so filling
+rows in later turns it into an ordinary recipe with nothing to migrate.
+
+`saveRecipe()` confirms rather than refuses when no ingredient rows are given. The
+quantity pipeline needed no guarding: `recipePer100()` iterates `dish.ingredients`, so an
+empty list contributes nothing and no other amount moves (verified byte-identical).
+
+It is marked উপকরণ নেই in the checklist (`.no-rec`) and the recipe library, and the note
+is appended once in `chefSplit()` where `split.dishes` is built — so every printed
+রান্নার আইটেম line shows `নাম (উপকরণ নেই)` without touching each print site.
+
+**Known limit, accepted by the owner.** Cook pages are built from ingredient rows
+(`out.active` keeps only cooks with at least one), so a cook given *only* recipe-less
+items gets no printed page and those items appear nowhere on paper. A cook with a mix is
+unaffected. The alternative — printing an empty sheet — was declined.
+
 ### The dishes are a checklist, not the package
 
 `picked[dishKey]` = `'vip' | 'packet' | 'both'` is now the source of truth for what this

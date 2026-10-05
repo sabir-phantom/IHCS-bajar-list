@@ -203,6 +203,25 @@
     <li><kbd>মূল রেসিপিতে ফেরান</kbd> undoes your changes to a built-in recipe.</li>
     <li><kbd>রেসিপি মুছুন</kbd> only appears for recipes you created. Deleting one also removes it from any package that used it, and the confirmation names those packages.</li>
   </ul>
+  <h3>Items with no recipe</h3>
+  <p>An item can be on the job without a recipe: one bought ready-made, one the cook sources
+     themselves, or one whose recipe is simply not written down yet. Press
+     <kbd>+ নতুন রেসিপি</kbd>, give it a name, and save with no ingredients at all.
+     A confirmation appears first, so one cannot be created by accident.</p>
+  <ul>
+    <li>It is marked <strong>উপকরণ নেই</strong> in the item list and in the recipe library.</li>
+    <li>Nothing is added to the market list for it, and no other amount moves.</li>
+    <li>On paper its name prints as <code>নাম (উপকরণ নেই)</code> on the
+        <strong>রান্নার আইটেম</strong> line, so nobody goes hunting the market list for
+        ingredients that were never there.</li>
+    <li>To write the recipe later, press <kbd>✎ সম্পাদনা</kbd> on that same item and add
+        ingredients. Nothing has to be re-created.</li>
+  </ul>
+  <p><strong>One limit.</strong> A cook's page is built from their ingredients, so a cook given
+     <em>only</em> recipe-less items gets no printed page and those items appear nowhere on
+     paper. Give such a cook at least one item that has ingredients, or keep these items on
+     the standard cook.</p>
+
   <h3>Finding an ingredient, and adding a new one</h3>
   <p>The ingredient box is a search box. Start typing and the list narrows to matching rows &mdash; there are over 200, so this is faster than scrolling. Eighteen names sit on more than one row (&#2328;&#2495; is on three, &#2465;&#2495;&#2478; on four); those are listed with their sheet after the name, so you always pick a specific row.</p>
   <p>The suggestions are drawn by the page itself, directly under the box. Arrow keys move through them, Enter picks, Escape closes. On a narrow window each ingredient becomes a stacked card &mdash; name on its own line, then amount, unit and &#10005; &mdash; so nothing has to be scrolled sideways to reach.</p>

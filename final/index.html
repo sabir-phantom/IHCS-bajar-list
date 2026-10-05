@@ -217,6 +217,13 @@
   .item-row input.n { width: 50px; }
   .item-row select.c { width: 60px; }
   .item-row .nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+  /* Quiet, not alarming: an item with no recipe is a normal thing to have. */
+  /* Only the phone layout needs it; on a wide screen the row is a single line. */
+  .item-row .row-break { display: none; }
+  .no-rec {
+    flex: none; font-size: 11px; color: #8a6d1f; background: #fdf3d8;
+    border: 1px solid #ecdcae; border-radius: 4px; padding: 1px 5px; white-space: nowrap;
+  }
   .item-row .drop {
     flex: none; border: 0; background: none; color: #b9a984; cursor: pointer; font-size: 15px; padding: 0 2px;
   }
@@ -567,6 +574,10 @@
     .item-cols-head { display: none; }
     .item-row { flex-wrap: wrap; gap: 6px 10px; padding: 7px 8px; }
     .item-row .nm { flex: 1 1 calc(100% - 34px); font-size: 16px; }   /* beside the tick, controls wrap below */
+    /* A badge shares the name's line: the name gives way, and the break after it sends the
+       controls to the next line, so the row reads like every other one. */
+    .item-row:has(.no-rec) .nm { flex: 0 1 auto; }
+    .item-row .row-break { display: block; flex: 1 1 100%; height: 0; margin: 0; }
     .item-row input.tick { width: 20px; height: 20px; }
     .ctl { display: flex; flex-direction: column; gap: 2px; }
     .ctl .mini { display: block; font-size: 11px; color: #a3906a; }
@@ -1699,6 +1710,9 @@ function renderDishChips() {
       + '<span class="nm" title="' + escapeHtml(RECIPE_LIBRARY[k].label) + '"'
       + (tinted ? ' style="color:' + chefInk(chef) + '"' : '') + '>'
       + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>'
+      + (hasNoIngredients(k)
+          ? '<span class="no-rec" title="এই আইটেমের কোনো উপকরণ সংরক্ষিত নেই">উপকরণ নেই</span>'
+            + '<span class="row-break" aria-hidden="true"></span>' : '')
       // Each control carries its own label. On a wide screen the wrapper is
       // `display: contents` and the label is hidden, so the row looks exactly as before;
       // on a phone the row stacks and the labels are what name the controls.
@@ -2166,7 +2180,11 @@ function chefSplit(data) {
   const dishes = {};
   ids.forEach(id => { dishes[id] = []; });
   allDishKeys().forEach(k => {
-    if (RECIPE_LIBRARY[k]) dishes[chefOf(k)].push(RECIPE_LIBRARY[k].label);
+    if (!RECIPE_LIBRARY[k]) return;
+    // Noted here rather than at each print site, so every রান্নার আইটেম line carries it:
+    // nobody should hunt the market list for ingredients that were never there.
+    dishes[chefOf(k)].push(RECIPE_LIBRARY[k].label
+      + (hasNoIngredients(k) ? ' (উপকরণ নেই)' : ''));
   });
   out.dishes = dishes;
   out.active = chefIds().filter(c => Object.keys(out[c]).length > 0);
@@ -2929,6 +2947,15 @@ function isDessert(key) {
   return r.dessert !== undefined ? Boolean(r.dessert) : DESSERT_KEYS.indexOf(key) !== -1;
 }
 
+// An item can be on the job without a recipe: bought ready-made, sourced by the cook, or
+// simply not written down yet. There is no separate flag for it — an item is
+// ingredient-less exactly while it holds no ingredients, so filling rows in later turns it
+// into an ordinary recipe with nothing to migrate.
+function hasNoIngredients(key) {
+  const r = RECIPE_LIBRARY[key];
+  return Boolean(r) && !(r.ingredients || []).length && !(r.editable || []).length;
+}
+
 // An ingredient names its form row either by row id ("p7") or by a short alias ("চাল").
 function recipeRowId(name) {
   if (ROW_INDEX[name]) return name;
@@ -2963,7 +2990,8 @@ function renderRecipeList() {
     const n = (r.ingredients || []).length + (r.editable || []).length;
     const tag = r.custom ? '<span class="rec-tag new">নতুন</span>' : (r.edited ? '<span class="rec-tag">পরিবর্তিত</span>' : '');
     return '<div class="recipe-item"><span class="recipe-name">' + escapeHtml(r.label) + '</span>' + tag
-      + '<span class="recipe-meta">' + (isDessert(k) ? 'মিষ্টান্ন' : 'প্রধান আইটেম') + ' · ' + toBanglaNum(n) + 'টি উপকরণ</span>'
+      + '<span class="recipe-meta">' + (isDessert(k) ? 'মিষ্টান্ন' : 'প্রধান আইটেম') + ' · '
+      + (hasNoIngredients(k) ? 'উপকরণ নেই' : toBanglaNum(n) + 'টি উপকরণ') + '</span>'
       + '<button type="button" class="pkg-btn" data-recipe="' + k + '">✎ সম্পাদনা</button></div>';
   }).join('');
 }
@@ -3300,7 +3328,9 @@ function saveRecipe() {
   const loose = recipeDraft.rows.filter(r => !r.rowId && r.qty !== '' && Number(r.qty) > 0);
   if (loose.length) { alert('পরিমাণ দেওয়া কিছু উপকরণের সারি বাছাই করা হয়নি। সারি বাছাই করুন বা লাইনটি মুছুন।'); return; }
   const rows = recipeDraft.rows.filter(r => r.rowId && Number(r.qty) > 0);
-  if (!rows.length) { alert('অন্তত একটি উপকরণ ও তার পরিমাণ দিন।'); return; }
+  // Hard to do by accident, but possible on purpose.
+  if (!rows.length && !confirm('"' + name + '" কোনো উপকরণ ছাড়া সংরক্ষণ করা হবে। '
+      + 'বাজার তালিকায় এর জন্য কিছু যোগ হবে না, আর আইটেমের পাশে "উপকরণ নেই" লেখা থাকবে। নিশ্চিত?')) return;
 
   const key = recipeDraft.key || ('rec' + Date.now());
   const prev = RECIPE_LIBRARY[key] || {};

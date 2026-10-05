@@ -97,6 +97,19 @@ loading an old one, check those two rows read পিছ.
 `DISH_MATCHERS` learned both dishes, and `chickenRoast` now excludes আস্ত — without that
 it swallowed "আস্ত মুরগির রোস্ট" on the way past, since it matches any রোস্ট.
 
+### Phone layout
+
+A `@media (max-width: 620px)` block carries the phone rules: package slots stack, the
+checklist drops to one column, and a row wraps so the dish name sits beside its tick box
+with the three controls on the line below. Each control is wrapped in a `.ctl` span that
+is `display: contents` on a wide screen — the desktop layout is untouched — and becomes a
+labelled column on a phone, so the controls are still named once the header row is hidden.
+Controls stay hidden on unticked rows. The review tables scroll sideways inside their own
+box rather than widening the page.
+
+Print is deliberately outside all of this: the `@media print` sizes were measured against
+A4 and are not touched by the screen rules.
+
 ### Settings live in one dialog
 
 The data-file bar, the cook list and the backup links were three separate blocks at the

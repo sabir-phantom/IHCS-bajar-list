@@ -130,6 +130,22 @@ before, which meant removing a cook silently repainted everyone below them. A ch
 row wears its cook's colour; the standard cook keeps the gold. A list saved before
 colours existed gets one assigned per cook on load.
 
+### Dishes that default to a cook
+
+`CHEF_DEFAULTS` maps ten dish keys to a cook: six to A (`sherwaniRuti`, `rumaliRuti`,
+`beefKalia`, `koraiGosht`, `jhalFry`, `muttonGlassy`) and four to C (`fishFillet`,
+`russianSalad`, `dressingSalad`, `doryFish`). `chefOf()` reads it only when the job holds
+no assignment at all, so an explicit choice always wins — which is why it tests
+`chefAssign[k] !== undefined` rather than truthiness: picking **S** by hand must not fall
+back to the default. An id no longer in `chefIds()` (a removed cook) falls to S, so a
+default can never strand ingredients off every sheet.
+
+This softens the rule written under *Chef split*: assignments were deliberately not saved
+so a forgotten one could never quietly empty the main sheets. Ten dishes now carry one by
+default, at the owner's request. The guard above keeps the dangerous half of that risk
+closed — nothing is ever assigned to a cook who does not exist — but these ten do move
+their ingredients onto a cook's page without anyone asking.
+
 ### Items with no recipe
 
 An item can be on a job with no ingredients at all: bought ready-made, sourced by the

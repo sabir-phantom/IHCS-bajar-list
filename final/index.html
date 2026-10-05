@@ -2047,8 +2047,17 @@ function chefBadge(id) {
 
 // dishKey -> chef id. Not saved: every job starts with every dish standard.
 let chefAssign = {};
+// Dishes a cook normally takes. These only fill in the dropdown when the job says
+// nothing; the moment anyone picks a cook for a dish, their choice is what counts —
+// including picking S, which is why a missing entry and an explicit 'S' are told apart.
+const CHEF_DEFAULTS = {
+  sherwaniRuti: 'A', rumaliRuti: 'A', beefKalia: 'A',
+  koraiGosht: 'A', jhalFry: 'A', muttonGlassy: 'A',
+  fishFillet: 'C', russianSalad: 'C', dressingSalad: 'C', doryFish: 'C'
+};
+
 function chefOf(dishKey) {
-  const c = chefAssign[dishKey];
+  const c = chefAssign[dishKey] !== undefined ? chefAssign[dishKey] : CHEF_DEFAULTS[dishKey];
   return (c && chefIds().indexOf(c) !== -1) ? c : 'S';
 }
 

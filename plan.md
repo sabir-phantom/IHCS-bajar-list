@@ -143,7 +143,7 @@ empty list contributes nothing and no other amount moves (verified byte-identica
 
 It is marked উপকরণ নেই in the checklist (`.no-rec`) and the recipe library, and the note
 is appended once in `chefSplit()` where `split.dishes` is built — so every printed
-রান্নার আইটেম line shows `নাম (উপকরণ নেই)` without touching each print site.
+রান্নার আইটেম line shows `উপকরণ নেই: নাম` without touching each print site.
 
 **Known limit, accepted by the owner.** Cook pages are built from ingredient rows
 (`out.active` keeps only cooks with at least one), so a cook given *only* recipe-less

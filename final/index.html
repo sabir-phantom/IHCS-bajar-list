@@ -2183,8 +2183,8 @@ function chefSplit(data) {
     if (!RECIPE_LIBRARY[k]) return;
     // Noted here rather than at each print site, so every রান্নার আইটেম line carries it:
     // nobody should hunt the market list for ingredients that were never there.
-    dishes[chefOf(k)].push(RECIPE_LIBRARY[k].label
-      + (hasNoIngredients(k) ? ' (উপকরণ নেই)' : ''));
+    dishes[chefOf(k)].push((hasNoIngredients(k) ? 'উপকরণ নেই: ' : '')
+      + RECIPE_LIBRARY[k].label);
   });
   out.dishes = dishes;
   out.active = chefIds().filter(c => Object.keys(out[c]).length > 0);

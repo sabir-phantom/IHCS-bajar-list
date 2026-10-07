@@ -45,7 +45,7 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Area | State |
 |---|---|
 | Order → bajar list handoff | Set menu tag, headcount, date, venue and item list pass through the URL |
-| Recipes | 28 dishes, per 100 guests, all ingredients resolve to form rows |
+| Recipes | 31 dishes, per 100 guests, all ingredients resolve to form rows |
 | Forms | 3 printed sheets, ~260 rows, fully editable (names, units, rows, headings) |
 | Packages | 3 built in: স্ট্যান্ডার্ড কাচ্চি, রুটি কালিয়া, মোরগ পোলাও; more can be created in the app. The order form's dropdown reads them live from `localStorage` (`iqbal_catering_bajar_setmenus`) |
 | Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations, and a sticky search box that filters all three sheets at once |

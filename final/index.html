@@ -1168,6 +1168,41 @@ plainPolao: {
       ['v17', 1, 'pcs'],          // মুলা
       ['v15', 1.5, 'kg']          // বড় পেঁপে — one whole fruit, taken as 1.5 কেজি
     ]
+  },
+
+  // Transcribed from the owner's hand-written তেহারি sheets and checked by them line by
+  // line. The sheets were written for 100 guests, so the figures go in as they stand.
+  // Several were entered in the কেজি column but meant as grams; the owner confirmed each.
+  // INCOMPLETE: the sheets carry no quantity for rice or meat, so this recipe buys
+  // neither. Add পোলাউ চাল and the meat before using it to shop.
+  tehari: {
+    label: 'তেহারি',
+    ingredients: [
+      // পার্টি বাজার লিস্ট
+      ['p20', 100, 'gm'],         // কাঠ বাদাম
+      ['p21', 50, 'gm'],          // পেস্তা বাদাম
+      ['p23', 300, 'gm'],         // কিচমিচ
+      ['p24', 200, 'gm'],         // আলু বোখারা
+      ['p25', 10, 'gm'],          // এলাচি
+      ['p26', 20, 'gm'],          // দারুচিনি
+      ['p27', 5, 'gm'],           // লবঙ্গ
+      ['p35', 10, 'gm'],          // তেজপাতা
+      ['p45', 2, 'kg'],           // লবণ — the one line on that sheet genuinely in কেজি
+      ['p47', 30, 'gm'],          // টেস্টিং সল্ট
+      ['p48', 100, 'gm'],         // পোস্ত দানা
+      // বাজার লিস্ট
+      ['m3', 5, 'ltr'],           // সয়াবিন তেল
+      ['m5', 1.25, 'kg'],         // ঘি — 1 কেজি 250 গ্রাম
+      ['m13', 500, 'gm'],         // দুধ
+      ['r12', 50, 'gm'],          // এলাচ গুড়া
+      ['r13', 50, 'gm'],          // জিরা গুড়া
+      ['r14', 50, 'gm'],          // সাদা গুড়া
+      ['r15', 50, 'gm'],          // মসলা গুড়া
+      ['r16', 200, 'gm'],         // মরিচ গুড়া
+      ['r17', 50, 'gm'],          // হলুদ গুড়া
+      // সবজী ও তাজা উপকরণ
+      ['v4', 500, 'gm']           // কাচামরিচ
+    ]
   }
 };
 
@@ -1187,7 +1222,8 @@ const DISH_MATCHERS = [
   // খাশী in it, so "আস্ত খাশীর রোস্ট" falls through to here rather than being counted
   // as a chicken roast.
   { key: 'astoKhasi', words: ['আস্ত খাশী', 'আস্ত খাসি', 'আস্ত খাশি', 'আস্ত খাসী'] },
-  { key: 'astoMurgiRoast', words: ['আস্ত মুরগ', 'আস্ত মোরগ', 'আস্ত মুরগি'] }
+  { key: 'astoMurgiRoast', words: ['আস্ত মুরগ', 'আস্ত মোরগ', 'আস্ত মুরগি'] },
+  { key: 'tehari', words: ['তেহারি', 'তেহারী'] }
 ];
 const DESSERT_KEYS = ['zarda', 'firni'];
 

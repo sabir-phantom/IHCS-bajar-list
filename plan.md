@@ -45,7 +45,7 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Area | State |
 |---|---|
 | Order → bajar list handoff | Set menu tag, headcount, date, venue and item list pass through the URL |
-| Recipes | 31 dishes, per 100 guests, all ingredients resolve to form rows |
+| Recipes | 32 dishes, per 100 guests, all ingredients resolve to form rows |
 | Forms | 3 printed sheets, ~260 rows, fully editable (names, units, rows, headings) |
 | Packages | 3 built in: স্ট্যান্ডার্ড কাচ্চি, রুটি কালিয়া, মোরগ পোলাও; more can be created in the app. The order form's dropdown reads them live from `localStorage` (`iqbal_catering_bajar_setmenus`) |
 | Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations, and a sticky search box that filters all three sheets at once |
@@ -332,6 +332,13 @@ It does not know which dishes a package contains — that stays in `index.html`.
 ## 4. Open items
 
 ### Needs the owner's answer
+
+- **তেহারি has no rice and no meat.** The hand-written sheets carry a quantity for 21
+  ingredients but none for পোলাউ চাল or any meat — both were ticked with no number, as
+  were চিনি, ডিম, টমেটো সস্, ফয়েল and রং. The recipe is in the library and correct as
+  far as it goes, but it will not buy rice or meat until those figures are added.
+- **তেহারি এলাচি 10 and দারুচিনি 20 were given without a unit** and are stored as grams,
+  matching every other spice on that sheet. Worth confirming once.
 
 - [ ] **চিকেন রোস্ট / জালি কাবাব carry no chicken.** Follows the master bazaar list,
       but it means the standard কাচ্চি package buys no মুরগী at all. Confirm that

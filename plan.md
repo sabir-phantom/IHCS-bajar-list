@@ -45,7 +45,7 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Area | State |
 |---|---|
 | Order → bajar list handoff | Set menu tag, headcount, date, venue and item list pass through the URL |
-| Recipes | 34 dishes, per 100 guests, all ingredients resolve to form rows |
+| Recipes | 33 dishes, per 100 guests, all ingredients resolve to form rows |
 | Forms | 3 printed sheets, ~260 rows, fully editable (names, units, rows, headings) |
 | Packages | 3 built in: স্ট্যান্ডার্ড কাচ্চি, রুটি কালিয়া, মোরগ পোলাও; more can be created in the app. The order form's dropdown reads them live from `localStorage` (`iqbal_catering_bajar_setmenus`) |
 | Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations, and a sticky search box that filters all three sheets at once |
@@ -344,7 +344,7 @@ It does not know which dishes a package contains — that stays in `index.html`.
 - **ডাস্টার has no form row**, so the ১–২ টি on the three salad/fillet sheets is left
   out. টুকরি (`p74`) does have one and is in.
 - **মাটন রেজালা and বিফ রেজালা carry no meat**, because the বিফ / মাটন রেজালা they
-  were copied from has only three lines and no মাংস. The original is still in the library.
+  were copied from had only three lines and no মাংস. That shared recipe has since been deleted.
 - **রাশিয়ান সালাদ তেজপাতা 250 gm** is printed on the sheet and entered as such, but it
   is a lot of bay leaf for a salad — worth a second look.
 

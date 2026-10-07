@@ -97,6 +97,27 @@ loading an old one, check those two rows read পিছ.
 `DISH_MATCHERS` learned both dishes, and `chickenRoast` now excludes আস্ত — without that
 it swallowed "আস্ত মুরগির রোস্ট" on the way past, since it matches any রোস্ট.
 
+### Motion
+
+Five small pieces, all screen-only: the brand header fades in on load, the settings
+dialog rises and sinks, a freshly ticked checklist row wears a gold ring for half a
+second, the go-to-top button fades instead of appearing mid-scroll, and buttons lift
+under the cursor.
+
+Three things keep it out of the way. The print block switches every animation and
+transition off, so a sheet can never be caught mid-fade by the printer — verified by
+re-rendering the five-page PDF, which comes back with text on every page. The one
+element with an entry animation is the brand header, which print hides anyway. And a
+`prefers-reduced-motion` block reduces every duration to nothing for anyone whose system
+asks for less movement.
+
+The ring on a ticked row is added after `renderDishChips()` redraws the list, to the new
+row rather than the old one — otherwise it replays on every checked row each time the
+list is redrawn. Closing the dialog is driven by `animationend` with a 220 ms timer
+behind it, since `animationend` does not arrive when motion is switched off; reopening
+clears that timer, or the close that was still playing would shut the dialog again a
+moment after it reopened.
+
 ### Phone layout
 
 A `@media (max-width: 620px)` block carries the phone rules: package slots stack, the

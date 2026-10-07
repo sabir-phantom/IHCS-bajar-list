@@ -640,7 +640,70 @@
 
   #print-sheet { display: none; }
 
+  /* ---------------- Motion ----------------
+     Short and quiet: this is a working tool, not a showcase. Nothing here moves the
+     printed sheets — the print block below switches every animation off, and the one
+     element with an entry animation (the brand header) is hidden on paper anyway. */
+  @keyframes bl-fade-in { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes bl-fade-out { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes bl-rise {
+    from { opacity: 0; transform: translateY(12px) scale(0.985) }
+    to   { opacity: 1; transform: none }
+  }
+  @keyframes bl-sink {
+    from { opacity: 1; transform: none }
+    to   { opacity: 0; transform: translateY(6px) scale(0.99) }
+  }
+  @keyframes bl-header-in {
+    from { opacity: 0; transform: translateY(-6px) }
+    to   { opacity: 1; transform: none }
+  }
+  /* A ring that fades off the row just ticked, so the eye follows the click. */
+  @keyframes bl-ticked {
+    from { box-shadow: inset 0 0 0 2px var(--gold) }
+    to   { box-shadow: inset 0 0 0 2px transparent }
+  }
+
+  .brand-header { animation: bl-header-in 0.3s ease both; }
+
+  .modal-back { animation: bl-fade-in 0.16s ease both; }
+  .modal { animation: bl-rise 0.22s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+  .modal-back.is-closing { animation: bl-fade-out 0.14s ease both; }
+  .modal-back.is-closing .modal { animation: bl-sink 0.14s ease both; }
+
+  .item-row.just-ticked { animation: bl-ticked 0.5s ease both; }
+
+  .btn { transition: transform 0.12s ease, box-shadow 0.18s ease; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(27, 52, 85, 0.18); }
+  .btn:active { transform: translateY(2px); box-shadow: none; }
+
+  .link-btn, .pkg-btn, .row-del, .settings-open, .modal-x, .to-top, .item-row,
+  .recipe-item, .chef-admin-chip {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  /* The button fades in rather than appearing mid-scroll. visibility carries the
+     transition so it is properly gone — and not tabbable — while hidden. */
+  .to-top {
+    visibility: hidden; opacity: 0; transform: translateY(8px) scale(0.92);
+    transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.15s ease,
+                visibility 0s linear 0.18s;
+  }
+  .to-top.is-visible {
+    visibility: visible; opacity: 1; transform: none; transition-delay: 0s;
+  }
+
+  /* Anyone who asks their system for less motion gets none of it. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important; animation-delay: 0s !important;
+      transition-duration: 0.001ms !important; transition-delay: 0s !important;
+    }
+  }
+
   @media print {
+    /* Paper never animates, and nothing may be caught mid-fade by the printer. */
+    *, *::before, *::after { animation: none !important; transition: none !important; }
     body { background: #fff; padding: 0; }
     /* On paper the page card is just a wrapper: its cream fill would print as a tint
        and its padding would eat into the printable width. */
@@ -839,7 +902,7 @@
 
   <div id="bl-preview"></div>
 
-  <button type="button" id="to-top" class="to-top" hidden aria-label="উপরে যান" title="উপরে যান">↑</button>
+  <button type="button" id="to-top" class="to-top" aria-label="উপরে যান" title="উপরে যান">↑</button>
 
 
   <!-- One line at the foot of the page: it still shows whether the data is safe,
@@ -1892,8 +1955,14 @@ function renderDishChips() {
   document.getElementById('item-count').textContent = toBanglaNum(n) + 'টি বাছাই';
 
   list.querySelectorAll('input.tick').forEach(el => el.addEventListener('change', () => {
-    if (el.checked) pickDish(el.dataset.dish, 'both', null); else dropDish(el.dataset.dish);
+    const dish = el.dataset.dish, on = el.checked;
+    if (on) pickDish(dish, 'both', null); else dropDish(dish);
     renderDishChips(); generateList();
+    // The list is redrawn, so the ring goes on the fresh row rather than the old one.
+    if (on) {
+      const box = list.querySelector('input.tick[data-dish="' + dish + '"]');
+      if (box && box.parentElement) box.parentElement.classList.add('just-ticked');
+    }
   }));
   list.querySelectorAll('select.g').forEach(el => el.addEventListener('change', () => {
     picked[el.dataset.dish] = el.value; delete pickedBy[el.dataset.dish];
@@ -3625,12 +3694,33 @@ function idb(mode, fn) {
   });
 }
 
+// A close that is still playing must be called off, or its timer shuts the dialog
+// again a moment after it was reopened.
+let settingsCloseTimer = null;
+
 function openSettings() {
-  document.getElementById('settings-modal').hidden = false;
-  document.getElementById('settings-modal').focus();
+  const back = document.getElementById('settings-modal');
+  clearTimeout(settingsCloseTimer);
+  settingsCloseTimer = null;
+  back.classList.remove('is-closing');
+  back.hidden = false;
+  back.focus();
 }
 function closeSettings() {
-  document.getElementById('settings-modal').hidden = true;
+  const back = document.getElementById('settings-modal');
+  if (back.hidden || back.classList.contains('is-closing')) return;
+  back.classList.add('is-closing');
+  const done = () => {
+    // Only finish a close that is still the current one.
+    if (!back.classList.contains('is-closing')) return;
+    clearTimeout(settingsCloseTimer);
+    settingsCloseTimer = null;
+    back.classList.remove('is-closing');
+    back.hidden = true;
+  };
+  // animationend does not fire when motion is switched off, so a timer closes it either way.
+  back.addEventListener('animationend', done, { once: true });
+  settingsCloseTimer = setTimeout(done, 220);
 }
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && !document.getElementById('settings-modal').hidden) closeSettings();
@@ -3761,7 +3851,7 @@ async function disconnectDataFile() {
 // ---------------- Go to top ----------------
 (function () {
   const btn = document.getElementById('to-top');
-  const update = () => { btn.hidden = window.scrollY < 400; };
+  const update = () => { btn.classList.toggle('is-visible', window.scrollY >= 400); };
   window.addEventListener('scroll', update, { passive: true });
   btn.addEventListener('click', () => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -45,7 +45,7 @@ Source material lives outside this folder at `D:\Sabir\Work\IC\Menu\Recipes\Reci
 | Area | State |
 |---|---|
 | Order → bajar list handoff | Set menu tag, headcount, date, venue and item list pass through the URL |
-| Recipes | 32 dishes, per 100 guests, all ingredients resolve to form rows |
+| Recipes | 34 dishes, per 100 guests, all ingredients resolve to form rows |
 | Forms | 3 printed sheets, ~260 rows, fully editable (names, units, rows, headings) |
 | Packages | 3 built in: স্ট্যান্ডার্ড কাচ্চি, রুটি কালিয়া, মোরগ পোলাও; more can be created in the app. The order form's dropdown reads them live from `localStorage` (`iqbal_catering_bajar_setmenus`) |
 | Review screen | Per-100 and per-order columns, per-ingredient breakdown, folding, confirmations, and a sticky search box that filters all three sheets at once |
@@ -332,6 +332,21 @@ It does not know which dishes a package contains — that stays in `index.html`.
 ## 4. Open items
 
 ### Needs the owner's answer
+
+- **তেহারি এলাচি / দারুচিনি are wanted in pieces** but rows `p25` and `p26` are weight
+  rows, and মোতানজান (5/5), বিফ কালা ভুনা (20/20), মুরগ পোলাও (50/75) and
+  মিক্সড ভেজিটেবল (20/30) all buy from them in grams. Switching the rows to pieces
+  would silently reinterpret those four. Either the gram weight of ১০ এলাচি and ২০
+  দারুচিনি, or piece counts for those four recipes, unblocks it. Stored as 10 gm and
+  20 gm meanwhile.
+- **কেওড়া জল is on the ঝাল ফ্রাই (50 gm) and কড়াই গোস্ত (100 gm) sheets**, but form
+  row `p44` is counted in bottles. Left out of both rather than guessed at.
+- **ডাস্টার has no form row**, so the ১–২ টি on the three salad/fillet sheets is left
+  out. টুকরি (`p74`) does have one and is in.
+- **মাটন রেজালা and বিফ রেজালা carry no meat**, because the বিফ / মাটন রেজালা they
+  were copied from has only three lines and no মাংস. The original is still in the library.
+- **রাশিয়ান সালাদ তেজপাতা 250 gm** is printed on the sheet and entered as such, but it
+  is a lot of bay leaf for a salad — worth a second look.
 
 - **তেহারি has no rice and no meat.** The hand-written sheets carry a quantity for 21
   ingredients but none for পোলাউ চাল or any meat — both were ticked with no number, as

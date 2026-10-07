@@ -99,10 +99,11 @@ it swallowed "আস্ত মুরগির রোস্ট" on the way past, 
 
 ### Motion
 
-Five small pieces, all screen-only: the brand header fades in on load, the settings
+Seven small pieces, all screen-only: the brand header fades in on load, the settings
 dialog rises and sinks, a freshly ticked checklist row wears a gold ring for half a
-second, the go-to-top button fades instead of appearing mid-scroll, and buttons lift
-under the cursor.
+second, the go-to-top button fades instead of appearing mid-scroll, buttons lift under
+the cursor, the রেসিপি লাইব্রেরি slides open and shut, and the package and recipe
+editor panels drop in and out.
 
 Three things keep it out of the way. The print block switches every animation and
 transition off, so a sheet can never be caught mid-fade by the printer — verified by
@@ -110,6 +111,14 @@ re-rendering the five-page PDF, which comes back with text on every page. The on
 element with an entry animation is the brand header, which print hides anyway. And a
 `prefers-reduced-motion` block reduces every duration to nothing for anyone whose system
 asks for less movement.
+
+A `<details>` offers no transition of its own and does not render its contents until it
+is open, so the library's height is measured and driven from JS: the summary's own click
+is cancelled, the body is pinned to its start height, read back, then moved. `overflow`
+is clipped only while it moves, or a menu hanging outside the box would be cut off once
+it sits still. The two editor panels need no JS to open — they are `display: none` until
+shown, so the animation starts the moment they appear — but closing them runs through
+the same `hidePanel` helper, which cancels a close in flight when the panel is reopened.
 
 The ring on a ticked row is added after `renderDishChips()` redraws the list, to the new
 row rather than the old one — otherwise it replays on every checked row each time the

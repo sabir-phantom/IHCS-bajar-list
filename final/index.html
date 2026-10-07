@@ -673,6 +673,25 @@
 
   .item-row.just-ticked { animation: bl-ticked 0.5s ease both; }
 
+  /* A <details> shows its contents the instant it opens, so the height is driven from
+     JS. overflow is clipped only while it moves, or it would cut off anything that
+     hangs outside the box once it is sitting still. */
+  .det-body { transition: height 0.26s ease, opacity 0.2s ease; }
+  .det-body.is-moving { overflow: hidden; }
+
+  /* The two editor panels drop open the same way. Opening needs no JS: they are
+     display:none until shown, so the animation starts the moment the panel appears. */
+  @keyframes bl-panel-in {
+    from { opacity: 0; transform: translateY(-6px) }
+    to   { opacity: 1; transform: none }
+  }
+  @keyframes bl-panel-out {
+    from { opacity: 1; transform: none }
+    to   { opacity: 0; transform: translateY(-6px) }
+  }
+  .pkg-editor:not([hidden]) { animation: bl-panel-in 0.2s ease both; }
+  .pkg-editor.is-closing { animation: bl-panel-out 0.14s ease both; }
+
   .btn { transition: transform 0.12s ease, box-shadow 0.18s ease; }
   .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(27, 52, 85, 0.18); }
   .btn:active { transform: translateY(2px); box-shadow: none; }
@@ -853,6 +872,7 @@
 
   <details class="recipe-lib" id="recipe-lib">
     <summary>রেসিপি লাইব্রেরি <span class="recipe-count" id="recipe-count"></span></summary>
+    <div class="det-body" id="recipe-lib-body">
     <p class="pkg-hint">একটি রেসিপি বদলালে যেসব প্যাকেজে সেটি আছে, সবগুলোর হিসাব বদলে যায়।</p>
     <div class="recipe-list" id="recipe-list"></div>
     <button type="button" class="pkg-btn pkg-btn-new" onclick="openRecipeEditor(null)">+ নতুন রেসিপি</button>
@@ -877,6 +897,7 @@
         <button type="button" class="pkg-btn" id="rec-restore" onclick="restoreRecipe()">মূল রেসিপিতে ফেরান</button>
         <button type="button" class="pkg-btn pkg-btn-danger" id="rec-delete" onclick="deleteRecipe()">রেসিপি মুছুন</button>
       </div>
+    </div>
     </div>
   </details>
 
@@ -1816,12 +1837,12 @@ function openPackageEditor(isNew, group) {
 
   // Only packages created here can be deleted; the original one stays.
   document.getElementById('pkg-delete').hidden = isNew || !menu.custom;
-  document.getElementById('pkg-editor').hidden = false;
+  showPanel(document.getElementById('pkg-editor'));
   document.getElementById('pkg-name').focus();
 }
 
 function closePackageEditor() {
-  document.getElementById('pkg-editor').hidden = true;
+  hidePanel(document.getElementById('pkg-editor'));
   editingKey = null;
 }
 
@@ -3244,14 +3265,14 @@ function openRecipeEditor(key) {
   rebuildPickIndex();   // the row list may have changed since the editor was last opened
   renderRecipeRows();
 
-  document.getElementById('recipe-lib').open = true;
-  document.getElementById('recipe-editor').hidden = false;
+  openRecipeLib();
+  showPanel(document.getElementById('recipe-editor'));
   document.getElementById('rec-name').focus();
 }
 
 function closeRecipeEditor() {
   closePickMenu();
-  document.getElementById('recipe-editor').hidden = true;
+  hidePanel(document.getElementById('recipe-editor'));
   recipeDraft = null;
 }
 
@@ -3847,6 +3868,78 @@ async function disconnectDataFile() {
   try { await idb('readwrite', st => st.delete('dataFile')); } catch (e) { /* nothing stored */ }
   setDataStatus('ডেটা এই ব্রাউজারে আছে — নিরাপদ রাখতে একটি ডেটা ফাইল তৈরি করুন', 'local');
 }
+
+// ---------------- The recipe library opens and closes ----------------
+// The height is measured and animated by hand: a <details> gives no transition of its
+// own, and its contents are not rendered at all until it is open.
+const recipeLib = document.getElementById('recipe-lib');
+const recipeLibBody = document.getElementById('recipe-lib-body');
+let recipeLibBusy = false;
+
+function lessMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Plays a panel's exit before taking it away. Reopening cancels a close in flight,
+// the same trap the settings dialog fell into.
+function hidePanel(el) {
+  if (el.hidden) return;
+  if (lessMotion()) { el.hidden = true; return; }
+  el.classList.add('is-closing');
+  const done = () => {
+    if (!el.classList.contains('is-closing')) return;
+    clearTimeout(el._closeTimer);
+    el._closeTimer = null;
+    el.classList.remove('is-closing');
+    el.hidden = true;
+  };
+  el.addEventListener('animationend', done, { once: true });
+  el._closeTimer = setTimeout(done, 200);
+}
+
+function showPanel(el) {
+  clearTimeout(el._closeTimer);
+  el._closeTimer = null;
+  el.classList.remove('is-closing');
+  el.hidden = false;
+}
+
+function slideDet(open) {
+  if (recipeLibBusy) return;
+  if (lessMotion()) { recipeLib.open = open; return; }
+  recipeLibBusy = true;
+  if (open) recipeLib.open = true;          // it must be open to have a height
+  const full = recipeLibBody.scrollHeight;
+  recipeLibBody.classList.add('is-moving');
+  recipeLibBody.style.height = (open ? 0 : full) + 'px';
+  recipeLibBody.style.opacity = open ? '0' : '1';
+  // Read back, so the browser takes the start of the move as a real state.
+  void recipeLibBody.offsetHeight;
+  recipeLibBody.style.height = (open ? full : 0) + 'px';
+  recipeLibBody.style.opacity = open ? '1' : '0';
+
+  let settled = false;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    recipeLibBody.classList.remove('is-moving');
+    recipeLibBody.style.height = '';
+    recipeLibBody.style.opacity = '';
+    if (!open) recipeLib.open = false;
+    recipeLibBusy = false;
+  };
+  recipeLibBody.addEventListener('transitionend', ev => {
+    if (ev.propertyName === 'height') finish();
+  }, { once: true });
+  setTimeout(finish, 350);          // transitionend never arrives if the move is a no-op
+}
+
+recipeLib.querySelector('summary').addEventListener('click', ev => {
+  ev.preventDefault();              // the browser would otherwise snap it open or shut
+  slideDet(!recipeLib.open);
+});
+
+function openRecipeLib() { if (!recipeLib.open) slideDet(true); }
 
 // ---------------- Go to top ----------------
 (function () {

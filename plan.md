@@ -333,12 +333,12 @@ It does not know which dishes a package contains — that stays in `index.html`.
 
 ### Needs the owner's answer
 
-- **তেহারি এলাচি / দারুচিনি are wanted in pieces** but rows `p25` and `p26` are weight
-  rows, and মোতানজান (5/5), বিফ কালা ভুনা (20/20), মুরগ পোলাও (50/75) and
-  মিক্সড ভেজিটেবল (20/30) all buy from them in grams. Switching the rows to pieces
-  would silently reinterpret those four. Either the gram weight of ১০ এলাচি and ২০
-  দারুচিনি, or piece counts for those four recipes, unblocks it. Stored as 10 gm and
-  20 gm meanwhile.
+- **এলাচি and দারুচিনি now sit on two rows each.** তেহারি counts them, so it uses the
+  new পিছ rows `p88` আস্ত এলাচি and `p89` আস্ত দারুচিনি; মোতানজান, মুরগ পোলাও and
+  মিক্সড ভেজিটেবল still weigh them on `p25` / `p26`. Flipping the shared rows to pieces
+  would have turned মুরগ পোলাও's 50 gm of cardamom into 50 pods, so they were left alone.
+  If every recipe should count these instead, the gram rows can be retired once piece
+  counts exist for those three — until then a job holding both prints two এলাচি lines.
 - **কেওড়া জল is on the ঝাল ফ্রাই (50 gm) and কড়াই গোস্ত (100 gm) sheets**, but form
   row `p44` is counted in bottles. Left out of both rather than guessed at.
 - **ডাস্টার has no form row**, so the ১–২ টি on the three salad/fillet sheets is left

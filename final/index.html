@@ -162,6 +162,10 @@
     border: 1px solid #d8cdb5; border-radius: 6px; background: #fff;
   }
   .reduce-pct { font-size: 17px; color: #7a6a4d; }
+  /* The packet box only means anything when there are packet guests. */
+  .packet-bar { background: #f6f3fb; border-color: #d9cfe9; margin-top: 10px; }
+  .packet-bar label { color: #4a2f6b; }
+  .packet-bar[hidden] { display: none; }
   .reduce-note { font-size: 15px; color: #8a6a55; }
   .chef-admin {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -911,6 +915,13 @@
     <input type="number" id="bl-reduce" min="0" max="100" step="any" placeholder="০" aria-label="শতাংশ কমান">
     <span class="reduce-pct">%</span>
     <span class="reduce-note" id="bl-reduce-note"></span>
+  </div>
+
+  <div class="reduce-bar packet-bar" id="packet-bar">
+    <label for="bl-packet-cut">প্যাকেটের পরিমাণ কমান</label>
+    <input type="number" id="bl-packet-cut" min="0" max="100" step="any" placeholder="০" aria-label="প্যাকেটে শতাংশ কমান">
+    <span class="reduce-pct">%</span>
+    <span class="reduce-note" id="bl-packet-cut-note"></span>
   </div>
 
   <div class="list-search" id="list-search-bar">
@@ -2091,7 +2102,28 @@ document.getElementById('bl-reduce').addEventListener('input', () => {
   generateList();
 });
 
+document.getElementById('bl-packet-cut').addEventListener('input', () => {
+  renderDishChips();     // the per-dish placeholders carry the cut
+  generateList();
+});
+
+// The packet box is only shown when there are packet guests to cut back.
+function updatePacketBar() {
+  const bar = document.getElementById('packet-bar');
+  const note = document.getElementById('bl-packet-cut-note');
+  if (!bar || !note) return;
+  bar.hidden = !packetGuests();
+  const pct = packetPercent();
+  const head = packetGuests();
+  note.textContent = pct
+    ? 'প্যাকেটের ভাগ ' + toBanglaNum(roundQty(pct)) + '% কম — '
+      + toBanglaNum(head) + ' জনের বদলে '
+      + toBanglaNum(roundQty(head * packetFactor())) + ' জনের হিসাবে'
+    : 'খালি রাখলে প্যাকেটও পুরো পরিমাণ পাবে';
+}
+
 function updateReduceNote() {
+  updatePacketBar();
   const note = document.getElementById('bl-reduce-note');
   if (!note) return;
   const pct = reducePercent();
@@ -2129,40 +2161,46 @@ function recipePer100() {
   const dishKeys = allDishKeys();
   const base = {};             // rowId -> per 100 guests, summed over the dishes
   const amount = {};           // rowId -> what this order needs, each dish at its own headcount
-  const sources = {};          // rowId -> [{ key, label, base, amount }], for the breakdown
+  const packet = {};           // rowId -> the part of `amount` the packet guests account for
+  // rowId -> [{ key, label, base, amount, packet }]. `packet` is the part of `amount`
+  // the packet guests account for, kept per source so the packet sheets can be lifted
+  // out of the main ones later without re-deriving anything.
+  const sources = {};
   const unmappedIngredients = [];
-  const note = (rowId, key, label, per100, qty) => {
+  const note = (rowId, key, label, per100, qty, pkt) => {
     if (!sources[rowId]) sources[rowId] = [];
-    sources[rowId].push({ key: key, label: label, base: per100, amount: qty });
+    sources[rowId].push({ key: key, label: label, base: per100, amount: qty, packet: pkt });
   };
 
   dishKeys.forEach(dishKey => {
     const dish = RECIPE_LIBRARY[dishKey];
     if (!dish) return;
+    const split = dishGuestSplit(dishKey);
+    const headPacket = split.packet * packetFactor();
+    const head = split.vip + headPacket;
+    const add = (rowId, label, per100) => {
+      const forThisDish = per100 * (head / 100);
+      const pktPart = per100 * (headPacket / 100);
+      base[rowId] = (base[rowId] || 0) + per100;
+      amount[rowId] = (amount[rowId] || 0) + forThisDish;
+      packet[rowId] = (packet[rowId] || 0) + pktPart;
+      note(rowId, dishKey, label, per100, forThisDish, pktPart);
+    };
     dish.ingredients.forEach(entry => {
       const name = entry[0], qty = entry[1], unit = entry[2];
       const rowId = recipeRowId(name);
       if (!rowId) { unmappedIngredients.push(name); return; }
-      const info = unitInfo(unit);
-      const per100 = qty * info.factor;
-      const forThisDish = per100 * (guestsFor(dishKey) / 100);
-      base[rowId] = (base[rowId] || 0) + per100;
-      amount[rowId] = (amount[rowId] || 0) + forThisDish;
-      note(rowId, dishKey, dish.label, per100, forThisDish);
+      add(rowId, dish.label, qty * unitInfo(unit).factor);
     });
     (dish.editable || []).forEach(e => {
       const rowId = ROW_ALIASES[e.label] || ROW_ALIASES['মুরগী'];
       if (!rowId) return;
-      const info = unitInfo(e.unit);
-      const per100 = e.per100 * info.factor;
-      const forThisDish = per100 * (guestsFor(dishKey) / 100);
-      base[rowId] = (base[rowId] || 0) + per100;
-      amount[rowId] = (amount[rowId] || 0) + forThisDish;
-      note(rowId, dishKey, dish.label, per100, forThisDish);
+      add(rowId, dish.label, e.per100 * unitInfo(e.unit).factor);
     });
   });
 
-  return { base: base, amount: amount, sources: sources, unmappedIngredients: unmappedIngredients };
+  return { base: base, amount: amount, packet: packet, sources: sources,
+           unmappedIngredients: unmappedIngredients };
 }
 
 // The per-100 value actually in force for a row: a saved default wins over the recipe.
@@ -2173,9 +2211,11 @@ function recipePer100() {
 // their sum. `amount` is what this order needs; `value` is the per-100 figure to show.
 function effectivePer100(rowId, recipeBase) {
   const factor = unitInfo(ROW_INDEX[rowId].unit).factor;
-  let per100 = 0, amount = 0, found = false;
+  let per100 = 0, amount = 0, packet = 0, found = false;
+  const groups = activeGroups();
+  const single = groups.length <= 1;      // one package feeds the whole job
 
-  activeGroups().forEach(g => {
+  groups.forEach(g => {
     const menuKey = groupMenuKey(g);
     const saved = (per100Store[menuKey] || {})[rowId];
     const confirmed = (SET_MENU_PER100[menuKey] || {})[rowId];
@@ -2184,12 +2224,18 @@ function effectivePer100(rowId, recipeBase) {
     else if (confirmed !== undefined) v = confirmed;
     else return;
     found = true;
+    // Who this package is feeding. With packetFactor() at 1 these add back up to
+    // guestsOfGroup(g) exactly, so nothing moves until a packet cut is typed.
+    const vipHead = single ? vipGuests() : (g.id === 'vip' ? vipGuests() : 0);
+    const pktHead = (single ? packetGuests() : (g.id === 'packet' ? packetGuests() : 0))
+      * packetFactor();
     per100 += v * factor;
-    amount += v * factor * (guestsOfGroup(g) / 100);
+    amount += v * factor * ((vipHead + pktHead) / 100);
+    packet += v * factor * (pktHead / 100);
   });
 
-  if (found) return { value: per100, amount: amount, fixed: true };
-  return { value: recipeBase[rowId], amount: undefined, fixed: false };
+  if (found) return { value: per100, amount: amount, packet: packet, fixed: true };
+  return { value: recipeBase[rowId], amount: undefined, packet: undefined, fixed: false };
 }
 
 // Everything the review screen and the print sheet need.
@@ -2210,15 +2256,24 @@ function aggregate() {
 
     // A recipe row is summed dish by dish, each at its own headcount. A hand-typed or
     // package-default value has no dish behind it, so it scales on the total.
-    let orderBase;
-    if (oneOff !== undefined && oneOff !== '') orderBase = parseFloat(oneOff) * factor;
-    else if (eff.fixed) orderBase = eff.amount;
-    else orderBase = (recipe.amount[rowId] === undefined) ? null : recipe.amount[rowId];
+    let orderBase, packetBase;
+    if (oneOff !== undefined && oneOff !== '') {
+      // A figure typed by hand belongs to no group, so it stays whole on the main sheets.
+      orderBase = parseFloat(oneOff) * factor;
+      packetBase = 0;
+    } else if (eff.fixed) {
+      orderBase = eff.amount;
+      packetBase = eff.packet || 0;
+    } else {
+      orderBase = (recipe.amount[rowId] === undefined) ? null : recipe.amount[rowId];
+      packetBase = (recipe.packet[rowId] === undefined) ? 0 : recipe.packet[rowId];
+    }
 
     // The across-the-board reduction, last, so it reduces whatever the row ended up with.
     const cut = reduceFactorFor(rowId);
     const reduced = orderBase !== null && cut !== 1;
     if (reduced) orderBase = orderBase * cut;
+    packetBase = packetBase * cut;
 
     rows[rowId] = {
       id: rowId,
@@ -2229,8 +2284,10 @@ function aggregate() {
       per100: hasPer100 ? per100Base / factor : '',
       orderQty: (orderBase === null || isNaN(orderBase)) ? null : orderBase / factor,
       orderBase: orderBase,
+      packetBase: orderBase === null ? 0 : Math.min(packetBase, orderBase),
       fromRecipe: recipe.base[rowId] !== undefined,
-      sources: (recipe.sources[rowId] || []).map(src => Object.assign({}, src, { amount: src.amount * cut })),
+      sources: (recipe.sources[rowId] || []).map(src => Object.assign({}, src,
+        { amount: src.amount * cut, packet: (src.packet || 0) * cut })),
       edited: oneOff !== undefined && oneOff !== '',
       excluded: Boolean(reduceExcluded[rowId]),
       reduced: reduced
@@ -2426,25 +2483,81 @@ function reduceFactorFor(rowId) {
   return 1 - pct / 100;
 }
 
+// প্যাকেট portions are smaller than a plate at the table. This cuts the packet half of
+// every dish; the ভি.আই.পি half is not touched by it.
+function packetPercent() {
+  const v = parseFloat((document.getElementById('bl-packet-cut') || {}).value);
+  if (isNaN(v) || v <= 0) return 0;
+  return Math.min(v, 100);
+}
+function packetFactor() { return 1 - packetPercent() / 100; }
+
+// How a dish's headcount divides between the two groups. A dish on উভয় splits in the
+// same ratio as the job itself, so a per-dish headcount typed by hand divides too.
+function dishGuestSplit(k) {
+  const total = guestsFor(k);
+  const grp = effectiveGroup(k);
+  if (grp === 'vip') return { vip: total, packet: 0 };
+  if (grp === 'packet') return { vip: 0, packet: total };
+  const v = vipGuests(), pk = packetGuests(), sum = v + pk;
+  if (sum <= 0) return { vip: total, packet: 0 };
+  return { vip: total * v / sum, packet: total * pk / sum };
+}
+
+// What a dish is really cooked for once the packet portions are cut back.
+function effectiveGuestsFor(k) {
+  const d = dishGuestSplit(k);
+  return d.vip + d.packet * packetFactor();
+}
+
 // Splits each row's quantity between the chefs in proportion to how much each chef's
 // dishes contribute to that row. A row with no recipe behind it (typed by hand, or a
 // package default) belongs to no dish, so all of it stays standard.
-function chefSplit(data) {
+// What the packet guests account for, row by row. Taken out of the main sheets first,
+// so nothing is bought twice; the cooks are then split out of what is left.
+// A row with no recipe behind it — a hand-typed figure or a saved package default —
+// cannot be attributed to either group, so it stays whole on the main sheets.
+function packetSplit(data) {
+  const out = {};
+  if (!packetGuests()) return out;
+  Object.keys(data.rows).forEach(rowId => {
+    const row = data.rows[rowId];
+    if (row.orderQty === null) return;
+    if (row.packetBase > 0.0000001) out[rowId] = row.packetBase;
+  });
+  return out;
+}
+
+// The dishes the packet sheets are buying for.
+function packetDishes() {
+  return allDishKeys().filter(k => {
+    const g = effectiveGroup(k);
+    return RECIPE_LIBRARY[k] && (g === 'packet' || g === 'both');
+  }).map(k => (hasNoIngredients(k) ? 'উপকরণ নেই: ' : '') + RECIPE_LIBRARY[k].label);
+}
+
+function chefSplit(data, packetTaken) {
   const ids = ['S'].concat(chefIds());
   if (!activeGroups().length) return { S: {}, dishes: { S: [] }, active: [] };
   const out = {};
   ids.forEach(id => { out[id] = {}; });
 
+  const pkt = packetTaken || {};
   Object.keys(data.rows).forEach(rowId => {
     const row = data.rows[rowId];
     if (row.orderQty === null) return;
+    // What is left for the main sheets once the packet's share has gone.
+    const mainBase = row.orderBase - (pkt[rowId] || 0);
+    if (!(mainBase > 0.0000001)) return;
     // Weighed on the scaled amounts, not the per-100 figures: with a dish cooked for 500
     // and another for 200, their per-100 numbers no longer reflect their real shares.
-    const total = row.sources.reduce((sum, src) => sum + src.amount, 0);
-    if (!row.sources.length || total <= 0) { out.S[rowId] = row.orderBase; return; }
+    // The weights use each source's non-packet part, for the same reason.
+    const total = row.sources.reduce((sum, src) => sum + (src.amount - (src.packet || 0)), 0);
+    if (!row.sources.length || total <= 0) { out.S[rowId] = mainBase; return; }
     ids.forEach(chef => {
-      const part = row.sources.reduce((sum, src) => sum + (chefOf(src.key) === chef ? src.amount : 0), 0);
-      if (part > 0) out[chef][rowId] = row.orderBase * (part / total);
+      const part = row.sources.reduce((sum, src) =>
+        sum + (chefOf(src.key) === chef ? src.amount - (src.packet || 0) : 0), 0);
+      if (part > 0) out[chef][rowId] = mainBase * (part / total);
     });
   });
 
@@ -2546,7 +2659,8 @@ function onFormsChanged() {
 
 function generateList() {
   const data = aggregate();
-  const split = chefSplit(data);
+  const packet = packetSplit(data);
+  const split = chefSplit(data, packet);
   const query = rowSearchQuery();
   const showCut = data.reducePct > 0;   // the keep-whole column only matters while reducing
   const colCount = showCut ? 6 : 5;
@@ -2961,7 +3075,8 @@ const DENSE_AFTER = 56;        // measured: 56 lines fill 963px in two columns
 const CHEF_PAGE_MAX = 100;
 function renderPrintSheet() {
   const data = aggregate();
-  const split = chefSplit(data);
+  const packet = packetSplit(data);
+  const split = chefSplit(data, packet);
   const sheetEl = document.getElementById('print-sheet');
   sheetEl.innerHTML = '';
 
@@ -3072,33 +3187,50 @@ function renderPrintSheet() {
     ? '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>' + escapeHtml(sheetDishes) + '</div>'
     : '';
 
+  // One pass over the three paper forms, against whichever allocation is being printed.
+  const addForms = (alloc, titleSuffix, firstPre) => {
+    let sheetNo = 0;
+    orderedForms().forEach(({ sheet }) => {
+      const cols = (sheet.columns || ['qty']).filter(c => COLS[c]);
+
+      // Only rows that ended up with a quantity print; numbering runs across columns.
+      const printable = [];
+      let n = 0;
+      sheet.rows.forEach(entry => {
+        if (entry.section !== undefined) { printable.push({ section: entry.section }); return; }
+        const row = data.rows[entry[0]];
+        if (!row || row.orderQty === null) return;
+        const amount = alloc[entry[0]];
+        if (!(amount > 0.0005)) return;
+        n += 1;
+        printable.push(Object.assign({ n: n }, row, { orderBase: amount }));
+      });
+      const lines = printable.filter((item, i) => {
+        if (item.section === undefined) return true;
+        const next = printable[i + 1];
+        return next && next.section === undefined;
+      });
+      if (!lines.some(item => item.section === undefined)) return;
+
+      sheetNo += 1;
+      addPage(escapeHtml(sheet.title) + titleSuffix, sheetNo === 1 ? firstPre : '', lines, cols);
+    });
+    return sheetNo;
+  };
+
   // The three paper forms, carrying the standard cook's share only.
-  let sheetNo = 0;
-  orderedForms().forEach(({ sheet }) => {
-    const cols = (sheet.columns || ['qty']).filter(c => COLS[c]);
+  addForms(split.S, '', sheetDishLine);
 
-    // Only rows that ended up with a quantity print; numbering runs across columns.
-    const printable = [];
-    let n = 0;
-    sheet.rows.forEach(entry => {
-      if (entry.section !== undefined) { printable.push({ section: entry.section }); return; }
-      const row = data.rows[entry[0]];
-      if (!row || row.orderQty === null) return;
-      const amount = split.S[entry[0]];
-      if (!(amount > 0.0005)) return;
-      n += 1;
-      printable.push(Object.assign({ n: n }, row, { orderBase: amount }));
-    });
-    const lines = printable.filter((item, i) => {
-      if (item.section === undefined) return true;
-      const next = printable[i + 1];
-      return next && next.section === undefined;
-    });
-    if (!lines.some(item => item.section === undefined)) return;
-
-    sheetNo += 1;
-    addPage(escapeHtml(sheet.title), sheetNo === 1 ? sheetDishLine : '', lines, cols);
-  });
+  // Then the same three forms again for the packet, when there are packet guests. Its
+  // share was taken out of the sheets above, so no ingredient is bought twice. No cook
+  // pages come out of these: a packet list is handed over whole.
+  const packetNames = packetDishes().join(', ');
+  const packetPre = '<div class="ps-chef-name">প্যাকেট — ' + toBanglaNum(data.packet) + ' জন'
+    + (packetPercent() ? ', পরিমাণ ' + toBanglaNum(roundQty(packetPercent())) + '% কম' : '')
+    + '</div>'
+    + (packetNames ? '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>'
+        + escapeHtml(packetNames) + '</div>' : '');
+  addForms(packet, ' — প্যাকেট', packetPre);
 
   addChefPage();
 }

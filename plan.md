@@ -234,6 +234,33 @@ tell which package the value belongs to.
 Verified: সয়াবিন তেল across both menus is 15 + 10 + 4 = 29 ltr, an ingredient both menus
 need lands on one row as the sum, and the chef split still has zero drift.
 
+### Smaller packet portions, and the packet's own sheets
+
+**The cut.** `প্যাকেটের পরিমাণ কমান` takes a percentage off the packet half of every dish
+and leaves the ভি.আই.পি half alone. `dishGuestSplit(k)` divides a dish's headcount between
+the groups — in the job's own ratio for a dish on উভয়, so a per-dish headcount typed by
+hand divides too — and `effectiveGuestsFor(k)` returns `vip + packet x factor`. 500 + 200
+at 20% is arithmetically a 660-guest job, and every row matches to the last gram.
+
+It had to be applied in two places. Recipe rows go through `recipePer100()`, but a row
+carrying a saved or confirmed package per-100 value never reaches the recipes:
+`effectivePer100()` scales it straight off the group headcount. That second path needed
+the same treatment, and it is where the first attempt silently did nothing at all.
+
+**The sheets.** With packet guests present the three forms print a second time under
+`— প্যাকেট`. `packetSplit()` reads each row's `packetBase`, and `chefSplit()` then divides
+only what is left, weighting on each source's non-packet part. So the packet share leaves
+the main sheets exactly as a cook's share does, and nothing is bought twice. Conservation
+holds across cuts, cooks, mixed groups and per-dish headcounts: worst drift 3.6e-12.
+
+A figure typed by hand into এই অর্ডারে belongs to no group, so it stays whole on the main
+sheets rather than being attributed by guesswork.
+
+**Known, and the owner's choice:** no cook pages come out of the packet sheets. A cook
+given a packet-only dish therefore receives none of its ingredients — they are all on the
+packet list — and so gets no page at all. The dish is still named on the packet sheet's
+রান্নার আইটেম line, so it appears somewhere.
+
 ### A group with nobody in it
 
 `activeGroups()` asks whether a package is chosen; `fedGroups()` asks whether anyone is

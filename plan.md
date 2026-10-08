@@ -234,6 +234,22 @@ tell which package the value belongs to.
 Verified: সয়াবিন তেল across both menus is 15 + 10 + 4 = 29 ltr, an ingredient both menus
 need lands on one row as the sum, and the chef split still has zero drift.
 
+### A group with nobody in it
+
+`activeGroups()` asks whether a package is chosen; `fedGroups()` asks whether anyone is
+in it. They are not the same — a প্যাকেট package can be selected while its headcount box
+is empty.
+
+`effectiveGroup(k)` clamps a dish to the groups that have people: with one headcount
+filled, every dish reads that group however its dropdown was left, and the dropdown
+offers that one choice only. What the owner picked is left in `picked[k]` untouched, so
+filling the other box brings it straight back. Every reader — `dishKeysOfGroup`,
+`dishBaseGuests`, `dishGroupIds` — goes through it.
+
+The quantities were already right, since `totalGuests()` equals the VIP count when the
+packet box is empty. What was wrong was what the screen said: a job for 250 VIP guests
+showed উভয় beside every dish, and প্যাকেট claimed dishes it was not feeding.
+
 ### Headcounts, per dish
 
 Two headcounts now: ভি.আই.পি and প্যাকেট, costed on their sum. `dishGuests[dishKey]` holds

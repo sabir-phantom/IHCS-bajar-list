@@ -1728,6 +1728,22 @@ function activeGroups() {
   return GROUPS.filter(g => groupMenu(g));
 }
 
+// Groups with somebody in them. A package can be chosen for প্যাকেট while its headcount
+// box is still empty, and nobody is eating in that case.
+function fedGroups() {
+  return GROUPS.filter(g => groupGuests(g) > 0);
+}
+
+// The group a dish is really cooked for. What the owner picked is kept untouched as
+// their intent — this only clamps it to the groups that have people, so a job with one
+// headcount filled never reads উভয়. Fill the other box and the stored choice returns.
+function effectiveGroup(k) {
+  const want = picked[k];
+  if (!want) return want;
+  const fed = fedGroups();
+  return fed.length === 1 ? fed[0].id : want;
+}
+
 // How many people a group cooks for. A single package feeds everyone, so it takes the
 // whole headcount rather than only its own half.
 function guestsOfGroup(g) {
@@ -1764,15 +1780,19 @@ function applyPreset(g) {
 }
 
 function dishKeysOfGroup(g) {
-  return Object.keys(picked).filter(k => picked[k] === g.id || picked[k] === 'both');
+  return Object.keys(picked).filter(k => {
+    const grp = effectiveGroup(k);
+    return grp === g.id || grp === 'both';
+  });
 }
 
 // dishKey -> the headcount it is cooked for, before any per-dish override.
 function dishBaseGuests() {
   const map = {};
   Object.keys(picked).forEach(k => {
-    map[k] = picked[k] === 'vip' ? vipGuests()
-           : picked[k] === 'packet' ? packetGuests()
+    const grp = effectiveGroup(k);
+    map[k] = grp === 'vip' ? vipGuests()
+           : grp === 'packet' ? packetGuests()
            : totalGuests();
   });
   return map;
@@ -1780,7 +1800,10 @@ function dishBaseGuests() {
 
 function dishGroupIds() {
   const map = {};
-  Object.keys(picked).forEach(k => { map[k] = picked[k] === 'both' ? ['vip', 'packet'] : [picked[k]]; });
+  Object.keys(picked).forEach(k => {
+    const grp = effectiveGroup(k);
+    map[k] = grp === 'both' ? ['vip', 'packet'] : [grp];
+  });
   return map;
 }
 
@@ -1919,6 +1942,9 @@ function renderDishChips() {
   const onlyPicked = document.getElementById('only-picked').checked;
   const ids = ['S'].concat(chefIds());
   const base = dishBaseGuests();
+  // With one headcount filled there is only one answer, so that is the only choice shown.
+  const fed = fedGroups();
+  const groupChoices = fed.length === 1 ? [fed[0].id] : ['vip', 'packet', 'both'];
 
   const keys = Object.keys(RECIPE_LIBRARY).filter(k => {
     if (onlyPicked && !picked[k]) return false;
@@ -1948,8 +1974,8 @@ function renderDishChips() {
       // on a phone the row stacks and the labels are what name the controls.
       + '<span class="ctl"><span class="mini">মেনু</span>'
       + '<select class="g" data-dish="' + k + '" aria-label="কোন মেনু"' + (on ? '' : ' disabled') + '>'
-      + ['vip', 'packet', 'both'].map(v => '<option value="' + v + '"'
-          + (picked[k] === v ? ' selected' : '') + '>' + GROUP_LABEL[v] + '</option>').join('')
+      + groupChoices.map(v => '<option value="' + v + '"'
+          + (effectiveGroup(k) === v ? ' selected' : '') + '>' + GROUP_LABEL[v] + '</option>').join('')
       + '</select></span>'
       + '<span class="ctl"><span class="mini">জন</span>'
       + '<input type="number" min="0" step="1" class="n dish-guests" data-dish="' + k + '"'

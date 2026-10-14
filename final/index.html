@@ -767,7 +767,12 @@
     /* Centred over the table, which is sized to its content rather than stretched. */
     .ps-chef-name { font-size: 16px; font-weight: 700; text-decoration: underline; margin-bottom: 2px; text-align: center; }
     .ps-chef-dishes { font-size: 13px; margin-bottom: 6px; text-align: center; }
-    .ps-chef-dishes span.k { font-weight: 700; margin-right: 4px; }
+    /* The embedded Bengali face covers one weight but declares 100-900, so the browser
+       never synthesises a bold for it and font-weight alone does nothing. A hairline
+       stroke in the text colour gives the label the weight it was asking for. */
+    .ps-chef-dishes span.k {
+      font-weight: 700; margin-right: 4px; -webkit-text-stroke: 0.35px currentColor;
+    }
     .ps-page.two-col .ps-chef-name { font-size: 14px; }
     .ps-page.two-col .ps-chef-dishes { font-size: 12px; }
     .ps-page.two-col.dense .ps-chef-name { font-size: 13px; }

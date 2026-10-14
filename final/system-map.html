@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>সিস্টেম ম্যাপ — বাজার লিস্ট</title>
+<style>
+  :root {
+    --navy: #10233b; --maroon: #7d1f34; --gold: #c9a227; --gold-light: #e8dcc0;
+    --cream: #faf6ea; --card: #fffdf7; --ink: #3a3326; --muted: #7a6a4d;
+    --green: #1f7a4d; --violet: #4a2f6b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Kalpurush', 'Nirmala UI', 'Noto Sans Bengali', 'Segoe UI', sans-serif;
+    background: var(--cream); color: var(--ink); margin: 0;
+    padding: 28px 20px 60px; line-height: 1.6;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 27px; color: var(--navy); margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 26px; font-size: 15px; }
+  h2 {
+    font-size: 21px; color: var(--maroon); margin: 34px 0 6px;
+    padding-bottom: 6px; border-bottom: 2px solid var(--gold-light);
+  }
+  h2 .en { font-size: 14px; color: var(--muted); font-weight: 400; }
+  p.lead { margin: 8px 0 14px; font-size: 16px; }
+  .card {
+    background: var(--card); border: 1px solid var(--gold-light);
+    border-radius: 12px; padding: 14px; margin: 12px 0 0; overflow-x: auto;
+  }
+  svg { display: block; width: 100%; height: auto; min-width: 640px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 10px 2px 0; font-size: 14px; color: var(--muted); }
+  .key { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.15); }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
+  th, td { border: 1px solid var(--gold-light); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f6efdc; color: var(--navy); font-size: 15px; }
+  td:first-child, th:first-child { width: 230px; font-weight: 700; color: var(--navy); }
+  .note {
+    background: #fdf6f4; border: 1px solid #e9c3bd; border-radius: 10px;
+    padding: 11px 14px; margin-top: 14px; font-size: 15px;
+  }
+  .note b { color: var(--maroon); }
+  code { font-family: Consolas, monospace; font-size: 13px; background: #f3eee0; padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 620px) { body { padding: 16px 10px 40px; } h1 { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>সিস্টেম ম্যাপ</h1>
+  <p class="sub">একটি অর্ডার কোথা থেকে শুরু হয়ে কীভাবে ছাপা কাগজে পৌঁছায় — পুরোটা এক নজরে।</p>
+
+  <!-- ========== 1. the journey ========== -->
+  <h2>১. পুরো যাত্রা <span class="en">— from order to paper</span></h2>
+  <p class="lead">ডান থেকে বাঁয়ে নয়, বাঁ থেকে ডানে পড়ুন। প্রতিটি ধাপ আগেরটির উপর দাঁড়ানো।</p>
+  <div class="card">
+  <svg viewBox="0 0 980 210" role="img" aria-label="অর্ডার ফর্ম থেকে প্রিন্ট পর্যন্ত পাঁচটি ধাপ">
+    <defs>
+      <marker id="ar" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+        <path d="M0,0 L10,4 L0,8 Z" fill="#a3906a"/>
+      </marker>
+    </defs>
+
+    <g font-size="15" text-anchor="middle">
+      <rect x="6"   y="58" width="168" height="78" rx="10" fill="#eef3f8" stroke="#10233b"/>
+      <text x="90"  y="86"  fill="#10233b" font-weight="700">অর্ডার ফর্ম</text>
+      <text x="90"  y="108" fill="#51607a" font-size="13">তারিখ, লোকসংখ্যা,</text>
+      <text x="90"  y="126" fill="#51607a" font-size="13">মেনু বাছাই</text>
+
+      <rect x="212" y="58" width="168" height="78" rx="10" fill="#fdf8ea" stroke="#c9a227"/>
+      <text x="296" y="86"  fill="#7a5a16" font-weight="700">বাজার লিস্ট পাতা</text>
+      <text x="296" y="108" fill="#8a7a55" font-size="13">আইটেম টিক, বাবুর্চি,</text>
+      <text x="296" y="126" fill="#8a7a55" font-size="13">শতাংশ কমানো</text>
+
+      <rect x="418" y="58" width="168" height="78" rx="10" fill="#f0f6f1" stroke="#1f7a4d"/>
+      <text x="502" y="86"  fill="#1f4d2c" font-weight="700">হিসাব</text>
+      <text x="502" y="108" fill="#4a6b55" font-size="13">রেসিপি × লোকসংখ্যা</text>
+      <text x="502" y="126" fill="#4a6b55" font-size="13">(ধাপ ২)</text>
+
+      <rect x="624" y="58" width="168" height="78" rx="10" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="708" y="86"  fill="#4a2f6b" font-weight="700">যাচাই স্ক্রিন</text>
+      <text x="708" y="108" fill="#6a5a85" font-size="13">প্রতিটি সারি দেখা</text>
+      <text x="708" y="126" fill="#6a5a85" font-size="13">ও হাতে বদলানো</text>
+
+      <rect x="830" y="58" width="144" height="78" rx="10" fill="#fdf1f3" stroke="#7d1f34"/>
+      <text x="902" y="86"  fill="#7d1f34" font-weight="700">প্রিন্ট</text>
+      <text x="902" y="108" fill="#8a5560" font-size="13">কাগজের শিট</text>
+      <text x="902" y="126" fill="#8a5560" font-size="13">(ধাপ ৪)</text>
+    </g>
+
+    <g stroke="#a3906a" stroke-width="2" marker-end="url(#ar)" fill="none">
+      <path d="M176 97 L208 97"/>
+      <path d="M382 97 L414 97"/>
+      <path d="M588 97 L620 97"/>
+      <path d="M794 97 L826 97"/>
+    </g>
+
+    <text x="90" y="178" text-anchor="middle" font-size="13" fill="#8a7a55">🛒 বোতাম সংখ্যা ও মেনু পাঠায়</text>
+    <text x="502" y="178" text-anchor="middle" font-size="13" fill="#8a7a55">সবকিছু প্রতি ১০০ জনের হিসেবে রাখা, সেখান থেকে বাড়ানো</text>
+  </svg>
+  </div>
+
+  <!-- ========== 2. one ingredient ========== -->
+  <h2>২. একটি উপকরণের পরিমাণ কীভাবে ঠিক হয় <span class="en">— how one row gets its number</span></h2>
+  <p class="lead">ফর্মের প্রতিটি সারি এই পথেই যায়। উপরের নিয়ম আগে — পেয়ে গেলে নিচেরগুলো আর দেখা হয় না।</p>
+  <div class="card">
+  <svg viewBox="0 0 980 470" role="img" aria-label="একটি সারির পরিমাণ নির্ধারণের ধাপ">
+    <g font-size="15">
+      <!-- step 1 -->
+      <rect x="20" y="14" width="430" height="58" rx="9" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="36" y="40" fill="#4a2f6b" font-weight="700">১ · এই অর্ডারে হাতে কিছু লেখা আছে?</text>
+      <text x="36" y="60" fill="#6a5a85" font-size="13">যাচাই স্ক্রিনের “এই অর্ডারে” ঘর</text>
+
+      <rect x="530" y="14" width="430" height="58" rx="9" fill="#fff" stroke="#c9b9d8" stroke-dasharray="4 3"/>
+      <text x="546" y="40" fill="#4a2f6b" font-weight="700">হ্যাঁ → ঐ সংখ্যাই চূড়ান্ত</text>
+      <text x="546" y="60" fill="#6a5a85" font-size="13">কোনো দলে ভাগ হয় না · পুরোটা মূল শিটে থাকে</text>
+
+      <!-- step 2 -->
+      <rect x="20" y="104" width="430" height="58" rx="9" fill="#fdf8ea" stroke="#c9a227"/>
+      <text x="36" y="130" fill="#7a5a16" font-weight="700">২ · প্যাকেজে সংরক্ষিত প্রতি ১০০ জনের মান?</text>
+      <text x="36" y="150" fill="#8a7a55" font-size="13">💾 বোতামে সংরক্ষণ করা, বা কোডে লেখা</text>
+
+      <rect x="530" y="104" width="430" height="58" rx="9" fill="#fff" stroke="#e0cf9a" stroke-dasharray="4 3"/>
+      <text x="546" y="130" fill="#7a5a16" font-weight="700">হ্যাঁ → দলের লোকসংখ্যা দিয়ে গুণ</text>
+      <text x="546" y="150" fill="#8a7a55" font-size="13">রেসিপি আর দেখা হয় না</text>
+
+      <!-- step 3 -->
+      <rect x="20" y="194" width="430" height="58" rx="9" fill="#f0f6f1" stroke="#1f7a4d"/>
+      <text x="36" y="220" fill="#1f4d2c" font-weight="700">৩ · না হলে — রেসিপি যোগ</text>
+      <text x="36" y="240" fill="#4a6b55" font-size="13">টিক দেওয়া প্রতিটি আইটেম, প্রতিটি নিজের লোকসংখ্যায়</text>
+
+      <rect x="530" y="194" width="430" height="58" rx="9" fill="#fff" stroke="#b9d6c4" stroke-dasharray="4 3"/>
+      <text x="546" y="220" fill="#1f4d2c" font-size="13">কাচ্চি ৫০০ জনের + রোস্ট ২৫০ জনের</text>
+      <text x="546" y="240" fill="#1f4d2c" font-size="13">= দুটো মিলে একটি সারি</text>
+
+      <!-- step 4 -->
+      <rect x="20" y="284" width="430" height="58" rx="9" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="36" y="310" fill="#4a2f6b" font-weight="700">৪ · প্যাকেটের ভাগ কমানো</text>
+      <text x="36" y="330" fill="#6a5a85" font-size="13">প্যাকেট অংশ × (১০০ − প্যাকেট %) · ভি.আই.পি ভাগ অপরিবর্তিত</text>
+
+      <!-- step 5 -->
+      <rect x="20" y="374" width="430" height="58" rx="9" fill="#fdf1f3" stroke="#7d1f34"/>
+      <text x="36" y="400" fill="#7d1f34" font-weight="700">৫ · সব পরিমাণ কমান %</text>
+      <text x="36" y="420" fill="#8a5560" font-size="13">“পুরোটা রাখুন” টিক দেওয়া সারিতে লাগে না</text>
+
+      <rect x="530" y="330" width="430" height="92" rx="9" fill="#10233b"/>
+      <text x="745" y="366" fill="#fff8ec" font-weight="700" text-anchor="middle" font-size="17">সারির মোট পরিমাণ</text>
+      <text x="745" y="392" fill="#c9b9a0" text-anchor="middle" font-size="13">এটাই যাচাই স্ক্রিনে দেখা যায়</text>
+      <text x="745" y="412" fill="#c9b9a0" text-anchor="middle" font-size="13">এবং ধাপ ৩-এ ভাগ হয়</text>
+    </g>
+
+    <g stroke="#a3906a" stroke-width="2" fill="none" marker-end="url(#ar)">
+      <path d="M235 72 L235 100"/>
+      <path d="M235 162 L235 190"/>
+      <path d="M235 252 L235 280"/>
+      <path d="M235 342 L235 370"/>
+      <path d="M450 43 L526 43"/>
+      <path d="M450 133 L526 133"/>
+      <path d="M450 223 L526 223"/>
+      <path d="M450 403 L526 390"/>
+    </g>
+    <g font-size="13" fill="#a3906a">
+      <text x="243" y="92">না</text>
+      <text x="243" y="182">না</text>
+    </g>
+  </svg>
+  </div>
+  <div class="note">
+    <b>খেয়াল রাখবেন:</b> ২ নম্বর ধাপ ৩ নম্বরকে চাপা দেয়। কোনো সারিতে প্যাকেজের সংরক্ষিত মান থাকলে
+    রেসিপি বদলালেও ঐ সারির হিসাব বদলাবে না — এটাই সবচেয়ে বেশি বিভ্রান্ত করে।
+  </div>
+
+  <!-- ========== 3. the split ========== -->
+  <h2>৩. মোট পরিমাণটি কীভাবে ভাগ হয় <span class="en">— who gets which part</span></h2>
+  <p class="lead">একটি সারির মোট পরিমাণ ভাগ হয়ে আলাদা আলাদা কাগজে যায়। যোগফল সব সময় মোট পরিমাণের সমান — কিছু দুবার কেনা হয় না।</p>
+  <div class="card">
+  <svg viewBox="0 0 980 300" role="img" aria-label="একটি সারির পরিমাণ প্যাকেট, বাবুর্চি ও মূল শিটে ভাগ">
+    <rect x="20" y="16" width="940" height="46" rx="8" fill="#10233b"/>
+    <text x="490" y="46" fill="#fff8ec" text-anchor="middle" font-size="17" font-weight="700">সারির মোট পরিমাণ — যেমন সয়াবিন তেল ২৯ লিটার</text>
+
+    <g stroke="#a3906a" stroke-width="2" fill="none" marker-end="url(#ar)">
+      <path d="M150 62 L150 96"/>
+      <path d="M400 62 L400 96"/>
+      <path d="M620 62 L620 96"/>
+      <path d="M840 62 L840 96"/>
+    </g>
+
+    <g font-size="15" text-anchor="middle">
+      <rect x="20"  y="100" width="260" height="80" rx="9" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="150" y="128" fill="#4a2f6b" font-weight="700">১ · প্যাকেটের ভাগ</text>
+      <text x="150" y="150" fill="#6a5a85" font-size="13">আগে এটি সরে যায়</text>
+      <text x="150" y="168" fill="#6a5a85" font-size="13">লোকসংখ্যার অনুপাতে</text>
+
+      <rect x="300" y="100" width="200" height="80" rx="9" fill="#f0d9d4" stroke="#7d1f34"/>
+      <text x="400" y="128" fill="#7d1f34" font-weight="700">২ · বাবুর্চি A</text>
+      <text x="400" y="150" fill="#8a5560" font-size="13">তার আইটেমগুলোর</text>
+      <text x="400" y="168" fill="#8a5560" font-size="13">ভাগ</text>
+
+      <rect x="520" y="100" width="200" height="80" rx="9" fill="#dbe6f0" stroke="#10233b"/>
+      <text x="620" y="128" fill="#10233b" font-weight="700">৩ · বাবুর্চি C</text>
+      <text x="620" y="150" fill="#51607a" font-size="13">তার আইটেমগুলোর</text>
+      <text x="620" y="168" fill="#51607a" font-size="13">ভাগ</text>
+
+      <rect x="740" y="100" width="220" height="80" rx="9" fill="#fdf8ea" stroke="#c9a227"/>
+      <text x="850" y="128" fill="#7a5a16" font-weight="700">৪ · যা বাকি থাকে</text>
+      <text x="850" y="150" fill="#8a7a55" font-size="13">স্ট্যান্ডার্ড বাবুর্চি</text>
+      <text x="850" y="168" fill="#8a7a55" font-size="13">= মূল তিনটি শিট</text>
+    </g>
+
+    <g stroke="#a3906a" stroke-width="2" fill="none" marker-end="url(#ar)">
+      <path d="M150 180 L150 214"/>
+      <path d="M400 180 L400 214"/>
+      <path d="M620 180 L620 214"/>
+      <path d="M850 180 L850 214"/>
+    </g>
+
+    <g font-size="13" text-anchor="middle" fill="#5a4d36">
+      <rect x="40"  y="218" width="220" height="40" rx="7" fill="#fff" stroke="#c9b9d8"/>
+      <text x="150" y="243">প্যাকেট শিট (৩ পাতা)</text>
+
+      <rect x="310" y="218" width="180" height="40" rx="7" fill="#fff" stroke="#e9c3bd"/>
+      <text x="400" y="243">A-এর নিজের পাতা</text>
+
+      <rect x="530" y="218" width="180" height="40" rx="7" fill="#fff" stroke="#b9c9dd"/>
+      <text x="620" y="243">C-এর নিজের পাতা</text>
+
+      <rect x="750" y="218" width="200" height="40" rx="7" fill="#fff" stroke="#e0cf9a"/>
+      <text x="850" y="243">মূল শিট (৩ পাতা)</text>
+    </g>
+    <text x="490" y="286" text-anchor="middle" font-size="14" fill="#1f4d2c">১ + ২ + ৩ + ৪ = মোট পরিমাণ · সব সময়</text>
+  </svg>
+  </div>
+  <div class="note">
+    <b>ক্রম গুরুত্বপূর্ণ:</b> প্যাকেটের ভাগ <i>আগে</i> সরে যায়, তারপর বাকিটা বাবুর্চিদের মধ্যে ভাগ হয়।
+    তাই শুধু-প্যাকেটের কোনো আইটেম কোনো বাবুর্চিকে দিলে তাঁর পাতায় কিছুই যাবে না — সবটাই প্যাকেট শিটে।
+  </div>
+
+  <!-- ========== 4. what prints ========== -->
+  <h2>৪. কী কী ছাপে <span class="en">— the printed packet</span></h2>
+  <p class="lead">প্যাকেটে লোক থাকলে ৩টি বাড়তি শিট ছাপে। বাবুর্চির পাতা সব সময় সবার শেষে — ছিঁড়ে হাতে দেওয়ার জন্য।</p>
+  <div class="card">
+  <svg viewBox="0 0 980 230" role="img" aria-label="ছাপা পাতার ক্রম">
+    <g font-size="13" text-anchor="middle">
+      <g fill="#fdf8ea" stroke="#c9a227">
+        <rect x="20"  y="30" width="104" height="132" rx="7"/>
+        <rect x="136" y="30" width="104" height="132" rx="7"/>
+        <rect x="252" y="30" width="104" height="132" rx="7"/>
+      </g>
+      <text x="72"  y="88"  fill="#7a5a16">পার্টি</text>
+      <text x="72"  y="108" fill="#7a5a16">বাজার লিস্ট</text>
+      <text x="188" y="98"  fill="#7a5a16">বাজার লিস্ট</text>
+      <text x="304" y="88"  fill="#7a5a16">সবজী ও</text>
+      <text x="304" y="108" fill="#7a5a16">তাজা উপকরণ</text>
+      <text x="188" y="182" fill="#8a7a55">মূল শিট — ভি.আই.পি অংশ</text>
+
+      <g fill="#f4f1fa" stroke="#4a2f6b">
+        <rect x="392" y="30" width="104" height="132" rx="7"/>
+        <rect x="508" y="30" width="104" height="132" rx="7"/>
+        <rect x="624" y="30" width="104" height="132" rx="7"/>
+      </g>
+      <text x="444" y="88"  fill="#4a2f6b">পার্টি</text>
+      <text x="444" y="108" fill="#4a2f6b">— প্যাকেট</text>
+      <text x="560" y="88"  fill="#4a2f6b">বাজার লিস্ট</text>
+      <text x="560" y="108" fill="#4a2f6b">— প্যাকেট</text>
+      <text x="676" y="88"  fill="#4a2f6b">সবজী</text>
+      <text x="676" y="108" fill="#4a2f6b">— প্যাকেট</text>
+      <text x="560" y="182" fill="#6a5a85">প্যাকেট শিট — শুধু প্যাকেটে লোক থাকলে</text>
+
+      <g fill="#fdf1f3" stroke="#7d1f34">
+        <rect x="764" y="30" width="96" height="132" rx="7"/>
+        <rect x="872" y="30" width="96" height="132" rx="7"/>
+      </g>
+      <text x="812" y="88"  fill="#7d1f34">বাবুর্চি A</text>
+      <text x="812" y="108" fill="#7d1f34">রান্নার তালিকা</text>
+      <text x="920" y="88"  fill="#7d1f34">বাবুর্চি C</text>
+      <text x="920" y="108" fill="#7d1f34">রান্নার তালিকা</text>
+      <text x="866" y="182" fill="#8a5560">বাবুর্চির পাতা — সবার শেষে</text>
+    </g>
+    <text x="490" y="214" text-anchor="middle" font-size="14" fill="#7a6a4d">প্যাকেট না থাকলে ৩ + বাবুর্চির পাতা · সব মিলিয়ে সর্বোচ্চ ৮ পাতা দেখা গেছে</text>
+  </svg>
+  </div>
+
+  <!-- ========== 5. the knobs ========== -->
+  <h2>৫. কোন ঘরটি কী বদলায় <span class="en">— every control, and what it touches</span></h2>
+  <p class="lead">কিছু বদলাতে চাইলে এই তালিকা দেখুন — কোথায় হাত দিলে কী নড়ে।</p>
+  <table>
+    <tr><th>ঘর / বোতাম</th><th>কী করে</th><th>কী নড়ে</th></tr>
+    <tr><td>লোকসংখ্যা — ভি.আই.পি</td><td>মূল হিসাবের ভিত্তি</td><td>সব পরিমাণ</td></tr>
+    <tr><td>লোকসংখ্যা — প্যাকেট</td><td>প্যাকেট দলের লোক</td><td>সব পরিমাণ · প্যাকেট শিট ছাপবে কি না · মেনু ঘরে উভয় দেখাবে কি না</td></tr>
+    <tr><td>সেট মেনু প্যাকেজ</td><td>আইটেমগুলো টিক করে দেয়</td><td>কোন আইটেম রান্না হবে</td></tr>
+    <tr><td>আইটেমের টিক বক্স</td><td>আইটেম যোগ বা বাদ</td><td>ঐ রেসিপির সব উপকরণ</td></tr>
+    <tr><td>আইটেমের মেনু ঘর</td><td>কোন দলের জন্য রান্না</td><td>কত জনের হিসাব · প্যাকেট শিটে যাবে কি না</td></tr>
+    <tr><td>আইটেমের জন ঘর</td><td>ঐ আইটেমের আলাদা লোকসংখ্যা</td><td>শুধু ঐ আইটেমের উপকরণ</td></tr>
+    <tr><td>আইটেমের বাবুর্চি ঘর</td><td>কে রাঁধবেন</td><td>উপকরণ মূল শিট ছেড়ে তাঁর পাতায় যায়</td></tr>
+    <tr><td>সব পরিমাণ কমান %</td><td>সবকিছু কমায়</td><td>প্রতিটি সারি, বাদ দেওয়াগুলো ছাড়া</td></tr>
+    <tr><td>প্যাকেটের পরিমাণ কমান %</td><td>প্যাকেটের ভাগ ছোট করে</td><td>শুধু প্যাকেট অংশ · ভি.আই.পি ভাগ অক্ষত</td></tr>
+    <tr><td>এই অর্ডারে ঘর</td><td>হিসাব উপেক্ষা করে</td><td>ঐ একটি সারি, শুধু এই অর্ডারে</td></tr>
+    <tr><td>প্রতি ১০০ জনে ঘর + 💾</td><td>প্যাকেজের স্থায়ী মান</td><td>ঐ প্যাকেজের প্রতিটি ভবিষ্যৎ অর্ডার — রেসিপিকেও চাপা দেয়</td></tr>
+    <tr><td>রেসিপি লাইব্রেরি</td><td>আইটেমের উপকরণ</td><td>যেসব প্যাকেজে ঐ আইটেম আছে, সবগুলো</td></tr>
+    <tr><td>⚙ সেটিংস → বাবুর্চি তালিকা</td><td>বাবুর্চি যোগ বা বাদ</td><td>প্রতিটি আইটেমের বাবুর্চি ঘরের বাছাই</td></tr>
+  </table>
+
+  <div class="note">
+    <b>সবচেয়ে বেশি ভুল হয় যেখানে:</b> একটি উপকরণ একবারই কেনা হয় — প্রতিটি উপকরণের জন্য ফর্মে
+    একটি মাত্র সারি। দুটি আইটেমে সয়াবিন তেল থাকলে দুটো যোগ হয়ে এক সারিতেই দেখায়।
+    আর একক মেলাতে হয়: কেজির সারিতে পিছের সংখ্যা বসালে হিসাব হাজার গুণ ভুল হয়।
+  </div>
+
+</div>
+</body>
+</html>

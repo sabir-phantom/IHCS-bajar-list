@@ -443,8 +443,9 @@ It does not know which dishes a package contains — that stays in `index.html`.
   out. টুকরি (`p74`) does have one and is in.
 - **মাটন রেজালা and বিফ রেজালা carry no meat**, because the বিফ / মাটন রেজালা they
   were copied from had only three lines and no মাংস. That shared recipe has since been deleted.
-- **রাশিয়ান সালাদ তেজপাতা 250 gm** is printed on the sheet and entered as such, but it
-  is a lot of bay leaf for a salad — worth a second look.
+- **রাশিয়ান সালাদ তেজপাতা was 250 gm on the typed sheet and is now 25 gm.**
+  The printed figure gave a kilo of bay leaf in a salad at 400 guests; the owner confirmed
+  25 gm after seeing it on the rendered page. No other recipe uses p35 at that rate.
 
 - **তেহারি has no rice and no meat.** The hand-written sheets carry a quantity for 21
   ingredients but none for পোলাউ চাল or any meat — both were ticked with no number, as

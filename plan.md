@@ -234,6 +234,31 @@ tell which package the value belongs to.
 Verified: সয়াবিন তেল across both menus is 15 + 10 + 4 = 29 ltr, an ingredient both menus
 need lands on one row as the sum, and the chef split still has zero drift.
 
+### বাবুর্চি C gets a page per dish
+
+Every other cook is handed one merged list. C is handed one page per dish, because each
+of C's items is cooked on its own. `PER_DISH_CHEF = 'C'` and `dishAlloc(data, packet, k)`
+give a single dish's share of every row, using the same weights `chefSplit` uses — so a
+dish's pages add up to exactly what `chefSplit` allocated to C (verified, drift 0), and
+overall conservation is untouched.
+
+The three-form layout does not apply to these pages: each carries one dish's own
+ingredients, after the packet share and any reduction, which is precisely what left the
+main sheets for it. A dish with nothing to buy — everything on fixed package rows, or an
+উপকরণ নেই item — produces no page, as a cook with no ingredients already did.
+
+The review screen says so per cook rather than warning about one-page limits, which do
+not apply when the list is already split a dish at a time.
+
+### A wider page
+
+`.container` went 880px → 1200px and every on-screen `font-size` rose 2px (106 of them).
+The `@media print` and `@media (max-width: Npx)` blocks are skipped by the script that
+does it: paper was measured against A4 and the phone layout against 375px, so growing
+either would break something that already fits. 19 sizes sit in those blocks, untouched.
+The checklist columns went to `minmax(430px, 1fr)`, its three controls widened to match
+the bigger type, and the settings dialog to 760px.
+
 ### Smaller packet portions, and the packet's own sheets
 
 **The cut.** `প্যাকেটের পরিমাণ কমান` takes a percentage off the packet half of every dish

@@ -3116,10 +3116,9 @@ function renderPrintSheet() {
   const dateDisplay = dateVal ? toBanglaNum(dateVal.split('-').reverse().join('/')) : '—';
   const place = escapeHtml(document.getElementById('bl-place').value || '—');
   const label = escapeHtml(document.getElementById('bl-label').value || '—');
-  const guests = toBanglaNum(data.guestCount)
-    + (data.vip && data.packet
-        ? ' (ভি.আই.পি ' + toBanglaNum(data.vip) + ' + প্যাকেট ' + toBanglaNum(data.packet) + ')'
-        : '');
+  const guests = data.vip && data.packet
+    ? 'ভি.আই.পি ' + toBanglaNum(data.vip) + ' + প্যাকেট ' + toBanglaNum(data.packet)
+    : toBanglaNum(data.guestCount);
 
   // Price columns (দর / টাকা / মোট টাকা) are not printed.
   const COLS = { pcs: 'পিছ', kg: 'কেজি', gm: 'গ্রাম', qty: 'পরিমাণ' };
@@ -3233,7 +3232,7 @@ function renderPrintSheet() {
     : '';
 
   // One pass over the three paper forms, against whichever allocation is being printed.
-  const addForms = (alloc, titleSuffix, firstPre) => {
+  const addForms = (alloc, titlePrefix, firstPre) => {
     let sheetNo = 0;
     orderedForms().forEach(({ sheet }) => {
       const cols = (sheet.columns || ['qty']).filter(c => COLS[c]);
@@ -3258,7 +3257,7 @@ function renderPrintSheet() {
       if (!lines.some(item => item.section === undefined)) return;
 
       sheetNo += 1;
-      addPage(escapeHtml(sheet.title) + titleSuffix, sheetNo === 1 ? firstPre : '', lines, cols);
+      addPage(titlePrefix + escapeHtml(sheet.title), sheetNo === 1 ? firstPre : '', lines, cols);
     });
     return sheetNo;
   };
@@ -3275,7 +3274,7 @@ function renderPrintSheet() {
     + '</div>'
     + (packetNames ? '<div class="ps-chef-dishes"><span class="k">রান্নার আইটেম:</span>'
         + escapeHtml(packetNames) + '</div>' : '');
-  addForms(packet, ' — প্যাকেট', packetPre);
+  addForms(packet, 'প্যাকেট — ', packetPre);
 
   addChefPage();
 }

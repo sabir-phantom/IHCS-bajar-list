@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System map — Bajar List</title>
+<style>
+  :root {
+    --navy: #10233b; --maroon: #7d1f34; --gold: #c9a227; --gold-light: #e8dcc0;
+    --cream: #faf6ea; --card: #fffdf7; --ink: #3a3326; --muted: #7a6a4d;
+    --green: #1f7a4d; --violet: #4a2f6b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Kalpurush', 'Nirmala UI', 'Noto Sans Bengali', 'Segoe UI', sans-serif;
+    background: var(--cream); color: var(--ink); margin: 0;
+    padding: 28px 20px 60px; line-height: 1.6;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 27px; color: var(--navy); margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 10px; font-size: 15px; }
+  .lang { margin: 0 0 24px; font-size: 14px; }
+  .lang a { color: var(--maroon); }
+  h2 {
+    font-size: 21px; color: var(--maroon); margin: 34px 0 6px;
+    padding-bottom: 6px; border-bottom: 2px solid var(--gold-light);
+  }
+  p.lead { margin: 8px 0 14px; font-size: 16px; }
+  .card {
+    background: var(--card); border: 1px solid var(--gold-light);
+    border-radius: 12px; padding: 14px; margin: 12px 0 0; overflow-x: auto;
+  }
+  svg { display: block; width: 100%; height: auto; min-width: 640px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
+  th, td { border: 1px solid var(--gold-light); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f6efdc; color: var(--navy); font-size: 15px; }
+  td:first-child, th:first-child { width: 250px; font-weight: 700; color: var(--navy); }
+  .note {
+    background: #fdf6f4; border: 1px solid #e9c3bd; border-radius: 10px;
+    padding: 11px 14px; margin-top: 14px; font-size: 15px;
+  }
+  .note b { color: var(--maroon); }
+  code { font-family: Consolas, monospace; font-size: 13px; background: #f3eee0; padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 620px) { body { padding: 16px 10px 40px; } h1 { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>System map</h1>
+  <p class="sub">Where a job starts, how every number is worked out, and how it reaches the printed sheets.</p>
+  <p class="lang">বাংলায় পড়তে চাইলে — <a href="system-map.html">সিস্টেম ম্যাপ</a></p>
+
+  <!-- ========== 1 ========== -->
+  <h2>1. The journey of a job</h2>
+  <p class="lead">Left to right. Each step stands on the one before it.</p>
+  <div class="card">
+  <svg viewBox="0 0 980 210" role="img" aria-label="Five steps from order form to print">
+    <defs>
+      <marker id="ar" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+        <path d="M0,0 L10,4 L0,8 Z" fill="#a3906a"/>
+      </marker>
+    </defs>
+
+    <g font-size="15" text-anchor="middle">
+      <rect x="6"   y="58" width="168" height="78" rx="10" fill="#eef3f8" stroke="#10233b"/>
+      <text x="90"  y="86"  fill="#10233b" font-weight="700">Order form</text>
+      <text x="90"  y="108" fill="#51607a" font-size="13">date, headcounts,</text>
+      <text x="90"  y="126" fill="#51607a" font-size="13">menu chosen</text>
+
+      <rect x="212" y="58" width="168" height="78" rx="10" fill="#fdf8ea" stroke="#c9a227"/>
+      <text x="296" y="86"  fill="#7a5a16" font-weight="700">Bajar list page</text>
+      <text x="296" y="108" fill="#8a7a55" font-size="13">tick items, pick cooks,</text>
+      <text x="296" y="126" fill="#8a7a55" font-size="13">set the percentages</text>
+
+      <rect x="418" y="58" width="168" height="78" rx="10" fill="#f0f6f1" stroke="#1f7a4d"/>
+      <text x="502" y="86"  fill="#1f4d2c" font-weight="700">Calculation</text>
+      <text x="502" y="108" fill="#4a6b55" font-size="13">recipe × headcount</text>
+      <text x="502" y="126" fill="#4a6b55" font-size="13">(step 2)</text>
+
+      <rect x="624" y="58" width="168" height="78" rx="10" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="708" y="86"  fill="#4a2f6b" font-weight="700">Review screen</text>
+      <text x="708" y="108" fill="#6a5a85" font-size="13">check every row,</text>
+      <text x="708" y="126" fill="#6a5a85" font-size="13">overrule by hand</text>
+
+      <rect x="830" y="58" width="144" height="78" rx="10" fill="#fdf1f3" stroke="#7d1f34"/>
+      <text x="902" y="86"  fill="#7d1f34" font-weight="700">Print</text>
+      <text x="902" y="108" fill="#8a5560" font-size="13">the paper sheets</text>
+      <text x="902" y="126" fill="#8a5560" font-size="13">(step 4)</text>
+    </g>
+
+    <g stroke="#a3906a" stroke-width="2" marker-end="url(#ar)" fill="none">
+      <path d="M176 97 L208 97"/>
+      <path d="M382 97 L414 97"/>
+      <path d="M588 97 L620 97"/>
+      <path d="M794 97 L826 97"/>
+    </g>
+
+    <text x="10" y="178" text-anchor="start" font-size="13" fill="#8a7a55">the 🛒 button carries the counts and menus over</text>
+    <text x="530" y="178" text-anchor="middle" font-size="13" fill="#8a7a55">every recipe is stored per 100 guests and scaled from there</text>
+  </svg>
+  </div>
+
+  <!-- ========== 2 ========== -->
+  <h2>2. How one ingredient gets its number</h2>
+  <p class="lead">Every row on the forms goes down this path. The first rule that applies wins — the ones below it are never consulted.</p>
+  <div class="card">
+  <svg viewBox="0 0 980 470" role="img" aria-label="How a row's quantity is decided">
+    <g font-size="15">
+      <rect x="20" y="14" width="430" height="58" rx="9" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="36" y="40" fill="#4a2f6b" font-weight="700">1 · Typed by hand for this order?</text>
+      <text x="36" y="60" fill="#6a5a85" font-size="13">the এই অর্ডারে box on the review screen</text>
+
+      <rect x="530" y="14" width="430" height="58" rx="9" fill="#fff" stroke="#c9b9d8" stroke-dasharray="4 3"/>
+      <text x="546" y="40" fill="#4a2f6b" font-weight="700">Yes → that number is final</text>
+      <text x="546" y="60" fill="#6a5a85" font-size="13">belongs to no group · stays whole on the main sheets</text>
+
+      <rect x="20" y="104" width="430" height="58" rx="9" fill="#fdf8ea" stroke="#c9a227"/>
+      <text x="36" y="130" fill="#7a5a16" font-weight="700">2 · A saved per-100 value for the package?</text>
+      <text x="36" y="150" fill="#8a7a55" font-size="13">stored with 💾, or written into the code</text>
+
+      <rect x="530" y="104" width="430" height="58" rx="9" fill="#fff" stroke="#e0cf9a" stroke-dasharray="4 3"/>
+      <text x="546" y="130" fill="#7a5a16" font-weight="700">Yes → scaled on the group headcount</text>
+      <text x="546" y="150" fill="#8a7a55" font-size="13">the recipes are never looked at</text>
+
+      <rect x="20" y="194" width="430" height="58" rx="9" fill="#f0f6f1" stroke="#1f7a4d"/>
+      <text x="36" y="220" fill="#1f4d2c" font-weight="700">3 · Otherwise — add up the recipes</text>
+      <text x="36" y="240" fill="#4a6b55" font-size="13">every ticked dish, each at its own headcount</text>
+
+      <rect x="530" y="194" width="430" height="58" rx="9" fill="#fff" stroke="#b9d6c4" stroke-dasharray="4 3"/>
+      <text x="546" y="220" fill="#1f4d2c" font-size="13">কাচ্চি for 500 + চিকেন রোস্ট for 250</text>
+      <text x="546" y="240" fill="#1f4d2c" font-size="13">= both land on one row</text>
+
+      <rect x="20" y="284" width="430" height="58" rx="9" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="36" y="310" fill="#4a2f6b" font-weight="700">4 · Cut the packet share</text>
+      <text x="36" y="330" fill="#6a5a85" font-size="13">packet part × (100 − packet %) · the VIP part is untouched</text>
+
+      <rect x="20" y="374" width="430" height="58" rx="9" fill="#fdf1f3" stroke="#7d1f34"/>
+      <text x="36" y="400" fill="#7d1f34" font-weight="700">5 · The across-the-board %</text>
+      <text x="36" y="420" fill="#8a5560" font-size="13">skipped on any row ticked to keep whole</text>
+
+      <rect x="530" y="330" width="430" height="92" rx="9" fill="#10233b"/>
+      <text x="745" y="366" fill="#fff8ec" font-weight="700" text-anchor="middle" font-size="17">The row total</text>
+      <text x="745" y="392" fill="#c9b9a0" text-anchor="middle" font-size="13">this is what the review screen shows</text>
+      <text x="745" y="412" fill="#c9b9a0" text-anchor="middle" font-size="13">and what step 3 divides up</text>
+    </g>
+
+    <g stroke="#a3906a" stroke-width="2" fill="none" marker-end="url(#ar)">
+      <path d="M235 72 L235 100"/>
+      <path d="M235 162 L235 190"/>
+      <path d="M235 252 L235 280"/>
+      <path d="M235 342 L235 370"/>
+      <path d="M450 43 L526 43"/>
+      <path d="M450 133 L526 133"/>
+      <path d="M450 223 L526 223"/>
+      <path d="M450 403 L526 390"/>
+    </g>
+    <g font-size="13" fill="#a3906a">
+      <text x="243" y="92">no</text>
+      <text x="243" y="182">no</text>
+    </g>
+  </svg>
+  </div>
+  <div class="note">
+    <b>Worth knowing:</b> rule 2 overrides rule 3. If a row carries a saved package value,
+    editing the recipe changes nothing for that row — this is the easiest thing in the whole
+    system to be caught out by.
+  </div>
+
+  <!-- ========== 3 ========== -->
+  <h2>3. How the total is split</h2>
+  <p class="lead">A row's total is divided between separate pieces of paper. The parts always add back to the total, so nothing is bought twice.</p>
+  <div class="card">
+  <svg viewBox="0 0 980 300" role="img" aria-label="A row's total split between packet, cooks and the main sheets">
+    <rect x="20" y="16" width="940" height="46" rx="8" fill="#10233b"/>
+    <text x="490" y="46" fill="#fff8ec" text-anchor="middle" font-size="17" font-weight="700">The row total — say সয়াবিন তেল, 29 litres</text>
+
+    <g stroke="#a3906a" stroke-width="2" fill="none" marker-end="url(#ar)">
+      <path d="M150 62 L150 96"/>
+      <path d="M400 62 L400 96"/>
+      <path d="M620 62 L620 96"/>
+      <path d="M840 62 L840 96"/>
+    </g>
+
+    <g font-size="15" text-anchor="middle">
+      <rect x="20"  y="100" width="260" height="80" rx="9" fill="#f4f1fa" stroke="#4a2f6b"/>
+      <text x="150" y="128" fill="#4a2f6b" font-weight="700">1 · The packet's share</text>
+      <text x="150" y="150" fill="#6a5a85" font-size="13">comes off first,</text>
+      <text x="150" y="168" fill="#6a5a85" font-size="13">in headcount proportion</text>
+
+      <rect x="300" y="100" width="200" height="80" rx="9" fill="#f0d9d4" stroke="#7d1f34"/>
+      <text x="400" y="128" fill="#7d1f34" font-weight="700">2 · বাবুর্চি A</text>
+      <text x="400" y="150" fill="#8a5560" font-size="13">the share of the</text>
+      <text x="400" y="168" fill="#8a5560" font-size="13">dishes given to A</text>
+
+      <rect x="520" y="100" width="200" height="80" rx="9" fill="#dbe6f0" stroke="#10233b"/>
+      <text x="620" y="128" fill="#10233b" font-weight="700">3 · বাবুর্চি C</text>
+      <text x="620" y="150" fill="#51607a" font-size="13">the share of the</text>
+      <text x="620" y="168" fill="#51607a" font-size="13">dishes given to C</text>
+
+      <rect x="740" y="100" width="220" height="80" rx="9" fill="#fdf8ea" stroke="#c9a227"/>
+      <text x="850" y="128" fill="#7a5a16" font-weight="700">4 · Whatever is left</text>
+      <text x="850" y="150" fill="#8a7a55" font-size="13">the standard cook</text>
+      <text x="850" y="168" fill="#8a7a55" font-size="13">= the three main sheets</text>
+    </g>
+
+    <g stroke="#a3906a" stroke-width="2" fill="none" marker-end="url(#ar)">
+      <path d="M150 180 L150 214"/>
+      <path d="M400 180 L400 214"/>
+      <path d="M620 180 L620 214"/>
+      <path d="M850 180 L850 214"/>
+    </g>
+
+    <g font-size="13" text-anchor="middle" fill="#5a4d36">
+      <rect x="40"  y="218" width="220" height="40" rx="7" fill="#fff" stroke="#c9b9d8"/>
+      <text x="150" y="243">packet sheets (3 pages)</text>
+
+      <rect x="310" y="218" width="180" height="40" rx="7" fill="#fff" stroke="#e9c3bd"/>
+      <text x="400" y="243">A's own page</text>
+
+      <rect x="530" y="218" width="180" height="40" rx="7" fill="#fff" stroke="#b9c9dd"/>
+      <text x="620" y="243">C's own page</text>
+
+      <rect x="750" y="218" width="200" height="40" rx="7" fill="#fff" stroke="#e0cf9a"/>
+      <text x="850" y="243">main sheets (3 pages)</text>
+    </g>
+    <text x="490" y="286" text-anchor="middle" font-size="14" fill="#1f4d2c">1 + 2 + 3 + 4 = the row total · always</text>
+  </svg>
+  </div>
+  <div class="note">
+    <b>The order matters:</b> the packet's share leaves <i>first</i>, and the cooks are split out of
+    what remains. So a packet-only dish given to a cook puts nothing on that cook's page — all of
+    it is already on the packet sheets.
+  </div>
+
+  <!-- ========== 4 ========== -->
+  <h2>4. What prints</h2>
+  <p class="lead">Three extra sheets appear when there are packet guests. The cooks' pages are always last, so they can be torn off the back and handed over.</p>
+  <div class="card">
+  <svg viewBox="0 0 980 230" role="img" aria-label="The order of the printed pages">
+    <g font-size="13" text-anchor="middle">
+      <g fill="#fdf8ea" stroke="#c9a227">
+        <rect x="20"  y="30" width="104" height="132" rx="7"/>
+        <rect x="136" y="30" width="104" height="132" rx="7"/>
+        <rect x="252" y="30" width="104" height="132" rx="7"/>
+      </g>
+      <text x="72"  y="88"  fill="#7a5a16">পার্টি</text>
+      <text x="72"  y="108" fill="#7a5a16">বাজার লিস্ট</text>
+      <text x="188" y="98"  fill="#7a5a16">বাজার লিস্ট</text>
+      <text x="304" y="88"  fill="#7a5a16">সবজী ও</text>
+      <text x="304" y="108" fill="#7a5a16">তাজা উপকরণ</text>
+      <text x="188" y="182" fill="#8a7a55">main sheets — the VIP share</text>
+
+      <g fill="#f4f1fa" stroke="#4a2f6b">
+        <rect x="392" y="30" width="104" height="132" rx="7"/>
+        <rect x="508" y="30" width="104" height="132" rx="7"/>
+        <rect x="624" y="30" width="104" height="132" rx="7"/>
+      </g>
+      <text x="444" y="88"  fill="#4a2f6b">পার্টি</text>
+      <text x="444" y="108" fill="#4a2f6b">— প্যাকেট</text>
+      <text x="560" y="88"  fill="#4a2f6b">বাজার লিস্ট</text>
+      <text x="560" y="108" fill="#4a2f6b">— প্যাকেট</text>
+      <text x="676" y="88"  fill="#4a2f6b">সবজী</text>
+      <text x="676" y="108" fill="#4a2f6b">— প্যাকেট</text>
+      <text x="560" y="182" fill="#6a5a85">packet sheets — only with packet guests</text>
+
+      <g fill="#fdf1f3" stroke="#7d1f34">
+        <rect x="764" y="30" width="96" height="132" rx="7"/>
+        <rect x="872" y="30" width="96" height="132" rx="7"/>
+      </g>
+      <text x="812" y="88"  fill="#7d1f34">বাবুর্চি A</text>
+      <text x="812" y="108" fill="#7d1f34">cooking list</text>
+      <text x="920" y="88"  fill="#7d1f34">বাবুর্চি C</text>
+      <text x="920" y="108" fill="#7d1f34">cooking list</text>
+      <text x="866" y="182" fill="#8a5560">cooks' pages — always last</text>
+    </g>
+    <text x="490" y="214" text-anchor="middle" font-size="14" fill="#7a6a4d">without a packet it is 3 sheets plus the cooks' pages · 8 pages is the most seen so far</text>
+  </svg>
+  </div>
+
+  <!-- ========== 5 ========== -->
+  <h2>5. Every control, and what it changes</h2>
+  <p class="lead">When you want to change something, this says where to reach and what will move.</p>
+  <table>
+    <tr><th>Control</th><th>What it does</th><th>What moves</th></tr>
+    <tr><td>লোকসংখ্যা — ভি.আই.পি</td><td>the basis of the whole calculation</td><td>every quantity</td></tr>
+    <tr><td>লোকসংখ্যা — প্যাকেট</td><td>how many packet guests</td><td>every quantity · whether packet sheets print · whether উভয় is offered on an item</td></tr>
+    <tr><td>সেট মেনু প্যাকেজ</td><td>ticks that package's items</td><td>which dishes are cooked</td></tr>
+    <tr><td>An item's tick box</td><td>adds or removes the dish</td><td>every ingredient in that recipe</td></tr>
+    <tr><td>An item's মেনু box</td><td>which group it is cooked for</td><td>the headcount used · whether it reaches the packet sheets</td></tr>
+    <tr><td>An item's জন box</td><td>a headcount for that dish alone</td><td>only that dish's ingredients</td></tr>
+    <tr><td>An item's বাবুর্চি box</td><td>who cooks it</td><td>its ingredients leave the main sheets for that cook's page</td></tr>
+    <tr><td>সব পরিমাণ কমান %</td><td>reduces everything</td><td>every row except those ticked to keep whole</td></tr>
+    <tr><td>প্যাকেটের পরিমাণ কমান %</td><td>makes packet portions smaller</td><td>the packet share only · the VIP share is untouched</td></tr>
+    <tr><td>এই অর্ডারে box</td><td>overrules the calculation</td><td>that one row, for this order only</td></tr>
+    <tr><td>প্রতি ১০০ জনে box + 💾</td><td>a permanent value for the package</td><td>every future order on that package — and it overrides the recipe</td></tr>
+    <tr><td>Recipe library</td><td>what a dish is made of</td><td>every package that uses that dish</td></tr>
+    <tr><td>⚙ সেটিংস → বাবুর্চি তালিকা</td><td>adds or removes a cook</td><td>the choices in every item's বাবুর্চি box</td></tr>
+  </table>
+
+  <div class="note">
+    <b>Where mistakes come from:</b> an ingredient is bought once — one form row per ingredient. If
+    two dishes both use সয়াবিন তেল, the two amounts are summed onto that single row. And units have
+    to match: a piece count entered on a kilogram row is wrong by a factor of a thousand.
+  </div>
+
+</div>
+</body>
+</html>

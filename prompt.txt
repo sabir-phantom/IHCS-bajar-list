@@ -1,0 +1,319 @@
+================================================================================
+BUILD PROMPT — CATERING ORDER FORM + MARKET SHOPPING LIST (BENGALI)
+================================================================================
+Paste this whole file as the brief. It describes a working system in use by a
+Bangladeshi catering business. Build it from scratch; nothing here depends on
+seeing the original code.
+
+--------------------------------------------------------------------------------
+0. WHAT YOU ARE BUILDING
+--------------------------------------------------------------------------------
+Two web pages for "Iqbal Hossain Catering Service".
+
+  order_form.html  Takes a customer's order, keeps a history, prints an order
+                   sheet, and hands the order to the second page.
+  index.html       Turns that order into a market shopping list, calculated
+                   from recipes, and prints it on the firm's three existing
+                   paper forms.
+
+The whole business runs on paper. The screen exists to produce correct paper.
+Every design decision follows from that.
+
+--------------------------------------------------------------------------------
+1. HARD CONSTRAINTS — DO NOT NEGOTIATE THESE
+--------------------------------------------------------------------------------
+1.1  Each page is ONE self-contained .html file. No build step, no bundler, no
+     npm, no framework, no external requests at runtime. Fonts are embedded as
+     base64 in a <style> block. Opening the file by double-click, with no
+     internet, must work completely.
+1.2  Plain HTML + CSS + vanilla JavaScript. No React/Vue/jQuery.
+1.3  Entire interface in Bengali. All numbers shown to the user are in Bengali
+     numerals (০১২৩৪৫৬৭৮৯). Keep a toBanglaNum() helper and use it everywhere,
+     including printed sheets.
+1.4  Target browser is Chrome or Edge on Windows. The File System Access API is
+     used, so this is acceptable; do not add polyfills.
+1.5  Printing is the product. Printed output must be verified against A4 — see
+     section 9. Never let a screen-styling change alter the printed sheets.
+
+--------------------------------------------------------------------------------
+2. PAGE ONE — order_form.html
+--------------------------------------------------------------------------------
+2.1 FIELDS
+    গ্রাহকের নাম (name), ঠিকানা (address), তারিখ (date), সময় (time — a select:
+    দুপুর / রাত / সকাল), স্থান (venue), অনুষ্ঠানের নাম (event name).
+    Two headcount boxes: লোকসংখ্যা — ভি.আই.পি and লোকসংখ্যা — প্যাকেট.
+    Two set-menu dropdowns: one for the VIP package, one for the packet package
+    (the second may be left as "— আলাদা মেনু নেই —", meaning both groups eat
+    the same menu).
+
+2.2 THE MENU LIBRARY
+    Dishes are grouped in editable categories. Ship with three:
+    ["ভি.আই.পি মেনু", "এক্সট্রা মেনু", "প্যাকেট মেনু"].
+    The page shows "menu blocks"; each block picks a category and lists that
+    category's items with tick boxes. In each block the owner can add an item,
+    rename it, delete it, and drag to reorder. Category names are editable and
+    new categories can be created. The library persists (see 2.5).
+    Ship a realistic default list, e.g. under ভি.আই.পি মেনু:
+      শাহী মাটন কাচ্চি বিরিয়ানী (চিনিগুড়া), চিকেন রোস্ট, শাহী শেরওয়ানী রুটি,
+      বিফ কালিয়া, বোরহানী, শাহী জর্দা+মিষ্টি গুটি, আলু বোখারার চাটনী,
+      পিছ সালাদ, মিনারেল ওয়াটার, শাহী পান বক্স, আস্ত খাশীর রোস্ট, চিকেন সাসলিক
+    Item names are free text and often carry extra words in brackets.
+
+2.3 ORDER HISTORY
+    💾 সংরক্ষণ করুন saves the current order. A history panel lists saved orders
+    newest first with a search box matching name or event. Opening one refills
+    the whole form. Orders can be deleted.
+
+2.4 PRINTING THE ORDER SHEET
+    A print view showing the customer block, the headcounts, and the ticked
+    items grouped by category. Include a print font-size control (a percentage,
+    shown in Bengali numerals, persisted) because the owner adjusts it to make
+    an order fit one page.
+
+2.5 STORAGE
+    localStorage keys:
+      iqbal_catering_menu_items        the menu library
+      iqbal_catering_order_history     saved orders
+      iqbal_catering_print_font_scale  print font percentage
+    Plus the shared data file — see section 8.
+
+2.6 THE HANDOFF (important)
+    A 🛒 button opens index.html in a new tab, passing the order in the query
+    string: date, place, label (event), vip, packet, guests, setMenu,
+    setMenuPacket, and items (a JSON array of the ticked item names).
+    index.html must accept this and set itself up with no further typing.
+    Because item names are free text, index.html matches them onto recipes by
+    keyword — see 4.6.
+
+--------------------------------------------------------------------------------
+3. PAGE TWO — index.html — THE THREE PAPER FORMS
+--------------------------------------------------------------------------------
+The firm already uses three pre-printed forms. The app must reproduce them
+exactly, because buyers know them by eye.
+
+  Sheet 1  "পার্টি বাজার লিস্ট"   columns: নং | দ্রব্যের নাম | পিছ | কেজি | গ্রাম
+  Sheet 2  "বাজার লিস্ট"          columns: নং | দ্রব্যের নাম | পরিমাণ
+  Sheet 3  "বাজার লিস্ট — সবজী ও তাজা উপকরণ"   columns: নং | দ্রব্যের নাম | পরিমাণ
+
+Hold the forms as data: an ordered list of rows per sheet, each row
+{ id, label, unit }, plus heading rows { section: "..." } that print as a
+spanning sub-heading. Expect roughly 230 rows in total.
+
+Row ids are short and stable (p1, p2 … on sheet 1; m1, r1 … on sheet 2;
+v1, w1 … on sheet 3). Never renumber them; recipes refer to them.
+
+units: 'pcs' | 'kg' | 'gm' | 'ltr' | 'ml' | 'pound'.
+A row's unit decides which column its quantity prints in.
+
+THE SINGLE MOST IMPORTANT RULE: one ingredient, exactly one row. If two dishes
+both use সয়াবিন তেল, their amounts are SUMMED onto that one row. Never let the
+same ingredient appear on two lines — the buyer would buy it twice.
+
+--------------------------------------------------------------------------------
+4. RECIPES AND DISH SELECTION
+--------------------------------------------------------------------------------
+4.1 A recipe is { label, ingredients: [[rowId, qty, unit], ...] } stored PER 100
+    GUESTS. Ship around 30 real recipes (কাচ্চি, চিকেন রোস্ট, বোরহানি, জালি কাবাব,
+    জদ্দা, ফির্নি, রাশিয়ান সালাদ, ফিস ফিলে, মিক্সড ভেজিটেবল, বিফ কালা ভুনা,
+    মুরগ পোলাও, তেহারি, and so on).
+4.2 A recipe may have ZERO ingredients. That is a real case: an item bought
+    ready-made or whose recipe is not written down. Show it in the list badged
+    "উপকরণ নেই", contribute nothing to any quantity, and print its name on the
+    item line as "উপকরণ নেই: নাম". Saving a recipe with no ingredients asks for
+    confirmation rather than being refused.
+4.3 A recipe editor: add, edit, delete, and restore-to-original. The ingredient
+    field is a SEARCH box over all ~230 rows (scrolling 230 rows is unusable),
+    drawn as a fixed-position menu so it is never clipped by a scrolling panel.
+    Around 18 ingredient names exist on more than one row (ঘি on three, ডিম on
+    four) — show the sheet name beside those so the right row is chosen.
+    If a typed name matches no row, offer to create the row: pick a sheet, pick
+    a unit, and the row is added permanently and selected in one step.
+4.4 SET MENU PACKAGES: named bundles of dishes, e.g. "স্ট্যান্ডার্ড কাচ্চি প্যাকেজ".
+    Choosing one ticks its dishes. Packages are editable and new ones can be
+    created.
+4.5 THE DISH CHECKLIST (main selection UI): every recipe is a row with a tick
+    box, laid out in two columns, with a search box and a "শুধু বাছাই করা দেখান"
+    filter. The list never reorders as you work. Each ticked row carries three
+    controls: মেনু (which group), জন (a headcount for this dish alone), and
+    বাবুর্চি (which cook).
+4.6 MATCHING FREE TEXT FROM THE ORDER FORM: a keyword table mapping substrings
+    to recipe keys, with exclusions. Example: 'রোস্ট' matches chicken roast but
+    must NOT match when the text also contains খাশী/মাটন/গরু/বিফ/আস্ত, so that
+    "আস্ত খাশীর রোস্ট" falls through to the whole-roast recipe instead.
+    WARNING: Bengali has two encodings of য় (U+09DF, and U+09AF+U+09BC). Pick
+    one, normalise on input, or matching will silently fail.
+
+--------------------------------------------------------------------------------
+5. HOW A QUANTITY IS DECIDED  (the heart of the system — get this exactly right)
+--------------------------------------------------------------------------------
+For every row of the three forms, in this order. The FIRST rule that applies
+wins and the rest are not consulted:
+
+  RULE 1  A figure typed by hand into the row's "এই অর্ডারে" box on the review
+          screen. That number is final. It belongs to no group (see 7.4).
+  RULE 2  A saved or built-in per-100 value for the chosen PACKAGE. Scaled on
+          the group headcounts. The recipes are not looked at.
+  RULE 3  Otherwise, sum the recipes of every ticked dish, each at its OWN
+          headcount.
+
+  THEN    cut the packet portion (section 6).
+  THEN    apply the across-the-board percentage (section 7.3).
+  = the row total.
+
+Rule 2 overriding rule 3 is the single most confusing thing in the system: with
+a saved package value, editing a recipe changes nothing. Say so in the docs.
+
+PER-DISH HEADCOUNT: each ticked dish may carry its own জন figure. Default is the
+headcount of its group. This is normal — চিকেন রোস্ট for 500 while কাচ্চি is for
+700.
+
+--------------------------------------------------------------------------------
+6. TWO GROUPS: ভি.আই.পি AND প্যাকেট
+--------------------------------------------------------------------------------
+6.1 Two headcounts and two packages. A dish's মেনু box is 'vip' | 'packet' |
+    'both' (উভয়).
+6.2 A GROUP WITH NOBODY IN IT DOES NOT EXIST. If only one headcount is filled,
+    every dish reads that group and the dropdown offers only that one choice.
+    Keep what the owner picked stored and untouched, and clamp only for display
+    and calculation — filling the other box must bring the earlier choice back.
+    Note "has a package chosen" and "has people in it" are different questions;
+    use the second one here.
+6.3 PACKET PORTIONS ARE SMALLER. A percentage box "প্যাকেটের পরিমাণ কমান" cuts
+    the packet half of every dish and leaves the VIP half alone. Split a dish's
+    headcount between the groups (in the job's own ratio when the dish is on
+    উভয়, so a hand-typed per-dish headcount divides too), then the dish is
+    cooked for  vip + packet × (1 − pct/100).
+    CHECK: 500 VIP + 200 packet at 20% must equal a flat 660-guest job on every
+    single row. Test that.
+    Apply this in BOTH places quantities come from — rule 2 and rule 3 of
+    section 5. Applying it only to recipes looks like it works and silently
+    does nothing for package-valued rows.
+
+--------------------------------------------------------------------------------
+7. SPLITTING THE TOTAL, AND THE REDUCTIONS
+--------------------------------------------------------------------------------
+7.1 COOKS. Cooks are an editable list; ship two, "বাবুর্চি: A" and "বাবুর্চি: C",
+    plus an implicit standard cook "S". Each cook gets a colour of their own,
+    stored with them so removing one does not repaint the others; a ticked
+    checklist row wears its cook's colour.
+    Some dishes default to a cook; the default fills the dropdown only, and an
+    explicit choice always wins — including choosing S, so distinguish "no
+    choice" from "chose S".
+7.2 THE SPLIT, IN THIS ORDER:
+      (a) the packet's share leaves first   → the packet sheets
+      (b) each cook's share leaves next     → that cook's page
+      (c) whatever remains                  → the three main sheets
+    Weight each share on the dishes behind it, using SCALED amounts, not the
+    per-100 figures — with one dish for 500 and another for 200 the per-100
+    numbers no longer reflect the real shares.
+    INVARIANT: packet + every cook + main = the row total, always. Test it.
+7.3 "সব পরিমাণ কমান %" reduces every row, applied last, with a per-row tick to
+    keep a row whole.
+7.4 A hand-typed "এই অর্ডারে" figure belongs to no group and no cook; it stays
+    whole on the main sheets. Do not split it by guesswork.
+
+--------------------------------------------------------------------------------
+8. THE DATA FILE, AND BACKUP
+--------------------------------------------------------------------------------
+Both pages share one JSON file through the File System Access API, so the two
+pages and both machines see the same data. Show a status line saying whether
+the data is in the browser only or saved to a file, and offer: create a new
+data file, open an existing one, reopen the last one (the handle is kept in
+IndexedDB), and disconnect. Each page writes only its own section so they never
+overwrite one another: the shopping list owns recipes, forms, packages and
+per-100 values; the order form owns the menu library and order history.
+Also offer a plain backup download and restore.
+The data file holds real customer history — keep it out of version control.
+
+--------------------------------------------------------------------------------
+9. PRINTING — MEASURE, DO NOT GUESS
+--------------------------------------------------------------------------------
+9.1 A4's printable area is about 703 × 1032 px at the scale the app renders.
+    Every page must satisfy  offsetHeight ≤ 1032  and  scrollWidth ≤ 703.
+9.2 Sheets grow in tiers: one column up to 22 lines, two columns beyond that,
+    and tighter type past 56 lines, so a long list never spills to a second
+    page. Never split a sub-heading away from the rows under it.
+9.3 THE PRINTED PACKET, IN ORDER:
+      1-3  the three main sheets (standard cook's share)
+      4-6  the same three forms again for the packet, when there are packet
+           guests, each titled "প্যাকেট — <sheet name>", with the packet
+           headcount and the cut named at the top
+      then one page per cook, LAST, so they can be torn off and handed over
+    Cook A's page is one merged list. Cook C gets ONE PAGE PER DISH — each of
+    C's dishes is cooked on its own, so each gets its own sheet holding only
+    that dish's ingredients. No cook pages come out of the packet sheets.
+9.4 Every page carries: the brand line, the sheet title, and a meta row of
+    তারিখ / লোকসংখ্যা / স্থান / অনুষ্ঠান. The headcount reads
+    "ভি.আই.পি ৪০০ + প্যাকেট ১৫০" with no total. Above the first table, and on
+    each cook page, print a "রান্নার আইটেম:" line naming the dishes the sheet
+    is buying for.
+9.5 Print rules live in one @media print block. Switch every animation and
+    transition off inside it so nothing is caught mid-fade by the printer.
+    Do not print price columns (দর / টাকা / মোট টাকা).
+
+--------------------------------------------------------------------------------
+10. THE REVIEW SCREEN
+--------------------------------------------------------------------------------
+Between choosing and printing, show every row with: the per-100 figure, what
+this order needs, and an "এই অর্ডারে" override box. Each recipe-derived row has
+a small arrow revealing which dishes contributed and how much each. A row whose
+value was typed by hand says so in red. A search box filters all three sheets at
+once and never affects what prints. Per cook, show their list and say what will
+happen on paper.
+
+--------------------------------------------------------------------------------
+11. LOOK, AND SMALL THINGS THAT MATTER
+--------------------------------------------------------------------------------
+Cream and gold with maroon and navy; a brand header; serif Latin for the firm's
+name, Bengali throughout for everything else. Container about 1200px wide,
+comfortable type sizes — the owner is reading this at arm's length.
+Keep motion small and quiet: a dialog that rises and sinks, a gold ring on a
+just-ticked row, a go-to-top button that fades in, collapsible sections that
+slide. Honour prefers-reduced-motion. None of it on paper.
+Gather the data-file bar, the cook list and the backup links into one ⚙ সেটিংস
+dialog; gate the cook list behind an edit button so a stray click cannot send a
+cook's dishes back to the main sheets.
+Make it work on a phone: single column, each control under a small label, tables
+scrolling inside their own box so the page never scrolls sideways.
+
+--------------------------------------------------------------------------------
+12. VERIFY THESE BEFORE CALLING IT DONE
+--------------------------------------------------------------------------------
+Wrong quantities are the only failure that costs money. Check all of these:
+  [ ] Unit kinds never cross. A piece count on a kilogram row is wrong by a
+      factor of a thousand. Assert that every recipe entry's unit is the same
+      kind (weight/volume/count) as its row's unit.
+  [ ] One ingredient, one row. Two dishes sharing সয়াবিন তেল produce ONE line
+      whose value is the sum.
+  [ ] Conservation: packet + every cook + main = the row total, for every row.
+      Test with cuts, cooks, mixed groups and per-dish headcounts in play.
+  [ ] 500 + 200 at a 20% packet cut equals a flat 660-guest job, row for row.
+      At 100% it equals the VIP count alone.
+  [ ] A dish set to ভি.আই.পি does not move when the packet percentage changes.
+  [ ] C's per-dish pages sum exactly to what C was allocated.
+  [ ] Every page fits A4 with every recipe ticked across two cooks.
+  [ ] Scaling: a recipe at 100 guests gives its stored figure unchanged; at 250
+      it gives 2.5×.
+  [ ] The handoff: open index.html from the order form and confirm the dishes
+      arrive ticked and scaled, including from a file:// page.
+  [ ] Nothing a screen change does may alter the printed sheets. Re-measure
+      after any styling work.
+
+--------------------------------------------------------------------------------
+13. TRAPS THAT HAVE ALREADY CAUGHT SOMEONE
+--------------------------------------------------------------------------------
+- A quantity path that bypasses the recipes (rule 2) will silently ignore any
+  new scaling you add to the recipe path.
+- Re-rendering a list on 'change' destroys the button the user is pressing: the
+  browser fires mousedown → blur → change → click, and the click lands on a
+  node no longer in the document. Act on mousedown and preventDefault.
+- A grid inside a flex parent collapses to one column without flex: 1 1 auto.
+- An author `display` rule beats the `hidden` attribute; add [hidden]{display:none}.
+- A pending close timer will shut a dialog again moments after it reopens;
+  reopening must cancel it.
+- A font declared @font-face { font-weight: 100 900 } with a single static face
+  makes the browser believe bold exists, so it never synthesises one and every
+  font-weight: 700 in the app silently does nothing.
+- The two encodings of য় (U+09DF vs U+09AF+U+09BC) will break name lookups.
+- Don't trust a synthetic .click() in a test where real use involves focus.
+================================================================================

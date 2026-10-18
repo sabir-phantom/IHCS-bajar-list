@@ -241,6 +241,10 @@
   .item-add:hover { background: #faf2df; border-color: var(--gold); }
   .item-cols-head { display: flex; gap: 4px; padding: 0 6px 2px; font-size: 15px; color: #a3906a; }
   .item-cols-head .s1 { flex: 1 1 auto; }
+  /* Each column carries its own header. When the grid falls to a single column the
+     second one lands in the middle of the list, which reads as a stray line, so it is
+     hidden there. `one-col` is set from the grid's own track count. */
+  #item-list.one-col .item-col:nth-child(2) .item-cols-head { display: none; }
   .item-cols-head .s2 { width: 86px; text-align: center; }
   .item-cols-head .s3 { width: 62px; text-align: center; }
   .item-cols-head .s4 { width: 72px; text-align: center; }
@@ -2094,10 +2098,14 @@ function renderDishChips() {
   const head = '<div class="item-cols-head"><span class="s1"></span><span class="s2">মেনু</span>'
     + '<span class="s3">জন</span><span class="s4">বাবুর্চি</span></div>';
   const half = Math.ceil(keys.length / 2);
+  const left = keys.slice(0, half), right = keys.slice(half);
+  const col = ks => '<div class="item-col">' + head + ks.map(rowHtml).join('') + '</div>';
+  // An empty second column would still carry a header, and a header with nothing under
+  // it reads as a stray line.
   list.innerHTML = keys.length
-    ? '<div class="item-col">' + head + keys.slice(0, half).map(rowHtml).join('') + '</div>'
-      + '<div class="item-col">' + head + keys.slice(half).map(rowHtml).join('') + '</div>'
+    ? col(left) + (right.length ? col(right) : '')
     : '<div class="item-rest-label">কিছু মেলেনি।</div>';
+  syncItemCols();
 
   const n = Object.keys(picked).length;
   document.getElementById('item-count').textContent = toBanglaNum(n) + 'টি বাছাই';
@@ -2124,6 +2132,23 @@ function renderDishChips() {
     if (v === '') delete dishGuests[el.dataset.dish]; else dishGuests[el.dataset.dish] = v;
     generateList();
   }));
+}
+
+// Whether the checklist is showing one column or two. The track count is read back from
+// the grid rather than guessed from a width, so changing the minmax() in the stylesheet
+// cannot leave this out of step with it.
+function syncItemCols() {
+  const list = document.getElementById('item-list');
+  if (!list) return;
+  const tracks = getComputedStyle(list).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
+  list.classList.toggle('one-col', tracks <= 1);
+}
+
+// The grid can collapse because the window changed or because something around it did,
+// so watch the element itself rather than the window.
+if (window.ResizeObserver) {
+  const el = document.getElementById('item-list');
+  if (el) new ResizeObserver(syncItemCols).observe(el);
 }
 
 // Colours for cooks beyond the first two, so each stays recognisable.

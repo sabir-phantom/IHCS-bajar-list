@@ -234,6 +234,40 @@ tell which package the value belongs to.
 Verified: সয়াবিন তেল across both menus is 15 + 10 + 4 = 29 ltr, an ingredient both menus
 need lands on one row as the sum, and the chef split still has zero drift.
 
+### A new pick is ভি.আই.পি when two menus are in play
+
+`twoMenus()` is true when two different packages are chosen. `defaultPickGroup()` then
+returns `'vip'` instead of `'both'`, and every path that ticks a dish goes through it:
+the checklist tick box, the dessert from an incoming order, and loose items carried over
+from the order form. `applyPreset` follows the same rule — a dish both packages list used
+to become উভয় and now stays ভি.আই.পি. With one menu nothing changes, because one
+kitchen really is feeding everybody.
+
+This only sets the default. The মেনু box still offers all three, and a choice already
+made is never rewritten.
+
+### The item list has an order the owner sets
+
+`itemOrder` is an array of dish keys saved in ⚙ সেটিংস and carried in the data file.
+`orderedDishKeys()` returns the saved order first and then anything it does not mention,
+in library order — so a recipe added later sits at the end rather than vanishing into the
+middle. The checklist is the only thing that follows it; the recipe library and the
+printed রান্নার আইটেম lines are unchanged.
+
+The dialog edits a working copy (`orderDraft`), and the front page does not move until
+সংরক্ষণ is pressed, so a half-finished drag cannot leave the list in a strange state.
+Dragging is HTML5 drag-and-drop; `dragover` calls `preventDefault()`, without which no
+`drop` event is delivered at all. ↑ ↓ buttons sit beside each row because drag-and-drop
+does not work under touch, and they serve keyboard users too.
+
+### Default cook per item, editable
+
+`CHEF_DEFAULTS` was a constant naming ten dishes. It is now `FACTORY_CHEF_DEFAULTS`, and
+the live `chefDefaults` is saved, carried in the data file, and edited in ⚙ সেটিংস —
+one row per item with a cook dropdown, saved the moment it changes. `chefOf()` reads it.
+A per-job choice still wins over it, including choosing S, so the distinction between
+"no choice" and "chose S" still matters.
+
 ### বাবুর্চি C gets a page per dish
 
 Every other cook is handed one merged list. C is handed one page per dish, because each

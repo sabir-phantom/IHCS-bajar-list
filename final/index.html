@@ -514,6 +514,34 @@
   .modal-sec .data-bar { border: 0; background: none; padding: 0; gap: 8px 12px; }
   .modal-sec .chef-admin { border-top: 0; padding-top: 0; font-size: 17px; }
   .modal-sec .footer-links { border-top: 0; padding-top: 0; justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
+
+  /* Long lists inside the dialog scroll in their own box, so the dialog stays short. */
+  .ord-list {
+    max-height: 290px; overflow-y: auto; border: 1px solid #ece3cd; border-radius: 8px;
+    background: #fffdf7; padding: 4px;
+  }
+  .ord-row {
+    display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 6px;
+    font-size: 16px; cursor: grab;
+  }
+  .ord-row + .ord-row { border-top: 1px solid #f3ecd9; }
+  .ord-row:hover { background: #faf4e4; }
+  .ord-row.dragging { opacity: 0.45; }
+  .ord-row.drop-into { background: #f6efdc; box-shadow: inset 0 2px 0 var(--gold); }
+  .ord-grip { flex: none; color: #c3b391; letter-spacing: -2px; cursor: grab; }
+  .ord-num { flex: none; width: 26px; color: #a3906a; font-size: 14px; }
+  .ord-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ord-btn {
+    flex: none; font-family: inherit; font-size: 15px; line-height: 1; cursor: pointer;
+    border: 1px solid #e0d4b8; border-radius: 5px; background: #fff; color: #7a6a4d; padding: 3px 7px;
+  }
+  .ord-btn:hover { background: #faf2df; color: var(--maroon); }
+  .ord-row select {
+    flex: none; width: 92px; font-family: inherit; font-size: 15px; padding: 2px 4px;
+    border: 1px solid #ded2b8; border-radius: 4px; background: #fff; color: #5a4d36;
+  }
+  .ord-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .ord-note { font-size: 15px; color: var(--green); }
   /* Actions in here read as buttons, not as a row of underlined words. */
   .modal .link-btn {
     text-decoration: none; padding: 6px 12px; border: 1px solid #e0d4b8; border-radius: 6px;
@@ -985,6 +1013,29 @@
             <button type="button" class="link-btn" onclick="addChef()">+ যোগ করুন</button>
             <button type="button" class="link-btn" onclick="restoreChefs()">ডিফল্টে ফেরান</button>
           </span>
+        </div>
+      </section>
+
+      <section class="modal-sec">
+        <h4><span class="ico" aria-hidden="true">☰</span> আইটেমের ক্রম</h4>
+        <p class="hint">মূল পাতার আইটেম তালিকা কোন ক্রমে দেখাবে। টেনে সাজান, বা ↑ ↓ বাটন চাপুন —
+           তারপর সংরক্ষণ করুন। নতুন রেসিপি তালিকার শেষে যোগ হবে।</p>
+        <div class="ord-list" id="item-order-list"></div>
+        <div class="ord-actions">
+          <button type="button" class="link-btn" onclick="saveItemOrderFromDraft()">সংরক্ষণ করুন</button>
+          <button type="button" class="link-btn" onclick="resetItemOrder()">আদি ক্রমে ফেরান</button>
+          <span class="ord-note" id="item-order-note"></span>
+        </div>
+      </section>
+
+      <section class="modal-sec">
+        <h4><span class="ico" aria-hidden="true">👨‍🍳</span> আইটেমের ডিফল্ট বাবুর্চি</h4>
+        <p class="hint">প্রতিটি আইটেম শুরুতে কার নামে বসবে। কাজের সময় বদলালে সেই বাছাইই চলবে —
+           এটি শুধু ঘরটি আগে থেকে পূরণ করে রাখে। বদলালেই সংরক্ষিত হয়।</p>
+        <div class="ord-list" id="chef-default-list"></div>
+        <div class="ord-actions">
+          <button type="button" class="link-btn" onclick="resetChefDefaults()">ডিফল্টে ফেরান</button>
+          <span class="ord-note" id="chef-default-note"></span>
         </div>
       </section>
 
@@ -1773,6 +1824,12 @@ let picked = {};
 // Which preset ticked a dish, so changing preset clears only its own picks.
 let pickedBy = {};
 
+// With two different menus chosen, nothing is assumed to feed everybody: a newly ticked
+// dish belongs to the ভি.আই.পি side until the owner says otherwise. With a single menu
+// there is only one kitchen, so উভয় stays the sensible default.
+function twoMenus() { return activeGroups().length === 2; }
+function defaultPickGroup() { return twoMenus() ? 'vip' : 'both'; }
+
 function pickDish(k, group, byPreset) {
   picked[k] = group || 'both';
   if (byPreset) pickedBy[k] = byPreset; else delete pickedBy[k];
@@ -1791,7 +1848,10 @@ function applyPreset(g) {
   dishes.forEach(k => {
     if (!RECIPE_LIBRARY[k]) return;
     // A dish both presets want is cooked for everybody.
-    pickDish(k, picked[k] && picked[k] !== g.id ? 'both' : g.id, g.id);
+    // A dish both packages list: cooked for everybody with one menu, but with two
+    // menus it stays on the ভি.আই.পি side rather than silently becoming উভয়.
+    const shared = picked[k] && picked[k] !== g.id;
+    pickDish(k, shared ? (twoMenus() ? 'vip' : 'both') : g.id, g.id);
   });
 }
 
@@ -1962,7 +2022,7 @@ function renderDishChips() {
   const fed = fedGroups();
   const groupChoices = fed.length === 1 ? [fed[0].id] : ['vip', 'packet', 'both'];
 
-  const keys = Object.keys(RECIPE_LIBRARY).filter(k => {
+  const keys = orderedDishKeys().filter(k => {
     if (onlyPicked && !picked[k]) return false;
     return !q || RECIPE_LIBRARY[k].label.toLowerCase().indexOf(q) !== -1;
   });
@@ -2019,7 +2079,7 @@ function renderDishChips() {
 
   list.querySelectorAll('input.tick').forEach(el => el.addEventListener('change', () => {
     const dish = el.dataset.dish, on = el.checked;
-    if (on) pickDish(dish, 'both', null); else dropDish(dish);
+    if (on) pickDish(dish, defaultPickGroup(), null); else dropDish(dish);
     renderDishChips(); generateList();
     // The list is redrawn, so the ring goes on the fresh row rather than the old one.
     if (on) {
@@ -2343,6 +2403,7 @@ function loadChefs() {
 function saveChefs() {
   try { localStorage.setItem(CHEFS_KEY, JSON.stringify(chefs)); } catch (e) { /* storage off */ }
   scheduleFileWrite();
+  renderChefDefaults();                // the per-item dropdowns offer the new list
 }
 loadChefs();
 
@@ -2374,14 +2435,54 @@ let chefAssign = {};
 // Dishes a cook normally takes. These only fill in the dropdown when the job says
 // nothing; the moment anyone picks a cook for a dish, their choice is what counts —
 // including picking S, which is why a missing entry and an explicit 'S' are told apart.
-const CHEF_DEFAULTS = {
+const FACTORY_CHEF_DEFAULTS = {
   sherwaniRuti: 'A', rumaliRuti: 'A', beefKalia: 'A',
   koraiGosht: 'A', jhalFry: 'A', muttonGlassy: 'A',
   fishFillet: 'C', russianSalad: 'C', dressingSalad: 'C', doryFish: 'C'
 };
+const CHEF_DEFAULTS_KEY = 'iqbal_catering_bajar_chef_defaults';
+let chefDefaults = Object.assign({}, FACTORY_CHEF_DEFAULTS);
+
+function loadChefDefaults() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CHEF_DEFAULTS_KEY) || 'null');
+    if (saved && typeof saved === 'object') chefDefaults = saved;
+  } catch (e) { /* storage off: the built-in ten */ }
+}
+function saveChefDefaults() {
+  try { localStorage.setItem(CHEF_DEFAULTS_KEY, JSON.stringify(chefDefaults)); } catch (e) { /* storage off */ }
+  scheduleFileWrite();
+}
+loadChefDefaults();
+
+// ---------------- The order the items are listed in ----------------
+// A saved order the owner dragged into place. Anything it does not mention follows it,
+// in library order — so a recipe added later sits at the end where it is easy to find.
+const ITEM_ORDER_KEY = 'iqbal_catering_bajar_item_order';
+let itemOrder = [];
+
+function loadItemOrder() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ITEM_ORDER_KEY) || 'null');
+    if (Array.isArray(saved)) itemOrder = saved.filter(k => typeof k === 'string');
+  } catch (e) { /* storage off: library order */ }
+}
+function saveItemOrder() {
+  try { localStorage.setItem(ITEM_ORDER_KEY, JSON.stringify(itemOrder)); } catch (e) { /* storage off */ }
+  scheduleFileWrite();
+}
+loadItemOrder();
+
+function orderedDishKeys() {
+  const seen = {};
+  const out = [];
+  itemOrder.forEach(k => { if (RECIPE_LIBRARY[k] && !seen[k]) { seen[k] = 1; out.push(k); } });
+  Object.keys(RECIPE_LIBRARY).forEach(k => { if (!seen[k]) out.push(k); });
+  return out;
+}
 
 function chefOf(dishKey) {
-  const c = chefAssign[dishKey] !== undefined ? chefAssign[dishKey] : CHEF_DEFAULTS[dishKey];
+  const c = chefAssign[dishKey] !== undefined ? chefAssign[dishKey] : chefDefaults[dishKey];
   return (c && chefIds().indexOf(c) !== -1) ? c : 'S';
 }
 
@@ -3357,10 +3458,10 @@ function applyIncomingOrder(order) {
   onGuestsChanged();
 
   // The dessert named in the order is just another item to tick.
-  if (order.dessertKey && RECIPE_LIBRARY[order.dessertKey]) pickDish(order.dessertKey, 'both', null);
+  if (order.dessertKey && RECIPE_LIBRARY[order.dessertKey]) pickDish(order.dessertKey, defaultPickGroup(), null);
   // Items the order named that no package covers are ticked too, so they are costed
   // instead of only being reported as missing.
-  (order.dishes || []).forEach(k => { if (RECIPE_LIBRARY[k] && !picked[k]) pickDish(k, 'both', null); });
+  (order.dishes || []).forEach(k => { if (RECIPE_LIBRARY[k] && !picked[k]) pickDish(k, defaultPickGroup(), null); });
 }
 
 function renderOrderNotice(order) {
@@ -3866,7 +3967,8 @@ function snapshotAll() {
   Object.keys(SET_MENUS).forEach(k => { if (k !== 'fromOrder') setMenus[k] = SET_MENUS[k]; });
   return {
     app: 'iqbal-bajar', version: 2, savedAt: new Date().toISOString(),
-    per100: per100Store, forms: forms, setMenus: setMenus, recipes: savedRecipes(), chefs: chefs
+    per100: per100Store, forms: forms, setMenus: setMenus, recipes: savedRecipes(), chefs: chefs,
+    itemOrder: itemOrder, chefDefaults: chefDefaults
   };
 }
 
@@ -3882,6 +3984,14 @@ function applyAll(d) {
     chefs = d.chefs.filter(c => c && c.id && c.id !== 'S' && c.name);
     saveChefs();
     renderChefAdmin();
+  }
+  if (Array.isArray(d.itemOrder)) {
+    itemOrder = d.itemOrder.filter(k => typeof k === 'string');
+    saveItemOrder();
+  }
+  if (d.chefDefaults && typeof d.chefDefaults === 'object') {
+    chefDefaults = d.chefDefaults;
+    saveChefDefaults();
   }
   if (Array.isArray(d.forms) && d.forms.length) forms = d.forms;
   if (d.recipes && typeof d.recipes === 'object') {
@@ -3922,6 +4032,144 @@ function idb(mode, fn) {
   });
 }
 
+
+// ---------------- Settings: the order of the item list ----------------
+// A working copy while the dialog is open; nothing moves on the front page until
+// সংরক্ষণ is pressed, so a half-finished drag cannot leave the list in a strange order.
+let orderDraft = null;
+
+function orderNote(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = ''; }, 2500);
+}
+
+function renderItemOrder() {
+  const box = document.getElementById('item-order-list');
+  if (!box) return;
+  if (!orderDraft) orderDraft = orderedDishKeys();
+  // A recipe added or deleted while the dialog was shut.
+  orderDraft = orderDraft.filter(k => RECIPE_LIBRARY[k]);
+  Object.keys(RECIPE_LIBRARY).forEach(k => { if (orderDraft.indexOf(k) === -1) orderDraft.push(k); });
+
+  box.innerHTML = orderDraft.map((k, i) =>
+    '<div class="ord-row" draggable="true" data-i="' + i + '">'
+    + '<span class="ord-grip" aria-hidden="true">⋮⋮</span>'
+    + '<span class="ord-num">' + toBanglaNum(i + 1) + '</span>'
+    + '<span class="ord-name">' + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>'
+    + '<button type="button" class="ord-btn" data-move="up" data-i="' + i + '" aria-label="উপরে">↑</button>'
+    + '<button type="button" class="ord-btn" data-move="down" data-i="' + i + '" aria-label="নিচে">↓</button>'
+    + '</div>').join('');
+}
+
+function moveInOrder(from, to) {
+  if (to < 0 || to >= orderDraft.length || from === to) return;
+  const k = orderDraft.splice(from, 1)[0];
+  orderDraft.splice(to, 0, k);
+  renderItemOrder();
+}
+
+function saveItemOrderFromDraft() {
+  itemOrder = orderDraft.slice();
+  saveItemOrder();
+  renderDishChips();
+  orderNote('item-order-note', '✓ ক্রম সংরক্ষিত হয়েছে');
+}
+
+function resetItemOrder() {
+  itemOrder = [];
+  saveItemOrder();
+  orderDraft = null;
+  renderItemOrder();
+  renderDishChips();
+  orderNote('item-order-note', 'আদি ক্রমে ফেরানো হয়েছে');
+}
+
+(function () {
+  const box = document.getElementById('item-order-list');
+  if (!box) return;
+
+  box.addEventListener('click', ev => {
+    const btn = ev.target.closest('button[data-move]');
+    if (!btn) return;
+    const i = Number(btn.dataset.i);
+    moveInOrder(i, btn.dataset.move === 'up' ? i - 1 : i + 1);
+  });
+
+  let from = -1;
+  box.addEventListener('dragstart', ev => {
+    const row = ev.target.closest('.ord-row');
+    if (!row) return;
+    from = Number(row.dataset.i);
+    row.classList.add('dragging');
+    ev.dataTransfer.effectAllowed = 'move';
+    // Firefox refuses to start a drag without this.
+    try { ev.dataTransfer.setData('text/plain', String(from)); } catch (e) { /* ignore */ }
+  });
+  box.addEventListener('dragend', () => {
+    from = -1;
+    [...box.querySelectorAll('.ord-row')].forEach(r => r.classList.remove('dragging', 'drop-into'));
+  });
+  box.addEventListener('dragover', ev => {
+    if (from === -1) return;
+    ev.preventDefault();                       // without this, no drop event fires
+    ev.dataTransfer.dropEffect = 'move';
+    const row = ev.target.closest('.ord-row');
+    [...box.querySelectorAll('.ord-row')].forEach(r => r.classList.remove('drop-into'));
+    if (row) row.classList.add('drop-into');
+  });
+  box.addEventListener('drop', ev => {
+    if (from === -1) return;
+    ev.preventDefault();
+    const row = ev.target.closest('.ord-row');
+    if (!row) return;
+    moveInOrder(from, Number(row.dataset.i));
+    from = -1;
+  });
+})();
+
+// ---------------- Settings: each item's default cook ----------------
+function renderChefDefaults() {
+  const box = document.getElementById('chef-default-list');
+  if (!box) return;
+  const ids = ['S'].concat(chefIds());
+  box.innerHTML = orderedDishKeys().map(k => {
+    const cur = chefDefaults[k] && ids.indexOf(chefDefaults[k]) !== -1 ? chefDefaults[k] : 'S';
+    return '<div class="ord-row">'
+      + '<span class="ord-name">' + escapeHtml(RECIPE_LIBRARY[k].label) + '</span>'
+      + '<select data-dish="' + k + '" aria-label="' + escapeHtml(RECIPE_LIBRARY[k].label) + '">'
+      + ids.map(c => '<option value="' + c + '"' + (c === cur ? ' selected' : '') + '>'
+          + escapeHtml(chefShort(c)) + '</option>').join('')
+      + '</select></div>';
+  }).join('');
+}
+
+(function () {
+  const box = document.getElementById('chef-default-list');
+  if (!box) return;
+  box.addEventListener('change', ev => {
+    const sel = ev.target.closest('select[data-dish]');
+    if (!sel) return;
+    if (sel.value === 'S') delete chefDefaults[sel.dataset.dish];
+    else chefDefaults[sel.dataset.dish] = sel.value;
+    saveChefDefaults();
+    renderDishChips();                 // a dish not yet touched this job follows the new default
+    generateList();
+    orderNote('chef-default-note', '✓ সংরক্ষিত');
+  });
+})();
+
+function resetChefDefaults() {
+  chefDefaults = Object.assign({}, FACTORY_CHEF_DEFAULTS);
+  saveChefDefaults();
+  renderChefDefaults();
+  renderDishChips();
+  generateList();
+  orderNote('chef-default-note', 'ডিফল্টে ফেরানো হয়েছে');
+}
+
 // A close that is still playing must be called off, or its timer shuts the dialog
 // again a moment after it was reopened.
 let settingsCloseTimer = null;
@@ -3932,6 +4180,9 @@ function openSettings() {
   settingsCloseTimer = null;
   back.classList.remove('is-closing');
   back.hidden = false;
+  orderDraft = null;                   // start from what is saved, not a stale draft
+  renderItemOrder();
+  renderChefDefaults();
   back.focus();
 }
 function closeSettings() {

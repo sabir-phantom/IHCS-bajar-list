@@ -486,7 +486,14 @@
     background: #faf6ea; border: 1px solid var(--gold-light); border-radius: 999px; padding: 6px 15px;
   }
   .settings-open:hover { background: #f6efdc; color: var(--maroon); }
-  .settings-gear { color: #a3906a; }
+  /* It is a settings button that also reports the data state, not a status line with a
+     gear bolted on. The word leads; the state is a quiet aside, but it stays visible —
+     hiding it behind a click is how a data file goes unconnected. */
+  .settings-gear { color: var(--maroon); font-size: 18px; line-height: 1; }
+  .settings-label { font-weight: 700; color: var(--maroon-dark); }
+  .settings-sep { width: 1px; align-self: stretch; margin: 2px 2px; background: var(--gold-light); }
+  .settings-open #data-brief { font-size: 15px; color: #8a7a5e; }
+  .settings-open[data-state="warn"] #data-brief { color: #a85d12; font-weight: 700; }
   .settings-open[data-state="ok"] .data-dot { background: var(--green); }
   .settings-open[data-state="warn"] .data-dot { background: #c7771c; }
 
@@ -1002,9 +1009,11 @@
        and opens everything else in a dialog. -->
   <div class="settings-line">
     <button type="button" class="settings-open" id="settings-open" onclick="openSettings()">
+      <span class="settings-gear">⚙</span>
+      <span class="settings-label">সেটিংস</span>
+      <span class="settings-sep" aria-hidden="true"></span>
       <span class="data-dot" id="data-dot-brief" aria-hidden="true"></span>
-      <span id="data-brief">ডেটা এই ব্রাউজারে আছে</span>
-      <span class="settings-gear">⚙ সেটিংস</span>
+      <span id="data-brief">ডেটা শুধু এই ব্রাউজারে</span>
     </button>
   </div>
 
@@ -4274,9 +4283,11 @@ function setDataStatus(text, state) {
   const open = document.getElementById('settings-open');
   if (brief && open) {
     open.dataset.state = state;
-    brief.textContent = state === 'ok' ? 'ডেটা ফাইলে সংরক্ষিত হচ্ছে'
-      : state === 'warn' ? 'ডেটা ফাইল চালু নেই — দেখুন'
-      : 'ডেটা শুধু এই ব্রাউজারে আছে';
+    brief.textContent = state === 'ok' ? 'ডেটা ফাইলে সংরক্ষিত'
+      : state === 'warn' ? 'ডেটা ফাইল চালু নেই'
+      : 'ডেটা শুধু এই ব্রাউজারে';
+    // The full sentence is still available without opening anything.
+    open.title = text;
   }
   const connected = state === 'ok';
   const waiting = state === 'warn' && Boolean(dataFileHandle);

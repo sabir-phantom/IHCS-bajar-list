@@ -541,6 +541,22 @@
     border: 1px solid #ded2b8; border-radius: 4px; background: #fff; color: #5a4d36;
   }
   .ord-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* A long settings list folds away, so the dialog opens short and the sections that
+     matter day to day are all in view. */
+  .set-det > summary {
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 7px;
+    font-size: 19px; font-weight: 700; color: var(--navy-dark);
+  }
+  .set-det > summary::-webkit-details-marker { display: none; }
+  .set-det > summary::after {
+    content: '\25be'; margin-left: auto; color: #a3906a; font-size: 15px;
+    transition: transform 0.18s ease;
+  }
+  .set-det[open] > summary::after { transform: rotate(180deg); }
+  .set-det > summary:hover { color: var(--maroon); }
+  .set-det > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+  .set-det .hint { margin-top: 8px; }
   .ord-note { font-size: 15px; color: var(--green); }
   /* Actions in here read as buttons, not as a row of underlined words. */
   .modal .link-btn {
@@ -1017,7 +1033,9 @@
       </section>
 
       <section class="modal-sec">
-        <h4><span class="ico" aria-hidden="true">☰</span> আইটেমের ক্রম</h4>
+        <details class="set-det" id="order-det">
+          <summary><span class="ico" aria-hidden="true">☰</span> আইটেমের ক্রম</summary>
+          <div class="det-body" id="order-det-body">
         <p class="hint">মূল পাতার আইটেম তালিকা কোন ক্রমে দেখাবে। টেনে সাজান, বা ↑ ↓ বাটন চাপুন —
            তারপর সংরক্ষণ করুন। নতুন রেসিপি তালিকার শেষে যোগ হবে।</p>
         <div class="ord-list" id="item-order-list"></div>
@@ -1026,10 +1044,14 @@
           <button type="button" class="link-btn" onclick="resetItemOrder()">আদি ক্রমে ফেরান</button>
           <span class="ord-note" id="item-order-note"></span>
         </div>
+          </div>
+        </details>
       </section>
 
       <section class="modal-sec">
-        <h4><span class="ico" aria-hidden="true">👨‍🍳</span> আইটেমের ডিফল্ট বাবুর্চি</h4>
+        <details class="set-det" id="chef-def-det">
+          <summary><span class="ico" aria-hidden="true">👨‍🍳</span> আইটেমের ডিফল্ট বাবুর্চি</summary>
+          <div class="det-body" id="chef-def-det-body">
         <p class="hint">প্রতিটি আইটেম শুরুতে কার নামে বসবে। কাজের সময় বদলালে সেই বাছাইই চলবে —
            এটি শুধু ঘরটি আগে থেকে পূরণ করে রাখে। বদলালেই সংরক্ষিত হয়।</p>
         <div class="ord-list" id="chef-default-list"></div>
@@ -1037,6 +1059,8 @@
           <button type="button" class="link-btn" onclick="resetChefDefaults()">ডিফল্টে ফেরান</button>
           <span class="ord-note" id="chef-default-note"></span>
         </div>
+          </div>
+        </details>
       </section>
 
       <section class="modal-sec">
@@ -4327,12 +4351,9 @@ async function disconnectDataFile() {
   setDataStatus('ডেটা এই ব্রাউজারে আছে — নিরাপদ রাখতে একটি ডেটা ফাইল তৈরি করুন', 'local');
 }
 
-// ---------------- The recipe library opens and closes ----------------
+// ---------------- Collapsible panels ----------------
 // The height is measured and animated by hand: a <details> gives no transition of its
 // own, and its contents are not rendered at all until it is open.
-const recipeLib = document.getElementById('recipe-lib');
-const recipeLibBody = document.getElementById('recipe-lib-body');
-let recipeLibBusy = false;
 
 function lessMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4362,42 +4383,55 @@ function showPanel(el) {
   el.hidden = false;
 }
 
-function slideDet(open) {
-  if (recipeLibBusy) return;
-  if (lessMotion()) { recipeLib.open = open; return; }
-  recipeLibBusy = true;
-  if (open) recipeLib.open = true;          // it must be open to have a height
-  const full = recipeLibBody.scrollHeight;
-  recipeLibBody.classList.add('is-moving');
-  recipeLibBody.style.height = (open ? 0 : full) + 'px';
-  recipeLibBody.style.opacity = open ? '0' : '1';
-  // Read back, so the browser takes the start of the move as a real state.
-  void recipeLibBody.offsetHeight;
-  recipeLibBody.style.height = (open ? full : 0) + 'px';
-  recipeLibBody.style.opacity = open ? '1' : '0';
+// Wires one <details> and its body so it slides. Returns a handle that can open it.
+function makeSlider(detId, bodyId) {
+  const det = document.getElementById(detId);
+  const body = document.getElementById(bodyId);
+  if (!det || !body) return { open: () => {} };
+  let busy = false;
 
-  let settled = false;
-  const finish = () => {
-    if (settled) return;
-    settled = true;
-    recipeLibBody.classList.remove('is-moving');
-    recipeLibBody.style.height = '';
-    recipeLibBody.style.opacity = '';
-    if (!open) recipeLib.open = false;
-    recipeLibBusy = false;
+  const slide = open => {
+    if (busy) return;
+    if (lessMotion()) { det.open = open; return; }
+    busy = true;
+    if (open) det.open = true;              // it must be open to have a height
+    const full = body.scrollHeight;
+    body.classList.add('is-moving');
+    body.style.height = (open ? 0 : full) + 'px';
+    body.style.opacity = open ? '0' : '1';
+    // Read back, so the browser takes the start of the move as a real state.
+    void body.offsetHeight;
+    body.style.height = (open ? full : 0) + 'px';
+    body.style.opacity = open ? '1' : '0';
+
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      body.classList.remove('is-moving');
+      body.style.height = '';
+      body.style.opacity = '';
+      if (!open) det.open = false;
+      busy = false;
+    };
+    body.addEventListener('transitionend', ev => {
+      if (ev.propertyName === 'height') finish();
+    }, { once: true });
+    setTimeout(finish, 350);        // transitionend never arrives if the move is a no-op
   };
-  recipeLibBody.addEventListener('transitionend', ev => {
-    if (ev.propertyName === 'height') finish();
-  }, { once: true });
-  setTimeout(finish, 350);          // transitionend never arrives if the move is a no-op
+
+  det.querySelector('summary').addEventListener('click', ev => {
+    ev.preventDefault();            // the browser would otherwise snap it open or shut
+    slide(!det.open);
+  });
+  return { open: () => { if (!det.open) slide(true); } };
 }
 
-recipeLib.querySelector('summary').addEventListener('click', ev => {
-  ev.preventDefault();              // the browser would otherwise snap it open or shut
-  slideDet(!recipeLib.open);
-});
+const recipeLibSlider = makeSlider('recipe-lib', 'recipe-lib-body');
+makeSlider('order-det', 'order-det-body');
+makeSlider('chef-def-det', 'chef-def-det-body');
 
-function openRecipeLib() { if (!recipeLib.open) slideDet(true); }
+function openRecipeLib() { recipeLibSlider.open(); }
 
 // ---------------- Go to top ----------------
 (function () {

@@ -254,6 +254,12 @@ in library order — so a recipe added later sits at the end rather than vanishi
 middle. The checklist is the only thing that follows it; the recipe library and the
 printed রান্নার আইটেম lines are unchanged.
 
+Both of these sections fold away in the dialog — 33 rows each would otherwise bury
+the settings used day to day. Expandable rather than a second modal: a dialog stacked
+on a dialog needs its own focus and escape handling, and these are lists to scan
+rather than tasks of their own. The slide animation was hard-wired to the recipe
+library and is now `makeSlider(detId, bodyId)`, shared by all three panels.
+
 The dialog edits a working copy (`orderDraft`), and the front page does not move until
 সংরক্ষণ is pressed, so a half-finished drag cannot leave the list in a strange state.
 Dragging is HTML5 drag-and-drop; `dragover` calls `preventDefault()`, without which no

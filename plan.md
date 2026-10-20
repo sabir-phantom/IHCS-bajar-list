@@ -371,6 +371,19 @@ either would break something that already fits. 19 sizes sit in those blocks, un
 The checklist columns went to `minmax(430px, 1fr)`, its three controls widened to match
 the bigger type, and the settings dialog to 760px.
 
+### The two percentage boxes are a pair
+
+`সব পরিমাণ কমান` reduced every row, both groups alike, which made it the odd one out
+beside the packet box. It is now `ভি.আই.পি পরিমাণ কমান` and takes its percentage off the
+ভি.আই.পি half only: `orderBase = (orderBase - packetBase) * cut + packetBase`. Each
+source’s breakdown is cut the same way, so the review screen still adds up.
+
+Renaming it without changing the behaviour was the tempting half-measure, and it would
+have left a control whose label said VIP while it quietly cut the packet share too.
+
+With no packet guests `packetBase` is 0 and the whole row is cut, which is right: the
+whole job is VIP then. A row ticked to keep whole still ignores both boxes.
+
 ### Smaller packet portions, and the packet's own sheets
 
 **The cut.** `প্যাকেটের পরিমাণ কমান` takes a percentage off the packet half of every dish

@@ -1032,8 +1032,8 @@
 
   <div class="reduce-row">
   <div class="reduce-bar">
-      <label for="bl-reduce">সব পরিমাণ কমান</label>
-      <input type="number" id="bl-reduce" min="0" max="100" step="any" placeholder="০" aria-label="শতাংশ কমান">
+      <label for="bl-reduce">ভি.আই.পি পরিমাণ কমান</label>
+      <input type="number" id="bl-reduce" min="0" max="100" step="any" placeholder="০" aria-label="ভি.আই.পিতে শতাংশ কমান">
       <span class="reduce-pct">%</span>
       <span class="reduce-note" id="bl-reduce-note"></span>
     </div>
@@ -2348,7 +2348,7 @@ function updateReduceNote() {
   const pct = reducePercent();
   const kept = Object.keys(reduceExcluded).filter(k => reduceExcluded[k]).length;
   note.textContent = pct
-    ? toBanglaNum(roundQty(pct)) + '% কম ধরা হচ্ছে'
+    ? 'ভি.আই.পি ভাগ ' + toBanglaNum(roundQty(pct)) + '% কম'
       + (kept ? ' — ' + toBanglaNum(kept) + 'টি উপকরণ পুরোটাই থাকছে' : '')
     : 'খালি রাখলে কোনো কমানো হবে না';
 }
@@ -2488,11 +2488,12 @@ function aggregate() {
       packetBase = (recipe.packet[rowId] === undefined) ? 0 : recipe.packet[rowId];
     }
 
-    // The across-the-board reduction, last, so it reduces whatever the row ended up with.
+    // The ভি.আই.পি reduction, last. It takes its percentage off the ভি.আই.পি half of the
+    // row and leaves the packet half alone, so the two percentage boxes are a pair: one
+    // per group. With no packet guests the whole row is ভি.আই.পি and all of it is cut.
     const cut = reduceFactorFor(rowId);
     const reduced = orderBase !== null && cut !== 1;
-    if (reduced) orderBase = orderBase * cut;
-    packetBase = packetBase * cut;
+    if (reduced) orderBase = (orderBase - packetBase) * cut + packetBase;
 
     rows[rowId] = {
       id: rowId,
@@ -2505,8 +2506,11 @@ function aggregate() {
       orderBase: orderBase,
       packetBase: orderBase === null ? 0 : Math.min(packetBase, orderBase),
       fromRecipe: recipe.base[rowId] !== undefined,
-      sources: (recipe.sources[rowId] || []).map(src => Object.assign({}, src,
-        { amount: src.amount * cut, packet: (src.packet || 0) * cut })),
+      sources: (recipe.sources[rowId] || []).map(src => Object.assign({}, src, {
+        // only the non-packet part of each source is cut
+        amount: (src.amount - (src.packet || 0)) * cut + (src.packet || 0),
+        packet: src.packet || 0
+      })),
       edited: oneOff !== undefined && oneOff !== '',
       excluded: Boolean(reduceExcluded[rowId]),
       reduced: reduced

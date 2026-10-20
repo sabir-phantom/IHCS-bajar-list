@@ -254,6 +254,27 @@
      the same setting as <kbd>⚙ সেটিংস</kbd> → <strong>আইটেম অনুযায়ী বাবুর্চি</strong> — change it in
      either place and both agree. The recipe list shows each cook as a coloured chip.</p>
 
+  <h3>Publishing settings for everyone</h3>
+  <p>What you change is saved in <em>your</em> browser, and a browser cannot share that with
+     anyone — not even with the hosted copy of the page on the same computer. To push your
+     settings out to everybody:</p>
+  <ol>
+    <li><kbd>⚙ সেটিংস</kbd> → <strong>সবার জন্য প্রকাশ করুন</strong> →
+        <kbd>settings.json নামান</kbd>.</li>
+    <li>Put that file into the <code>final</code> folder of the GitHub repository — you can drag
+        it onto the page on github.com, no other tools needed.</li>
+    <li>Anyone opening the hosted link gets a small banner: <strong>নতুন সেটিংস এসেছে</strong>.
+        They press <kbd>আপডেট নিন</kbd> and your recipes, packages, forms, cooks and item
+        order replace theirs.</li>
+  </ol>
+  <p>It never applies itself. Anyone can press <kbd>এখন নয়</kbd> and nothing changes; they are
+     not asked about that same file again, only about a newer one.</p>
+  <p><strong>Order history and the admin PIN are not in this file.</strong> The repository is
+     public, so nothing about a customer goes into it. Use
+     <kbd>ব্যাকআপ ডাউনলোড</kbd> for a full private backup instead.</p>
+  <p>This works on the hosted link. Opening the file straight from your disk cannot read a
+     file beside it, so for your own two computers the data file is still the way.</p>
+
   <h3>The admin PIN</h3>
   <p><kbd>⚙ সেটিংস</kbd> → <strong>অ্যাডমিন পিন</strong>. Set one and anything that deletes or
      restores will ask for it first: cooks, recipes, packages, the forms, a backup

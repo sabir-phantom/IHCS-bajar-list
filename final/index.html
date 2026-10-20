@@ -585,6 +585,25 @@
   .set-det > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
   .set-det .hint { margin-top: 8px; }
   .ord-note { font-size: 15px; color: var(--green); }
+  .shared-bar {
+    position: fixed; left: 50%; top: 14px; transform: translate(-50%, -12px);
+    z-index: 95; display: flex; align-items: center; gap: 12px;
+    background: #10233b; color: #fff8ec; font-size: 16px;
+    padding: 10px 16px; border-radius: 10px; box-shadow: 0 10px 26px rgba(16, 35, 59, 0.33);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+  }
+  .shared-bar.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
+  .shared-bar button {
+    font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+    border-radius: 6px; padding: 4px 12px; border: 1px solid var(--gold);
+    background: none; color: var(--gold);
+  }
+  .shared-bar button:hover { background: var(--gold); color: #10233b; }
+  .shared-bar button.later { border-color: #6b7a90; color: #c9d4e2; }
+  .shared-bar button.later:hover { background: #6b7a90; color: #fff8ec; }
+  @media print { .shared-bar, .undo-bar { display: none !important; } }
+
   .admin-state { font-size: 15px; color: #7a6a4d; }
   .admin-state[data-state="locked"] { color: var(--green); font-weight: 700; }
   .admin-state[data-state="open"] { color: #a85d12; font-weight: 700; }
@@ -1129,6 +1148,17 @@
           <button type="button" class="link-btn" id="admin-set" onclick="setAdminPin()">পিন সেট করুন</button>
           <button type="button" class="link-btn" id="admin-lock" hidden onclick="lockAdmin()">এখনই লক করুন</button>
           <button type="button" class="link-btn" id="admin-clear" hidden onclick="clearAdminPin()">পিন তুলে দিন</button>
+        </div>
+      </section>
+
+      <section class="modal-sec">
+        <h4><span class="ico" aria-hidden="true">🌐</span> সবার জন্য প্রকাশ করুন</h4>
+        <p class="hint">এই ব্রাউজারের সেটিংস — রেসিপি, প্যাকেজ, ফরম, বাবুর্চি, আইটেমের
+           সিরিয়াল — একটি <code>settings.json</code> ফাইলে নামান। ফাইলটি GitHub-এ
+           <code>final</code> ফোল্ডারে রাখলে হোস্ট করা লিংক খুললেই সবাই এটি পাবে।
+           অর্ডার ইতিহাস বা অ্যাডমিন পিন এতে যায় না।</p>
+        <div class="footer-links">
+          <button type="button" class="link-btn" onclick="downloadShareFile()">settings.json নামান</button>
         </div>
       </section>
 
@@ -4352,6 +4382,100 @@ async function resetChefDefaults() {
 }
 
 
+
+// ---------------- Shared settings, published with the page ----------------
+// localStorage is per browser AND per origin, so the owner's settings cannot reach
+// anyone else — not even the hosted copy on the same machine. A settings.json published
+// beside the page fixes that: the owner writes one out, it goes into the repo, and every
+// other browser is offered it on its next visit.
+//
+// It is never applied without asking. Someone may have their own work in the browser,
+// and silently replacing it would be the one mistake this feature could make.
+//
+// What it carries: recipes, forms, packages, per-100 values, cooks, item order and cook
+// defaults. What it does not: customer orders, order history, and the admin PIN. The
+// repository is public, so nothing about a customer may go near this file.
+const SHARE_FILE = 'settings.json';
+const SHARED_SEEN_KEY = 'iqbal_catering_bajar_shared_seen';
+
+function shareSnapshot() {
+  const menus = {};
+  Object.keys(SET_MENUS).forEach(k => { if (k !== 'fromOrder') menus[k] = SET_MENUS[k]; });
+  return {
+    app: 'iqbal-bajar-settings', version: 1,
+    publishedAt: new Date().toISOString(),
+    per100: per100Store, forms: forms, setMenus: menus, recipes: savedRecipes(),
+    chefs: chefs, itemOrder: itemOrder, chefDefaults: chefDefaults
+  };
+}
+
+async function downloadShareFile() {
+  if (!(await requireAdmin())) return;
+  const blob = new Blob([JSON.stringify(shareSnapshot(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = SHARE_FILE;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  alert('settings.json নামিয়ে দেওয়া হলো।\n\nএই ফাইলটি GitHub-এ final ফোল্ডারে রাখলে '
+    + 'হোস্ট করা লিংক খুললেই সবাই এই সেটিংস পাবে।');
+}
+
+function sharedSeen() {
+  try { return localStorage.getItem(SHARED_SEEN_KEY) || ''; } catch (e) { return ''; }
+}
+function markSharedSeen(stamp) {
+  try { localStorage.setItem(SHARED_SEEN_KEY, stamp || ''); } catch (e) { /* storage off */ }
+}
+
+function showSharedBanner(d) {
+  let bar = document.getElementById('shared-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'shared-bar';
+    bar.className = 'shared-bar';
+    document.body.appendChild(bar);
+  }
+  const when = d.publishedAt ? toBanglaNum(String(d.publishedAt).slice(0, 10).split('-').reverse().join('/')) : '';
+  bar.innerHTML = '<span></span>'
+    + '<button type="button" class="take">আপডেট নিন</button>'
+    + '<button type="button" class="later">এখন নয়</button>';
+  bar.querySelector('span').textContent = 'নতুন সেটিংস এসেছে' + (when ? ' (' + when + ')' : '');
+  bar.classList.add('show');
+  bar.querySelector('.later').onclick = () => {
+    markSharedSeen(d.publishedAt);          // asked once; do not nag again for this one
+    bar.classList.remove('show');
+  };
+  bar.querySelector('.take').onclick = () => {
+    if (!confirm('এই ব্রাউজারের রেসিপি, প্যাকেজ, ফরম, বাবুর্চি আর সিরিয়াল '
+      + 'প্রকাশিত সেটিংস দিয়ে বদলে যাবে। অর্ডার ইতিহাস বা পিন বদলাবে না। নিশ্চিত?')) return;
+    applyAll(d);
+    renderChefDefaults();
+    orderDraft = null;
+    renderItemOrder();
+    renderDishChips();
+    generateList();
+    markSharedSeen(d.publishedAt);
+    bar.classList.remove('show');
+    alert('সেটিংস আপডেট হয়েছে।');
+  };
+}
+
+// Looked for quietly at startup. A missing file, a stale one, or no network is normal —
+// the page carries its own built-in settings and works offline either way.
+async function checkSharedSettings() {
+  try {
+    const res = await fetch(SHARE_FILE, { cache: 'no-store' });
+    if (!res.ok) return;
+    const d = await res.json();
+    if (!d || d.app !== 'iqbal-bajar-settings') return;
+    if (!d.publishedAt || d.publishedAt === sharedSeen()) return;   // already asked
+    showSharedBanner(d);
+  } catch (e) {
+    // file:// blocks this fetch, and an unpublished file 404s. Neither is a problem.
+  }
+}
+
 // ---------------- Admin PIN ----------------
 // This guards against accidents and idle poking, not against anyone determined: the page
 // is a file on disk, and whoever holds it can clear storage and walk in. The PIN is kept
@@ -4711,6 +4835,8 @@ makeSlider('order-det', 'order-det-body');
 makeSlider('chef-def-det', 'chef-def-det-body');
 
 function openRecipeLib() { recipeLibSlider.open(); }
+
+checkSharedSettings();
 
 // ---------------- Go to top ----------------
 (function () {

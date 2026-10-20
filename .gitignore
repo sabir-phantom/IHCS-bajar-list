@@ -4,6 +4,9 @@ bajar-data.json
 bajar-per100-backup.json
 iqbal_catering_backup_*.json
 
+# The published settings file is meant to be committed; the data file never is.
+# (listed here only as a reminder — settings.json is intentionally NOT ignored)
+
 # OS / editor noise
 Thumbs.db
 desktop.ini

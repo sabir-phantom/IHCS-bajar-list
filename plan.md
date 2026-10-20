@@ -291,6 +291,30 @@ one row per item with a cook dropdown, saved the moment it changes. `chefOf()` r
 A per-job choice still wins over it, including choosing S, so the distinction between
 "no choice" and "chose S" still matters.
 
+### Settings published with the page
+
+`localStorage` is per browser **and** per origin, so the owner's settings could not reach
+anyone else — not even the hosted copy on the same machine. `settings.json`, published
+beside the page, is the way across: the owner downloads one from ⚙ সেটিংস, it goes into
+`final/` in the repo, and every other browser is offered it on its next visit.
+
+**It is never applied without asking.** Someone may have their own work in the browser,
+and replacing it silently would be the one mistake this feature could make. A banner
+offers it; আপডেট নিন confirms first, এখন নয় leaves everything alone. Either answer
+records the file's `publishedAt`, so the same version is never offered twice; a newer one
+asks again.
+
+**What it carries:** recipes, forms, packages, per-100 values, cooks, item order, cook
+defaults. **What it must never carry:** customer orders, order history, the admin PIN.
+The repository is public. `shareSnapshot()` is a deliberately separate function from
+`snapshotAll()` for this reason — the backup keeps the PIN and the order form's data, the
+published file does not.
+
+A missing file, a stale one or no network is normal: the fetch is wrapped and the page
+carries its own built-in settings. Opening `index.html` straight from disk blocks the
+fetch altogether (`file://`), so this works on the hosted link, and the data file remains
+the way to move settings between the owner's own two machines.
+
 ### The admin PIN, and what it is not
 
 A PIN in a single file anyone can open is not security, and the docs say so plainly. It

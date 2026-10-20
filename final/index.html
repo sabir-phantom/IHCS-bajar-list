@@ -1869,11 +1869,12 @@ let picked = {};
 // Which preset ticked a dish, so changing preset clears only its own picks.
 let pickedBy = {};
 
-// With two different menus chosen, nothing is assumed to feed everybody: a newly ticked
-// dish belongs to the ভি.আই.পি side until the owner says otherwise. With a single menu
-// there is only one kitchen, so উভয় stays the sensible default.
-function twoMenus() { return activeGroups().length === 2; }
-function defaultPickGroup() { return twoMenus() ? 'vip' : 'both'; }
+// When both groups have people in them, nothing is assumed to feed everybody: a newly
+// ticked dish belongs to the ভি.আই.পি side until the owner says otherwise.
+// Keyed on the headcounts, not on whether a second menu was chosen — one menu can be
+// feeding both groups, and that is still two groups to decide between.
+function bothGroupsFed() { return fedGroups().length === 2; }
+function defaultPickGroup() { return bothGroupsFed() ? 'vip' : 'both'; }
 
 function pickDish(k, group, byPreset) {
   picked[k] = group || 'both';
@@ -1893,10 +1894,10 @@ function applyPreset(g) {
   dishes.forEach(k => {
     if (!RECIPE_LIBRARY[k]) return;
     // A dish both presets want is cooked for everybody.
-    // A dish both packages list: cooked for everybody with one menu, but with two
-    // menus it stays on the ভি.আই.পি side rather than silently becoming উভয়.
+    // A dish both packages list: cooked for everybody while only one group has people,
+    // but with both fed it stays on the ভি.আই.পি side rather than becoming উভয়.
     const shared = picked[k] && picked[k] !== g.id;
-    pickDish(k, shared ? (twoMenus() ? 'vip' : 'both') : g.id, g.id);
+    pickDish(k, shared ? defaultPickGroup() : g.id, g.id);
   });
 }
 

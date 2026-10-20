@@ -236,16 +236,24 @@ need lands on one row as the sum, and the chef split still has zero drift.
 
 ### A new pick is ভি.আই.পি when two menus are in play
 
-`bothGroupsFed()` is true when both headcount boxes hold a number. `defaultPickGroup()` then
-returns `'vip'` instead of `'both'`, and every path that ticks a dish goes through it:
+`defaultPickGroup()` returns `'vip'` unconditionally, and every path that ticks a dish
+goes through it:
 the checklist tick box, the dessert from an incoming order, and loose items carried over
 from the order form. `applyPreset` follows the same rule — a dish both packages list used
 to become উভয় and now stays ভি.আই.পি. With one group fed nothing changes, because there
 is only one group to cook for.
 
-It was first written against `activeGroups()`, which asks whether a second *package* was
-chosen. That is a different question: one menu often feeds both groups, and the owner
-hit exactly that case — two headcounts, one menu, and every tick still landing on উভয়.
+It took two goes to get right. First it asked `activeGroups()` — whether a second
+*package* was chosen — but one menu often feeds both groups, so two headcounts under one
+menu still landed on উভয়. Then it asked whether both headcount boxes held a number,
+which broke the ordinary order of work: tick the items, type the numbers after. With the
+boxes still empty nothing was fed, the dish was stored as উভয়, and it stayed there once
+the numbers arrived.
+
+The rule is now simply ভি.আই.পি, always. That is not a special case: with one group fed,
+`effectiveGroup()` clamps a dish to that group anyway, so ভি.আই.পি and উভয় cannot be told
+apart there. They differ only when both groups have people — exactly where উভয় must be a
+decision rather than an assumption.
 
 The group a dish sits in drives its headcount, so this changes quantities for
 recipe-driven rows: তেহারি on ভি.আই.পি at 500 + 200 takes 10 kg of salt where উভয় takes

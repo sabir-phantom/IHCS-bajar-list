@@ -1917,12 +1917,19 @@ let picked = {};
 // Which preset ticked a dish, so changing preset clears only its own picks.
 let pickedBy = {};
 
-// When both groups have people in them, nothing is assumed to feed everybody: a newly
-// ticked dish belongs to the ভি.আই.পি side until the owner says otherwise.
-// Keyed on the headcounts, not on whether a second menu was chosen — one menu can be
-// feeding both groups, and that is still two groups to decide between.
-function bothGroupsFed() { return fedGroups().length === 2; }
-function defaultPickGroup() { return bothGroupsFed() ? 'vip' : 'both'; }
+// A newly ticked dish always starts on the ভি.আই.পি side. উভয় means "cooked for everybody"
+// and is a decision, never an assumption.
+//
+// This used to depend on both headcounts already being filled, which broke the common
+// order of work: tick the items first, type the numbers after. With the boxes still
+// empty nothing was fed, so the dish was stored as উভয় and stayed there once the
+// numbers arrived — costing it at the full headcount.
+//
+// Returning 'vip' unconditionally is also simpler than it looks: with only one group
+// fed, effectiveGroup() clamps a dish to that group anyway, so ভি.আই.পি and উভয় are
+// indistinguishable there. The two only differ when both groups have people — and that
+// is exactly the case where উভয় must not be assumed.
+function defaultPickGroup() { return 'vip'; }
 
 function pickDish(k, group, byPreset) {
   picked[k] = group || 'both';

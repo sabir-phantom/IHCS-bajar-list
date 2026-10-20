@@ -283,6 +283,37 @@ one row per item with a cook dropdown, saved the moment it changes. `chefOf()` r
 A per-job choice still wins over it, including choosing S, so the distinction between
 "no choice" and "chose S" still matters.
 
+### The admin PIN, and what it is not
+
+A PIN in a single file anyone can open is not security, and the docs say so plainly. It
+guards against accidents and idle poking — which is the stated need — and nothing more.
+It is kept as a salted SHA-256 via Web Crypto, so a look at the stored data does not
+reveal it, but whoever holds the file can clear storage and walk in.
+
+Nothing is gated until a PIN is set. Once set, `requireAdmin()` guards the destructive
+actions **wherever they live**, not just the settings dialog: removing or restoring
+cooks, deleting or restoring a recipe, deleting a package, restoring the forms,
+restoring from a backup, disconnecting the data file, and resetting the item order or
+the cook defaults. Gating only the dialog would have left the recipe library and the
+package editor open, which is the kind of half-measure that feels safe and is not.
+
+An unlock lasts until the page is reloaded, with এখনই লক করুন to end it sooner. The PIN
+travels in the data file, so both machines agree. Forgetting it means clearing the
+browser's site data — there is no back door, and pretending otherwise would be worse.
+
+Deleting a cook now offers twelve seconds of undo, which is what actually saves the
+owner from their own slip. It also carries back what the deletion took: that cook's
+per-job assignments **and** their default assignments. Those defaults used to be left
+behind to dangle — harmless, since `chefOf()` falls back to S, but they would have
+reattached if a new cook ever reused the id.
+
+### A recipe carries its own default cook
+
+The recipe editor has a ডিফল্ট বাবুর্চি dropdown beside the dessert tick, writing to the
+same `chefDefaults` the settings list edits, so the two can never disagree. A new recipe
+only has a key once it is saved, so its cook is applied at save rather than on open. The
+library list shows the cook as a chip in that cook's own colour.
+
 ### বাবুর্চি C gets a page per dish
 
 Every other cook is handed one merged list. C is handed one page per dish, because each

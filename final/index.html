@@ -419,6 +419,17 @@
   .rec-tag { font-size: 16px; padding: 2px 8px; border-radius: 999px; background: var(--navy-light); color: var(--navy-dark); }
   .rec-tag.new { background: #e3f1ec; color: var(--green-dark); }
   .rec-dessert { display: flex; gap: 8px; align-items: center; margin: 0; font-weight: 500; color: #2b2620; }
+  .rec-meta-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .rec-chef { display: flex; align-items: center; gap: 8px; font-weight: 500; color: #2b2620; }
+  .rec-chef select {
+    font-family: inherit; font-size: 17px; padding: 4px 7px;
+    border: 1px solid #ded2b8; border-radius: 5px; background: #fff; color: #5a4d36;
+  }
+  /* The cook a recipe falls to, shown in the library list. */
+  .recipe-chef {
+    font-size: 14px; padding: 1px 7px; border-radius: 999px;
+    border: 1px solid currentColor; white-space: nowrap;
+  }
   .rec-table-wrap { overflow-x: auto; }
   .rec-table th, .rec-table td { padding: 5px 6px; }
   .rec-table th:nth-child(2), .rec-table td:nth-child(2) { width: 96px; }
@@ -574,6 +585,25 @@
   .set-det > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
   .set-det .hint { margin-top: 8px; }
   .ord-note { font-size: 15px; color: var(--green); }
+  .admin-state { font-size: 15px; color: #7a6a4d; }
+  .admin-state[data-state="locked"] { color: var(--green); font-weight: 700; }
+  .admin-state[data-state="open"] { color: #a85d12; font-weight: 700; }
+
+  /* A short window to take a deletion back. */
+  .undo-bar {
+    position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 14px);
+    z-index: 90; display: flex; align-items: center; gap: 14px;
+    background: var(--navy-dark); color: #fff8ec; font-size: 16px;
+    padding: 10px 16px; border-radius: 10px; box-shadow: 0 10px 26px rgba(16, 35, 59, 0.33);
+    opacity: 0; visibility: hidden; transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+  }
+  .undo-bar.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
+  .undo-bar button {
+    font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+    background: none; border: 1px solid var(--gold); color: var(--gold);
+    border-radius: 6px; padding: 4px 12px;
+  }
+  .undo-bar button:hover { background: var(--gold); color: var(--navy-dark); }
   /* Actions in here read as buttons, not as a row of underlined words. */
   .modal .link-btn {
     text-decoration: none; padding: 6px 12px; border: 1px solid #e0d4b8; border-radius: 6px;
@@ -953,7 +983,12 @@
         <label for="rec-name">রেসিপির নাম</label>
         <input type="text" id="rec-name" placeholder="যেমন: বিফ তেহারি">
       </div>
-      <label class="rec-dessert"><input type="checkbox" id="rec-dessert"> এটি একটি মিষ্টান্ন</label>
+      <div class="rec-meta-row">
+        <label class="rec-dessert"><input type="checkbox" id="rec-dessert"> এটি একটি মিষ্টান্ন</label>
+        <label class="rec-chef">ডিফল্ট বাবুর্চি
+          <select id="rec-chef" aria-label="এই আইটেমের ডিফল্ট বাবুর্চি"></select>
+        </label>
+      </div>
       <div class="rec-table-wrap">
         <table class="preview-table rec-table">
           <thead><tr><th>উপকরণ (ফর্মের সারি)</th><th style="width:120px;">প্রতি ১০০ জনে</th><th style="width:100px;">একক</th><th style="width:44px;"></th></tr></thead>
@@ -1082,6 +1117,19 @@
         </div>
           </div>
         </details>
+      </section>
+
+      <section class="modal-sec">
+        <h4><span class="ico" aria-hidden="true">🔒</span> অ্যাডমিন পিন</h4>
+        <p class="hint">পিন দিলে মুছে ফেলা বা আগের অবস্থায় ফেরানোর কাজে পিন চাইবে — বাবুর্চি,
+           রেসিপি, প্যাকেজ, ফরম, ব্যাকআপ। এটি ভুল করে মুছে ফেলা আটকায়; যে ফাইলটি
+           খুলতে পারে তাকে আটকাতে পারবে না। ভুলে গেলে ব্রাউজারের সাইট ডেটা মুছতে হবে।</p>
+        <div class="footer-links">
+          <span class="admin-state" id="admin-state" data-state="off"></span>
+          <button type="button" class="link-btn" id="admin-set" onclick="setAdminPin()">পিন সেট করুন</button>
+          <button type="button" class="link-btn" id="admin-lock" hidden onclick="lockAdmin()">এখনই লক করুন</button>
+          <button type="button" class="link-btn" id="admin-clear" hidden onclick="clearAdminPin()">পিন তুলে দিন</button>
+        </div>
       </section>
 
       <section class="modal-sec">
@@ -2012,7 +2060,9 @@ function savePackage() {
   renderSetMenuDetails();
 }
 
-function deletePackage() {
+async function deletePackage() {
+  if (!(await requireAdmin())) return;
+
   const menu = SET_MENUS[editingKey];
   if (!menu || !menu.custom) return;
   if (!confirm('"' + menu.label + '" প্যাকেজ এবং এর সংরক্ষিত পরিমাণগুলো মুছে ফেলা হবে। নিশ্চিত?')) return;
@@ -2581,7 +2631,8 @@ function renderChefAdmin() {
   });
 }
 
-function restoreChefs() {
+async function restoreChefs() {
+  if (!(await requireAdmin())) return;
   if (!confirm('বাবুর্চি তালিকা ডিফল্টে ফেরাবেন? নিজের যোগ করা নামগুলো বাদ যাবে।')) return;
   chefAssign = {};
   chefs = JSON.parse(JSON.stringify(FACTORY_CHEFS));
@@ -2604,20 +2655,46 @@ function addChef() {
   generateList();
 }
 
-function removeChef(id) {
+async function removeChef(id) {
   const c = chefs.filter(x => x.id === id)[0];
   if (!c) return;
+  if (!(await requireAdmin())) return;
+
   const assigned = Object.keys(chefAssign).filter(k => chefAssign[k] === id).length;
   const msg = assigned
     ? '"' + c.name + '" বাদ দেবেন? ' + toBanglaNum(assigned) + 'টি আইটেম স্ট্যান্ডার্ডে ফিরে যাবে।'
     : '"' + c.name + '" বাদ দেবেন?';
   if (!confirm(msg)) return;
-  Object.keys(chefAssign).forEach(k => { if (chefAssign[k] === id) delete chefAssign[k]; });
+
+  // Everything this cook was holding, kept so the deletion can be taken back. Their
+  // default assignments used to be left behind to dangle; they go with them now.
+  const undo = {
+    chef: c,
+    at: chefs.indexOf(c),
+    assigned: Object.keys(chefAssign).filter(k => chefAssign[k] === id),
+    defaults: Object.keys(chefDefaults).filter(k => chefDefaults[k] === id)
+  };
+  undo.assigned.forEach(k => { delete chefAssign[k]; });
+  undo.defaults.forEach(k => { delete chefDefaults[k]; });
   chefs = chefs.filter(x => x.id !== id);
   saveChefs();
+  saveChefDefaults();
   renderChefAdmin();
+  renderChefDefaults();
   renderDishChips();
   generateList();
+
+  showUndo('"' + c.name + '" বাদ দেওয়া হয়েছে।', () => {
+    chefs.splice(Math.min(undo.at, chefs.length), 0, undo.chef);
+    undo.assigned.forEach(k => { chefAssign[k] = id; });
+    undo.defaults.forEach(k => { chefDefaults[k] = id; });
+    saveChefs();
+    saveChefDefaults();
+    renderChefAdmin();
+    renderChefDefaults();
+    renderDishChips();
+    generateList();
+  });
 }
 
 // ---------------- Headcounts ----------------
@@ -3210,7 +3287,9 @@ function handleReviewClick(ev) {
   onFormsChanged();
 }
 
-function resetForms() {
+async function resetForms() {
+  if (!(await requireAdmin())) return;
+
   if (!confirm('ফর্মের সব নাম, একক, সারি ও শিরোনামের পরিবর্তন মুছে আগের অবস্থায় ফেরানো হবে। নিশ্চিত?')) return;
   try { localStorage.removeItem(FORMS_KEY); } catch (e) { /* storage off */ }
   forms = JSON.parse(JSON.stringify(SHEETS));
@@ -3247,7 +3326,9 @@ function exportDefaults() {
   URL.revokeObjectURL(a.href);
 }
 
-function importDefaults(event) {
+async function importDefaults(event) {
+  if (!(await requireAdmin())) return;
+
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -3610,6 +3691,9 @@ function renderRecipeList() {
     const n = (r.ingredients || []).length + (r.editable || []).length;
     const tag = r.custom ? '<span class="rec-tag new">নতুন</span>' : (r.edited ? '<span class="rec-tag">পরিবর্তিত</span>' : '');
     return '<div class="recipe-item"><span class="recipe-name">' + escapeHtml(r.label) + '</span>' + tag
+      + (chefDefaults[k] && chefIds().indexOf(chefDefaults[k]) !== -1
+          ? '<span class="recipe-chef" style="color:' + chefInk(chefDefaults[k]) + '">'
+            + escapeHtml(chefName(chefDefaults[k])) + '</span>' : '')
       + '<span class="recipe-meta">' + (isDessert(k) ? 'মিষ্টান্ন' : 'প্রধান আইটেম') + ' · '
       + (hasNoIngredients(k) ? 'উপকরণ নেই' : toBanglaNum(n) + 'টি উপকরণ') + '</span>'
       + '<button type="button" class="pkg-btn" data-recipe="' + k + '">✎ সম্পাদনা</button></div>';
@@ -3635,6 +3719,13 @@ function openRecipeEditor(key) {
   document.getElementById('recipe-editor-title').textContent = isNew ? 'নতুন রেসিপি' : 'রেসিপি সম্পাদনা';
   document.getElementById('rec-name').value = rec.label;
   document.getElementById('rec-dessert').checked = isNew ? false : isDessert(key);
+  // The same store the settings list writes to, so the two can never disagree.
+  const chefSel = document.getElementById('rec-chef');
+  const ids = ['S'].concat(chefIds());
+  const cur = (!isNew && chefDefaults[key] && ids.indexOf(chefDefaults[key]) !== -1)
+    ? chefDefaults[key] : 'S';
+  chefSel.innerHTML = ids.map(c => '<option value="' + c + '"' + (c === cur ? ' selected' : '') + '>'
+    + escapeHtml(chefName(c)) + '</option>').join('');
   document.getElementById('rec-delete').hidden = isNew || !rec.custom;
   document.getElementById('rec-restore').hidden = isNew || rec.custom || !rec.edited || !FACTORY_RECIPES[key];
   rebuildPickIndex();   // the row list may have changed since the editor was last opened
@@ -3961,6 +4052,13 @@ function saveRecipe() {
     custom: recipeDraft.isNew ? true : Boolean(prev.custom),
     edited: true
   };
+  // A new recipe only has a key now, so its cook is set here rather than on open.
+  const pickedChef = document.getElementById('rec-chef').value;
+  if (pickedChef === 'S') delete chefDefaults[key];
+  else chefDefaults[key] = pickedChef;
+  saveChefDefaults();
+  renderChefDefaults();
+
   const wasNew = recipeDraft.isNew;
   saveRecipes();
   closeRecipeEditor();
@@ -3969,7 +4067,8 @@ function saveRecipe() {
   renderSetMenuDetails();
 }
 
-function restoreRecipe() {
+async function restoreRecipe() {
+  if (!(await requireAdmin())) return;
   const key = recipeDraft && recipeDraft.key;
   if (!key || !FACTORY_RECIPES[key]) return;
   if (!confirm('"' + RECIPE_LIBRARY[key].label + '" মূল রেসিপিতে ফিরে যাবে। নিশ্চিত?')) return;
@@ -3981,7 +4080,8 @@ function restoreRecipe() {
   renderSetMenuDetails();
 }
 
-function deleteRecipe() {
+async function deleteRecipe() {
+  if (!(await requireAdmin())) return;
   const key = recipeDraft && recipeDraft.key;
   const rec = key && RECIPE_LIBRARY[key];
   if (!rec || !rec.custom) return;
@@ -4035,7 +4135,7 @@ function snapshotAll() {
   return {
     app: 'iqbal-bajar', version: 2, savedAt: new Date().toISOString(),
     per100: per100Store, forms: forms, setMenus: setMenus, recipes: savedRecipes(), chefs: chefs,
-    itemOrder: itemOrder, chefDefaults: chefDefaults
+    itemOrder: itemOrder, chefDefaults: chefDefaults, adminPin: adminPin
   };
 }
 
@@ -4051,6 +4151,11 @@ function applyAll(d) {
     chefs = d.chefs.filter(c => c && c.id && c.id !== 'S' && c.name);
     saveChefs();
     renderChefAdmin();
+  }
+  if (d.adminPin && d.adminPin.salt && d.adminPin.hash) {
+    adminPin = d.adminPin;
+    saveAdminPin();
+    renderAdminBox();
   }
   if (Array.isArray(d.itemOrder)) {
     itemOrder = d.itemOrder.filter(k => typeof k === 'string');
@@ -4145,7 +4250,8 @@ function saveItemOrderFromDraft() {
   orderNote('item-order-note', '✓ ক্রম সংরক্ষিত হয়েছে');
 }
 
-function resetItemOrder() {
+async function resetItemOrder() {
+  if (!(await requireAdmin())) return;
   itemOrder = [];
   saveItemOrder();
   orderDraft = null;
@@ -4228,13 +4334,132 @@ function renderChefDefaults() {
   });
 })();
 
-function resetChefDefaults() {
+async function resetChefDefaults() {
+  if (!(await requireAdmin())) return;
   chefDefaults = Object.assign({}, FACTORY_CHEF_DEFAULTS);
   saveChefDefaults();
   renderChefDefaults();
   renderDishChips();
   generateList();
   orderNote('chef-default-note', 'ডিফল্টে ফেরানো হয়েছে');
+}
+
+
+// ---------------- Admin PIN ----------------
+// This guards against accidents and idle poking, not against anyone determined: the page
+// is a file on disk, and whoever holds it can clear storage and walk in. The PIN is kept
+// as a salted SHA-256 so a glance at the stored data does not reveal it, and nothing is
+// gated at all until a PIN is set.
+const ADMIN_KEY = 'iqbal_catering_bajar_admin';
+let adminPin = null;            // { salt, hash }
+let adminUnlocked = false;
+
+function loadAdminPin() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ADMIN_KEY) || 'null');
+    if (saved && saved.salt && saved.hash) adminPin = saved;
+  } catch (e) { /* storage off: no PIN */ }
+}
+function saveAdminPin() {
+  try {
+    if (adminPin) localStorage.setItem(ADMIN_KEY, JSON.stringify(adminPin));
+    else localStorage.removeItem(ADMIN_KEY);
+  } catch (e) { /* storage off */ }
+  scheduleFileWrite();
+}
+loadAdminPin();
+
+function adminPinSet() { return Boolean(adminPin); }
+
+async function hashPin(pin, salt) {
+  const data = new TextEncoder().encode(salt + '|' + pin);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function newSalt() {
+  const a = new Uint8Array(8);
+  crypto.getRandomValues(a);
+  return [...a].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// True when the action may proceed. With no PIN set it never asks.
+async function requireAdmin() {
+  if (!adminPinSet() || adminUnlocked) return true;
+  const pin = prompt('এই কাজের জন্য অ্যাডমিন পিন দিন:');
+  if (pin === null) return false;
+  if (await hashPin(pin, adminPin.salt) === adminPin.hash) {
+    adminUnlocked = true;                  // stays open until the page is reloaded
+    renderAdminBox();
+    return true;
+  }
+  alert('পিন মেলেনি।');
+  return false;
+}
+
+async function setAdminPin() {
+  if (adminPinSet() && !(await requireAdmin())) return;
+  const pin = prompt('নতুন পিন দিন (অন্তত ৪ অঙ্ক):');
+  if (pin === null) return;
+  if (String(pin).trim().length < 4) { alert('পিন অন্তত ৪ অঙ্কের হতে হবে।'); return; }
+  const again = prompt('আরেকবার লিখুন:');
+  if (again === null) return;
+  if (again !== pin) { alert('দুইবারের পিন এক হয়নি।'); return; }
+  const salt = newSalt();
+  adminPin = { salt: salt, hash: await hashPin(pin, salt) };
+  adminUnlocked = true;
+  saveAdminPin();
+  renderAdminBox();
+  alert('পিন সেট হয়েছে। ভুলে গেলে ব্রাউজারের সাইট ডেটা মুছে ফেলা ছাড়া উপায় নেই।');
+}
+
+async function clearAdminPin() {
+  if (!(await requireAdmin())) return;
+  if (!confirm('পিন তুলে দেবেন? কোনো কাজে আর পিন চাইবে না।')) return;
+  adminPin = null;
+  adminUnlocked = false;
+  saveAdminPin();
+  renderAdminBox();
+}
+
+function lockAdmin() {
+  adminUnlocked = false;
+  renderAdminBox();
+}
+
+function renderAdminBox() {
+  const box = document.getElementById('admin-state');
+  if (!box) return;
+  const set = adminPinSet();
+  box.textContent = !set ? 'পিন দেওয়া নেই — কোনো কাজে বাধা নেই'
+    : adminUnlocked ? 'পিন চালু — এই বসায় খোলা আছে'
+    : 'পিন চালু — মুছে ফেলার কাজে পিন চাইবে';
+  box.dataset.state = !set ? 'off' : adminUnlocked ? 'open' : 'locked';
+  const btn = document.getElementById('admin-set');
+  if (btn) btn.textContent = set ? 'পিন বদলান' : 'পিন সেট করুন';
+  const clr = document.getElementById('admin-clear');
+  if (clr) clr.hidden = !set;
+  const lk = document.getElementById('admin-lock');
+  if (lk) lk.hidden = !set || !adminUnlocked;
+}
+
+// ---------------- Undo, for the one deletion that is easy to regret ----------------
+let undoTimer = null;
+function showUndo(text, onUndo) {
+  let bar = document.getElementById('undo-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'undo-bar';
+    bar.className = 'undo-bar';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = '<span></span><button type="button">ফিরিয়ে আনুন</button>';
+  bar.querySelector('span').textContent = text;
+  bar.classList.add('show');
+  clearTimeout(undoTimer);
+  const hide = () => { bar.classList.remove('show'); };
+  bar.querySelector('button').onclick = () => { clearTimeout(undoTimer); hide(); onUndo(); };
+  undoTimer = setTimeout(hide, 12000);
 }
 
 // A close that is still playing must be called off, or its timer shuts the dialog
@@ -4248,6 +4473,7 @@ function openSettings() {
   back.classList.remove('is-closing');
   back.hidden = false;
   orderDraft = null;                   // start from what is saved, not a stale draft
+  renderAdminBox();
   renderItemOrder();
   renderChefDefaults();
   back.focus();
@@ -4390,6 +4616,7 @@ async function reopenDataFile() {
 }
 
 async function disconnectDataFile() {
+  if (!(await requireAdmin())) return;
   if (!confirm('ডেটা ফাইল বিচ্ছিন্ন হবে। ফাইলটি মুছবে না, শুধু এই পাতা আর সেটিতে সংরক্ষণ করবে না। নিশ্চিত?')) return;
   dataFileHandle = null;
   try { await idb('readwrite', st => st.delete('dataFile')); } catch (e) { /* nothing stored */ }

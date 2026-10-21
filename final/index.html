@@ -607,11 +607,42 @@
   .shared-bar button:hover { background: var(--gold); color: #10233b; }
   .shared-bar button.later { border-color: #6b7a90; color: #c9d4e2; }
   .shared-bar button.later:hover { background: #6b7a90; color: #fff8ec; }
-  @media print { .shared-bar, .undo-bar { display: none !important; } }
+  @media print { .shared-bar, .undo-bar, .ask-back { display: none !important; } }
 
   .admin-state { font-size: 15px; color: #7a6a4d; }
   .admin-state[data-state="locked"] { color: var(--green); font-weight: 700; }
   .admin-state[data-state="open"] { color: #a85d12; font-weight: 700; }
+
+  /* The small ask dialog: the PIN journey, in the page's own hand. The browser's
+     prompt() box was the other option, and it is refused outright in some embedded
+     views, which made the PIN unusable there. This one sits above the settings dialog. */
+  .ask-back { z-index: 96; padding: 20px; }
+  .ask-card {
+    width: 100%; max-width: 380px; background: var(--cream-card); border-radius: 12px;
+    padding: 17px 19px 18px; box-shadow: 0 18px 44px rgba(16, 35, 59, 0.34);
+  }
+  .ask-card strong { display: block; font-size: 20px; color: var(--navy-dark); }
+  .ask-msg { margin: 5px 0 0; font-size: 16px; color: #7a6a4d; line-height: 1.55; }
+  .ask-msg:empty { display: none; }
+  .ask-field { display: block; margin-top: 11px; font-size: 16px; color: #7a6a4d; }
+  .ask-field[hidden] { display: none; }
+  .ask-field input {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 4px;
+    font-family: inherit; font-size: 19px; letter-spacing: 3px;
+    padding: 7px 10px; border: 1px solid #e0d4b8; border-radius: 7px; background: #fff;
+  }
+  .ask-field input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .ask-err { margin: 9px 0 0; font-size: 16px; font-weight: 700; color: #b1442f; }
+  .ask-err[hidden] { display: none; }
+  .ask-btns { display: flex; justify-content: flex-end; gap: 9px; margin-top: 15px; }
+  .ask-btns button {
+    font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;
+    border-radius: 7px; padding: 7px 16px; border: 1px solid #e0d4b8;
+    background: #fff; color: #7a6a4d;
+  }
+  .ask-btns button:hover { border-color: var(--maroon); color: var(--maroon); }
+  .ask-btns .ask-ok { background: var(--maroon); border-color: var(--maroon); color: #fff8ec; }
+  .ask-btns .ask-ok:hover { background: var(--maroon-dark); border-color: var(--maroon-dark); color: #fff8ec; }
 
   /* A short window to take a deletion back. */
   .undo-bar {
@@ -1074,6 +1105,26 @@
   <div class="data-foot" id="data-foot">
     <span class="data-dot" id="data-dot-brief" aria-hidden="true"></span>
     <span id="data-brief">ডেটা শুধু এই ব্রাউজারে</span>
+  </div>
+
+  <div class="modal-back ask-back" id="ask-modal" hidden>
+    <div class="ask-card" role="dialog" aria-modal="true" aria-labelledby="ask-title">
+      <strong id="ask-title"></strong>
+      <p class="ask-msg" id="ask-msg"></p>
+      <label class="ask-field" id="ask-w1" hidden>
+        <span id="ask-l1"></span>
+        <input type="password" id="ask-i1" inputmode="numeric" autocomplete="off">
+      </label>
+      <label class="ask-field" id="ask-w2" hidden>
+        <span id="ask-l2"></span>
+        <input type="password" id="ask-i2" inputmode="numeric" autocomplete="off">
+      </label>
+      <p class="ask-err" id="ask-err" hidden></p>
+      <div class="ask-btns">
+        <button type="button" id="ask-cancel">বাতিল</button>
+        <button type="button" class="ask-ok" id="ask-ok">ঠিক আছে</button>
+      </div>
+    </div>
   </div>
 
   <div class="modal-back" id="settings-modal" hidden>
@@ -4485,6 +4536,101 @@ async function checkSharedSettings() {
   }
 }
 
+// ---------------- The ask dialog, in place of prompt()/alert()/confirm() ----------------
+// prompt() is refused outright in some embedded views, which left the PIN unaskable and
+// so the whole feature unusable there. This dialog is the page's own, it can hold two
+// fields at once (a new PIN and its repeat, rather than two boxes one after the other),
+// and it shows a wrong PIN in place instead of in a second box.
+//
+// It resolves to an array of the typed values, or null when cancelled, so a caller
+// reads much like the prompt() it replaces.
+let askState = null;
+
+function askDialog(opts) {
+  const back = document.getElementById('ask-modal');
+  const fields = opts.fields || [];
+  document.getElementById('ask-title').textContent = opts.title || '';
+  document.getElementById('ask-msg').textContent = opts.msg || '';
+  document.getElementById('ask-ok').textContent = opts.okText || 'ঠিক আছে';
+  document.getElementById('ask-cancel').hidden = false;
+  [1, 2].forEach(n => {
+    const f = fields[n - 1];
+    document.getElementById('ask-w' + n).hidden = !f;
+    if (f) {
+      document.getElementById('ask-l' + n).textContent = f.label || '';
+      const inp = document.getElementById('ask-i' + n);
+      inp.value = '';
+    }
+  });
+  const err = document.getElementById('ask-err');
+  err.hidden = true;
+  err.textContent = '';
+  back.hidden = false;
+  const first = fields.length ? document.getElementById('ask-i1') : document.getElementById('ask-ok');
+  setTimeout(() => first.focus(), 0);
+  return new Promise(resolve => { askState = { resolve: resolve, fields: fields, check: opts.check }; });
+}
+
+function askValues() {
+  return (askState.fields || []).map((f, i) => document.getElementById('ask-i' + (i + 1)).value);
+}
+
+function askClose(result) {
+  const st = askState;
+  askState = null;
+  document.getElementById('ask-modal').hidden = true;
+  // The typed PIN does not sit in the DOM after the dialog shuts.
+  [1, 2].forEach(n => { document.getElementById('ask-i' + n).value = ''; });
+  if (st) st.resolve(result);
+}
+
+async function askSubmit() {
+  if (!askState) return;
+  const values = askValues();
+  if (askState.check) {
+    const msg = await askState.check(values);
+    if (!askState) return;                       // cancelled while the check ran
+    if (msg) {
+      const err = document.getElementById('ask-err');
+      err.textContent = msg;
+      err.hidden = false;
+      const inp = document.getElementById('ask-i1');
+      inp.focus();
+      inp.select();
+      return;                                    // stays open, so a slip is one retype
+    }
+  }
+  askClose(values);
+}
+
+document.getElementById('ask-ok').onclick = askSubmit;
+document.getElementById('ask-cancel').onclick = () => askClose(null);
+document.getElementById('ask-modal').addEventListener('mousedown', ev => {
+  if (ev.target.id === 'ask-modal') askClose(null);
+});
+document.getElementById('ask-modal').addEventListener('keydown', ev => {
+  if (ev.key === 'Enter') { ev.preventDefault(); askSubmit(); }
+});
+
+// A plain message, where an alert() used to be.
+function askNote(title, msg) {
+  document.getElementById('ask-title').textContent = title;
+  document.getElementById('ask-msg').textContent = msg || '';
+  document.getElementById('ask-ok').textContent = 'বুঝেছি';
+  document.getElementById('ask-cancel').hidden = true;
+  [1, 2].forEach(n => { document.getElementById('ask-w' + n).hidden = true; });
+  document.getElementById('ask-err').hidden = true;
+  document.getElementById('ask-modal').hidden = false;
+  setTimeout(() => document.getElementById('ask-ok').focus(), 0);
+  return new Promise(resolve => { askState = { resolve: resolve, fields: [] }; });
+}
+
+// A yes/no, where a confirm() used to be. True only on the ok button.
+async function askYesNo(title, msg, okText) {
+  const got = await askDialog({ title: title, msg: msg, okText: okText || 'হ্যাঁ' });
+  return got !== null;
+}
+
 // ---------------- Admin PIN ----------------
 // This guards against accidents and idle poking, not against anyone determined: the page
 // is a file on disk, and whoever holds it can clear storage and walk in. The PIN is kept
@@ -4526,36 +4672,48 @@ function newSalt() {
 // True when the action may proceed. With no PIN set it never asks.
 async function requireAdmin() {
   if (!adminPinSet() || adminUnlocked) return true;
-  const pin = prompt('এই কাজের জন্য অ্যাডমিন পিন দিন:');
-  if (pin === null) return false;
-  if (await hashPin(pin, adminPin.salt) === adminPin.hash) {
-    adminUnlocked = true;                  // stays open until the page is reloaded
-    renderAdminBox();
-    return true;
-  }
-  alert('পিন মেলেনি।');
-  return false;
+  // The dialog holds itself open on a wrong PIN, so by the time it resolves the PIN
+  // was right — or it was cancelled.
+  const got = await askDialog({
+    title: 'অ্যাডমিন পিন',
+    msg: 'এই কাজের জন্য পিন দিন।',
+    fields: [{ label: 'পিন' }],
+    check: async v => (await hashPin(v[0], adminPin.salt)) === adminPin.hash
+      ? '' : 'পিন মেলেনি।'
+  });
+  if (got === null) return false;
+  adminUnlocked = true;                    // stays open until the page is reloaded
+  renderAdminBox();
+  return true;
 }
 
 async function setAdminPin() {
   if (adminPinSet() && !(await requireAdmin())) return;
-  const pin = prompt('নতুন পিন দিন (অন্তত ৪ অঙ্ক):');
-  if (pin === null) return;
-  if (String(pin).trim().length < 4) { alert('পিন অন্তত ৪ অঙ্কের হতে হবে।'); return; }
-  const again = prompt('আরেকবার লিখুন:');
-  if (again === null) return;
-  if (again !== pin) { alert('দুইবারের পিন এক হয়নি।'); return; }
+  // Both boxes at once: the repeat is there to catch a typo, which is easier to see
+  // side by side than in two prompts one after the other.
+  const got = await askDialog({
+    title: adminPinSet() ? 'পিন বদলান' : 'পিন সেট করুন',
+    msg: 'অন্তত ৪ অঙ্কের একটি পিন দিন।',
+    fields: [{ label: 'নতুন পিন' }, { label: 'আরেকবার লিখুন' }],
+    check: v => String(v[0]).trim().length < 4
+      ? 'পিন অন্তত ৪ অঙ্কের হতে হবে।'
+      : v[1] !== v[0] ? 'দুইবারের পিন এক হয়নি।' : ''
+  });
+  if (got === null) return;
+  const pin = got[0];
   const salt = newSalt();
   adminPin = { salt: salt, hash: await hashPin(pin, salt) };
   adminUnlocked = true;
   saveAdminPin();
   renderAdminBox();
-  alert('পিন সেট হয়েছে। ভুলে গেলে ব্রাউজারের সাইট ডেটা মুছে ফেলা ছাড়া উপায় নেই।');
+  askNote('পিন সেট হয়েছে',
+    'ভুলে গেলে ব্রাউজারের সাইট ডেটা মুছে ফেলা ছাড়া উপায় নেই।');
 }
 
 async function clearAdminPin() {
   if (!(await requireAdmin())) return;
-  if (!confirm('পিন তুলে দেবেন? কোনো কাজে আর পিন চাইবে না।')) return;
+  if (!(await askYesNo('পিন তুলে দেবেন?',
+    'কোনো কাজে আর পিন চাইবে না।', 'তুলে দিন'))) return;
   adminPin = null;
   adminUnlocked = false;
   saveAdminPin();
@@ -4635,7 +4793,10 @@ function closeSettings() {
   settingsCloseTimer = setTimeout(done, 220);
 }
 document.addEventListener('keydown', ev => {
-  if (ev.key === 'Escape' && !document.getElementById('settings-modal').hidden) closeSettings();
+  if (ev.key !== 'Escape') return;
+  // The ask dialog sits on top of the settings dialog, so Escape answers it first.
+  if (!document.getElementById('ask-modal').hidden) { askClose(null); return; }
+  if (!document.getElementById('settings-modal').hidden) closeSettings();
 });
 document.getElementById('settings-modal').addEventListener('mousedown', ev => {
   if (ev.target.id === 'settings-modal') closeSettings();   // a click outside the card

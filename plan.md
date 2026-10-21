@@ -315,6 +315,22 @@ carries its own built-in settings. Opening `index.html` straight from disk block
 fetch altogether (`file://`), so this works on the hosted link, and the data file remains
 the way to move settings between the owner's own two machines.
 
+### The PIN box is the page's own
+
+`prompt()` is refused outright in some embedded views, which left the PIN unaskable and
+so every guarded action unusable there. `askDialog()` replaces it: a small dialog above
+the settings dialog that resolves to the typed values or `null` on cancel, so
+`requireAdmin()` reads much as it did.
+
+Two things it can do that `prompt()` could not. It holds both boxes of a new PIN at
+once, which is where a typo is actually visible; and a wrong PIN is shown **in place**
+with the dialog still open, so a slip costs one retype rather than restarting the
+action. `askNote()` and `askYesNo()` took over the PIN flow's `alert()` and `confirm()`,
+so the whole journey is in the page's own hand.
+
+`Escape` is answered by the ask dialog first, then by the settings dialog beneath it,
+and the typed PIN is cleared out of the DOM when the dialog shuts.
+
 ### The data state left the settings button
 
 The footer button had grown into two things: a settings button and a status line.

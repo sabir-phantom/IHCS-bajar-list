@@ -315,6 +315,17 @@ carries its own built-in settings. Opening `index.html` straight from disk block
 fetch altogether (`file://`), so this works on the hosted link, and the data file remains
 the way to move settings between the owner's own two machines.
 
+### The data state left the settings button
+
+The footer button had grown into two things: a settings button and a status line.
+A button should say what it does, so it now reads only `⚙ সেটিংস`, and the data
+state sits under it as a quiet right-aligned note (`.data-foot`).
+
+It stays on screen rather than moving inside the dialog: hiding it behind a click is
+how a data file goes unconnected for a week without anyone noticing. `setDataStatus()`
+puts the state on the note instead of the button; the dot colours and the warn
+emphasis moved with it, and the note is hidden in print.
+
 ### The admin PIN, and what it is not
 
 A PIN in a single file anyone can open is not security, and the docs say so plainly. It

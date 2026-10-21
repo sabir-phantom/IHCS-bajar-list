@@ -497,16 +497,21 @@
     background: #faf6ea; border: 1px solid var(--gold-light); border-radius: 999px; padding: 6px 15px;
   }
   .settings-open:hover { background: #f6efdc; color: var(--maroon); }
-  /* It is a settings button that also reports the data state, not a status line with a
-     gear bolted on. The word leads; the state is a quiet aside, but it stays visible —
-     hiding it behind a click is how a data file goes unconnected. */
+  /* A settings button, and nothing else: the data state lives in .data-foot below. */
   .settings-gear { color: var(--maroon); font-size: 18px; line-height: 1; }
   .settings-label { font-weight: 700; color: var(--maroon-dark); }
-  .settings-sep { width: 1px; align-self: stretch; margin: 2px 2px; background: var(--gold-light); }
-  .settings-open #data-brief { font-size: 15px; color: #8a7a5e; }
-  .settings-open[data-state="warn"] #data-brief { color: #a85d12; font-weight: 700; }
-  .settings-open[data-state="ok"] .data-dot { background: var(--green); }
-  .settings-open[data-state="warn"] .data-dot { background: #c7771c; }
+  /* The data state is no longer carried inside the button: a button says what it does,
+     and that sentence was doing a different job. It sits at the foot of the page, right
+     aligned, still always visible — hiding it behind a click is how a file goes
+     unconnected. */
+  .data-foot {
+    display: flex; justify-content: flex-end; align-items: center; gap: 7px;
+    margin-top: 10px; font-size: 15px; color: #8a7a5e;
+  }
+  .data-foot[data-state="warn"] #data-brief { color: #a85d12; font-weight: 700; }
+  .data-foot[data-state="ok"] .data-dot { background: var(--green); }
+  .data-foot[data-state="warn"] .data-dot { background: #c7771c; }
+  @media print { .data-foot { display: none; } }
 
   .modal-back {
     position: fixed; inset: 0; z-index: 80; background: rgba(27, 32, 45, 0.45);
@@ -1059,16 +1064,16 @@
   <button type="button" id="to-top" class="to-top" aria-label="উপরে যান" title="উপরে যান">↑</button>
 
 
-  <!-- One line at the foot of the page: it still shows whether the data is safe,
-       and opens everything else in a dialog. -->
+  <!-- The settings button, then the data state as a quiet note on its own line. -->
   <div class="settings-line">
     <button type="button" class="settings-open" id="settings-open" onclick="openSettings()">
       <span class="settings-gear">⚙</span>
       <span class="settings-label">সেটিংস</span>
-      <span class="settings-sep" aria-hidden="true"></span>
-      <span class="data-dot" id="data-dot-brief" aria-hidden="true"></span>
-      <span id="data-brief">ডেটা শুধু এই ব্রাউজারে</span>
     </button>
+  </div>
+  <div class="data-foot" id="data-foot">
+    <span class="data-dot" id="data-dot-brief" aria-hidden="true"></span>
+    <span id="data-brief">ডেটা শুধু এই ব্রাউজারে</span>
   </div>
 
   <div class="modal-back" id="settings-modal" hidden>
@@ -4642,7 +4647,7 @@ function setDataStatus(text, state) {
   // The line at the foot of the page keeps saying whether the data is safe, even with
   // the dialog shut — hiding that behind a click is how a file goes unconnected.
   const brief = document.getElementById('data-brief');
-  const open = document.getElementById('settings-open');
+  const open = document.getElementById('data-foot');
   if (brief && open) {
     open.dataset.state = state;
     brief.textContent = state === 'ok' ? 'ডেটা ফাইলে সংরক্ষিত'
@@ -4650,6 +4655,7 @@ function setDataStatus(text, state) {
       : 'ডেটা শুধু এই ব্রাউজারে';
     // The full sentence is still available without opening anything.
     open.title = text;
+    brief.title = text;
   }
   const connected = state === 'ok';
   const waiting = state === 'warn' && Boolean(dataFileHandle);
